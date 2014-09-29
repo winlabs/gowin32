@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package gowin32
+package wrappers
 
 import (
 	"unsafe"
