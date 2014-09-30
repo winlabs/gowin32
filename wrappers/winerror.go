@@ -19,5 +19,6 @@ package wrappers
 import "syscall"
 
 const (
-	ERROR_MORE_DATA syscall.Errno = 234
+	ERROR_MORE_DATA       syscall.Errno = 234
+	ERROR_OLD_WIN_VERSION syscall.Errno = 1150
 )

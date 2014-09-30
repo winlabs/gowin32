@@ -92,7 +92,7 @@ func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDesc
 	return nil
 }
 
-func VerifyVersionInfo(versionInfo *OSVERSIONINFO, typeMask uint32, conditionMask uint64) error {
+func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
 	r1, _, e1 := procVerifyVersionInfoW.Call(
 		uintptr(unsafe.Pointer(versionInfo)),
 		uintptr(typeMask),
