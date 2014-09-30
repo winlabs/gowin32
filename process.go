@@ -24,11 +24,11 @@ import (
 )
 
 type ProcessInfo struct {
-	ProcessID uint32
-	Threads uint32
+	ProcessID       uint32
+	Threads         uint32
 	ParentProcessID uint32
-	BasePriority int32
-	ExeFile string
+	BasePriority    int32
+	ExeFile         string
 }
 
 func GetProcesses() ([]ProcessInfo, error) {
@@ -45,11 +45,11 @@ func GetProcesses() ([]ProcessInfo, error) {
 	pi := []ProcessInfo{}
 	for {
 		pi = append(pi, ProcessInfo{
-			ProcessID: pe.ProcessID,
-			Threads: pe.Threads,
+			ProcessID:       pe.ProcessID,
+			Threads:         pe.Threads,
 			ParentProcessID: pe.ParentProcessID,
-			BasePriority: pe.PriClassBase,
-			ExeFile: syscall.UTF16ToString((&pe.ExeFile)[:]),
+			BasePriority:    pe.PriClassBase,
+			ExeFile:         syscall.UTF16ToString((&pe.ExeFile)[:]),
 		})
 		err := wrappers.Process32Next(hSnapshot, &pe)
 		if err == syscall.ERROR_NO_MORE_FILES {

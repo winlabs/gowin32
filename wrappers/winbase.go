@@ -22,13 +22,13 @@ import (
 )
 
 const (
-	ComputerNameNetBIOS = 0
-	ComputerNameDnsHostname = 1
-	ComputerNameDnsDomain = 2
-	ComputerNameDnsFullyQualified = 3
-	ComputerNamePhysicalNetBIOS = 4
-	ComputerNamePhysicalDnsHostname = 5
-	ComputerNamePhysicalDnsDomain = 6
+	ComputerNameNetBIOS                   = 0
+	ComputerNameDnsHostname               = 1
+	ComputerNameDnsDomain                 = 2
+	ComputerNameDnsFullyQualified         = 3
+	ComputerNamePhysicalNetBIOS           = 4
+	ComputerNamePhysicalDnsHostname       = 5
+	ComputerNamePhysicalDnsDomain         = 6
 	ComputerNamePhysicalDnsFullyQualified = 7
 )
 
@@ -36,10 +36,10 @@ var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
 
-	procGetComputerNameExW = modkernel32.NewProc("GetComputerNameExW")
+	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
 
-	procGetFileSecurityW = modadvapi32.NewProc("GetFileSecurityW")
+	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
 )
 
@@ -58,7 +58,7 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 	return nil
 }
 
-func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable* uint64, totalNumberOfBytes *uint64, totalNumberOfFreeBytes *uint64) error {
+func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, totalNumberOfBytes *uint64, totalNumberOfFreeBytes *uint64) error {
 	r1, _, e1 := procGetDiskFreeSpaceExW.Call(
 		uintptr(unsafe.Pointer(directoryName)),
 		uintptr(unsafe.Pointer(freeBytesAvailable)),
