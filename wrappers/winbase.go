@@ -61,9 +61,9 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable* uint64, totalNumberOfBytes *uint64, totalNumberOfFreeBytes *uint64) error {
 	r1, _, e1 := procGetDiskFreeSpaceExW.Call(
 		uintptr(unsafe.Pointer(directoryName)),
-		uintptr(unsafe.Pointer(&freeBytesAvailable)),
-		uintptr(unsafe.Pointer(&totalNumberOfBytes)),
-		uintptr(unsafe.Pointer(&totalNumberOfFreeBytes)))
+		uintptr(unsafe.Pointer(freeBytesAvailable)),
+		uintptr(unsafe.Pointer(totalNumberOfBytes)),
+		uintptr(unsafe.Pointer(totalNumberOfFreeBytes)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
