@@ -75,13 +75,11 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 	return nil
 }
 
-func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDescriptor *uint8, length uint32, lengthNeeded *uint32) error {
-	r1, _, e1 := procGetFileSecurityW.Call(
-		uintptr(unsafe.Pointer(fileName)),
-		uintptr(requestedInformation),
-		uintptr(unsafe.Pointer(securityDescriptor)),
-		uintptr(length),
-		uintptr(unsafe.Pointer(lengthNeeded)))
+func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
+	r1, _, e1 := procVerifyVersionInfoW.Call(
+		uintptr(unsafe.Pointer(versionInfo)),
+		uintptr(typeMask),
+		uintptr(conditionMask))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
@@ -92,11 +90,13 @@ func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDesc
 	return nil
 }
 
-func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
-	r1, _, e1 := procVerifyVersionInfoW.Call(
-		uintptr(unsafe.Pointer(versionInfo)),
-		uintptr(typeMask),
-		uintptr(conditionMask))
+func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDescriptor *uint8, length uint32, lengthNeeded *uint32) error {
+	r1, _, e1 := procGetFileSecurityW.Call(
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(requestedInformation),
+		uintptr(unsafe.Pointer(securityDescriptor)),
+		uintptr(length),
+		uintptr(unsafe.Pointer(lengthNeeded)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
