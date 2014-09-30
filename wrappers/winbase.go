@@ -38,6 +38,7 @@ var (
 
 	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
 
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
@@ -81,6 +82,21 @@ func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDesc
 		uintptr(unsafe.Pointer(securityDescriptor)),
 		uintptr(length),
 		uintptr(unsafe.Pointer(lengthNeeded)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func VerifyVersionInfo(versionInfo *OSVERSIONINFO, typeMask uint32, conditionMask uint64) error {
+	r1, _, e1 := procVerifyVersionInfoW.Call(
+		uintptr(unsafe.Pointer(versionInfo)),
+		uintptr(typeMask),
+		uintptr(conditionMask))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
