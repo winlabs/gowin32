@@ -31,6 +31,15 @@ type ProcessInfo struct {
 	ExeFile         string
 }
 
+type ModuleInfo struct {
+	ProcessID         uint32
+	ModuleBaseAddress *uint8
+	ModuleBaseSize    uint32
+	ModuleHandle      syscall.Handle
+	ModuleName        string
+	ExePath           string
+}
+
 func GetProcesses() ([]ProcessInfo, error) {
 	hSnapshot, err := wrappers.CreateToolhelp32Snapshot(wrappers.TH32CS_SNAPPROCESS, 0)
 	if err != nil {
@@ -54,6 +63,36 @@ func GetProcesses() ([]ProcessInfo, error) {
 		err := wrappers.Process32Next(hSnapshot, &pe)
 		if err == syscall.ERROR_NO_MORE_FILES {
 			return pi, nil
+		} else if err != nil {
+			return nil, err
+		}
+	}
+}
+
+func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
+	hSnapshot, err := wrappers.CreateToolhelp32Snapshot(wrappers.TH32CS_SNAPMODULE, pid)
+	if err != nil {
+		return nil, err
+	}
+	defer syscall.CloseHandle(hSnapshot)
+	me := wrappers.ModuleEntry32{}
+	me.Size = uint32(unsafe.Sizeof(me))
+	if err := wrappers.Module32First(hSnapshot, &me); err != nil {
+		return nil, err
+	}
+	mi := []ModuleInfo{}
+	for {
+		mi = append(mi, ModuleInfo{
+			ProcessID:         me.ProcessID,
+			ModuleBaseAddress: me.ModBaseAddr,
+			ModuleBaseSize:    me.ModBaseSize,
+			ModuleHandle:      me.Module,
+			ModuleName:        syscall.UTF16ToString((&me.ModuleName)[:]),
+			ExePath:           syscall.UTF16ToString((&me.ExePath)[:]),
+		})
+		err := wrappers.Module32Next(hSnapshot, &me)
+		if err == syscall.ERROR_NO_MORE_FILES {
+			return mi, nil
 		} else if err != nil {
 			return nil, err
 		}
