@@ -20,6 +20,7 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -97,4 +98,23 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 			return nil, err
 		}
 	}
+}
+
+func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
+	milliseconds := uint32(timeout / time.Millisecond)
+	if timeout < 0 {
+		milliseconds = syscall.INFINITE
+	}
+	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
+	if err != nil {
+		return err
+	}
+	defer syscall.CloseHandle(hProcess)
+	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, pid); err != nil {
+		return err
+	}
+	if _, err := syscall.WaitForSingleObject(hProcess, milliseconds); err != nil {
+		return err
+	}
+	return nil
 }
