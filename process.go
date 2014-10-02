@@ -118,3 +118,21 @@ func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 	}
 	return nil
 }
+
+func IsProcessRunning(pid uint32) (bool, error) {
+	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
+	if err == wrappers.ERROR_INVALID_PARAMETER {
+		// the process no longer exists
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	defer syscall.CloseHandle(hProcess)
+
+	// wait with a timeout of 0 to check the process's status and make sure it's not a zombie
+	event, err := syscall.WaitForSingleObject(hProcess, 0)
+	if err != nil {
+		return false, err
+	}
+	return event != syscall.WAIT_OBJECT_0, nil
+}
