@@ -38,6 +38,7 @@ var (
 
 	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
 
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
@@ -64,6 +65,21 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 		uintptr(unsafe.Pointer(freeBytesAvailable)),
 		uintptr(unsafe.Pointer(totalNumberOfBytes)),
 		uintptr(unsafe.Pointer(totalNumberOfFreeBytes)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
+	r1, _, e1 := procVerifyVersionInfoW.Call(
+		uintptr(unsafe.Pointer(versionInfo)),
+		uintptr(typeMask),
+		uintptr(conditionMask))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1

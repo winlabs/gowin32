@@ -21,4 +21,5 @@ import "syscall"
 const (
 	ERROR_INVALID_PARAMETER syscall.Errno = 87
 	ERROR_MORE_DATA         syscall.Errno = 234
+	ERROR_OLD_WIN_VERSION   syscall.Errno = 1150
 )
