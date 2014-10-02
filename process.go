@@ -119,6 +119,15 @@ func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 	return nil
 }
 
+func KillProcess(pid uint32, exitCode uint32) error {
+	hProcess, err := syscall.OpenProcess(syscall.PROCESS_TERMINATE, false, pid)
+	if err != nil {
+		return err
+	}
+	defer syscall.CloseHandle(hProcess)
+	return syscall.TerminateProcess(hProcess, exitCode)
+}
+
 func IsProcessRunning(pid uint32) (bool, error) {
 	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
 	if err == wrappers.ERROR_INVALID_PARAMETER {
