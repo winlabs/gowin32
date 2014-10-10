@@ -21,6 +21,8 @@ import (
 	"unsafe"
 )
 
+const MAX_MODULE_NAME32 = 255
+
 const (
 	TH32CS_SNAPHEAPLIST = 0x00000001
 	TH32CS_SNAPPROCESS  = 0x00000002
@@ -44,8 +46,23 @@ type ProcessEntry32 struct {
 	ExeFile         [syscall.MAX_PATH]uint16
 }
 
+type ModuleEntry32 struct {
+	Size         uint32
+	ModuleID     uint32
+	ProcessID    uint32
+	GlblcntUsage uint32
+	ProccntUsage uint32
+	ModBaseAddr  *uint8
+	ModBaseSize  uint32
+	Module       syscall.Handle
+	ModuleName   [MAX_MODULE_NAME32 + 1]uint16
+	ExePath      [syscall.MAX_PATH]uint16
+}
+
 var (
 	procCreateToolhelp32Snapshot = modkernel32.NewProc("CreateToolhelp32Snapshot")
+	procModule32FirstW           = modkernel32.NewProc("Module32FirstW")
+	procModule32NextW            = modkernel32.NewProc("Module32NextW")
 	procProcess32FirstW          = modkernel32.NewProc("Process32FirstW")
 	procProcess32NextW           = modkernel32.NewProc("Process32NextW")
 )
@@ -61,6 +78,30 @@ func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, e
 		}
 	}
 	return handle, nil
+}
+
+func Module32First(snapshot syscall.Handle, me *ModuleEntry32) error {
+	r1, _, e1 := procModule32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func Module32Next(snapshot syscall.Handle, me *ModuleEntry32) error {
+	r1, _, e1 := procModule32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func Process32First(snapshot syscall.Handle, pe *ProcessEntry32) error {

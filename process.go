@@ -20,6 +20,7 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -29,6 +30,15 @@ type ProcessInfo struct {
 	ParentProcessID uint32
 	BasePriority    int32
 	ExeFile         string
+}
+
+type ModuleInfo struct {
+	ProcessID         uint32
+	ModuleBaseAddress *uint8
+	ModuleBaseSize    uint32
+	ModuleHandle      syscall.Handle
+	ModuleName        string
+	ExePath           string
 }
 
 func GetProcesses() ([]ProcessInfo, error) {
@@ -58,4 +68,80 @@ func GetProcesses() ([]ProcessInfo, error) {
 			return nil, err
 		}
 	}
+}
+
+func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
+	hSnapshot, err := wrappers.CreateToolhelp32Snapshot(wrappers.TH32CS_SNAPMODULE, pid)
+	if err != nil {
+		return nil, err
+	}
+	defer syscall.CloseHandle(hSnapshot)
+	me := wrappers.ModuleEntry32{}
+	me.Size = uint32(unsafe.Sizeof(me))
+	if err := wrappers.Module32First(hSnapshot, &me); err != nil {
+		return nil, err
+	}
+	mi := []ModuleInfo{}
+	for {
+		mi = append(mi, ModuleInfo{
+			ProcessID:         me.ProcessID,
+			ModuleBaseAddress: me.ModBaseAddr,
+			ModuleBaseSize:    me.ModBaseSize,
+			ModuleHandle:      me.Module,
+			ModuleName:        syscall.UTF16ToString((&me.ModuleName)[:]),
+			ExePath:           syscall.UTF16ToString((&me.ExePath)[:]),
+		})
+		err := wrappers.Module32Next(hSnapshot, &me)
+		if err == syscall.ERROR_NO_MORE_FILES {
+			return mi, nil
+		} else if err != nil {
+			return nil, err
+		}
+	}
+}
+
+func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
+	milliseconds := uint32(timeout / time.Millisecond)
+	if timeout < 0 {
+		milliseconds = syscall.INFINITE
+	}
+	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
+	if err != nil {
+		return err
+	}
+	defer syscall.CloseHandle(hProcess)
+	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, pid); err != nil {
+		return err
+	}
+	if _, err := syscall.WaitForSingleObject(hProcess, milliseconds); err != nil {
+		return err
+	}
+	return nil
+}
+
+func KillProcess(pid uint32, exitCode uint32) error {
+	hProcess, err := syscall.OpenProcess(syscall.PROCESS_TERMINATE, false, pid)
+	if err != nil {
+		return err
+	}
+	defer syscall.CloseHandle(hProcess)
+	return syscall.TerminateProcess(hProcess, exitCode)
+}
+
+func IsProcessRunning(pid uint32) (bool, error) {
+	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
+	if err == wrappers.ERROR_INVALID_PARAMETER {
+		// the process no longer exists
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	defer syscall.CloseHandle(hProcess)
+
+	// wait with a timeout of 0 to check the process's status and make sure it's not a zombie
+	event, err := syscall.WaitForSingleObject(hProcess, 0)
+	if err != nil {
+		return false, err
+	}
+	return event != syscall.WAIT_OBJECT_0, nil
 }

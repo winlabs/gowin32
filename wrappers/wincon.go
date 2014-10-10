@@ -16,10 +16,30 @@
 
 package wrappers
 
-import "syscall"
+import (
+	"syscall"
+)
 
 const (
-	ERROR_INVALID_PARAMETER syscall.Errno = 87
-	ERROR_MORE_DATA         syscall.Errno = 234
-	ERROR_OLD_WIN_VERSION   syscall.Errno = 1150
+	CTRL_C_EVENT        = 0
+	CTRL_BREAK_EVENT    = 1
+	CTRL_CLOSE_EVENT    = 2
+	CTRL_LOGOFF_EVENT   = 5
+	CTRL_SHUTDOWN_EVENT = 6
 )
+
+var (
+	procGenerateConsoleCtrlEvent = modkernel32.NewProc("GenerateConsoleCtrlEvent")
+)
+
+func GenerateConsoleCtrlEvent(ctrlEvent uint32, processGroupId uint32) error {
+	r1, _, e1 := procGenerateConsoleCtrlEvent.Call(uintptr(ctrlEvent), uintptr(processGroupId))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
