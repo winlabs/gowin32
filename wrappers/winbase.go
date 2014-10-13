@@ -38,6 +38,7 @@ var (
 
 	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procSetStdHandle        = modkernel32.NewProc("SetStdHandle")
 	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
 
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
@@ -65,6 +66,18 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 		uintptr(unsafe.Pointer(freeBytesAvailable)),
 		uintptr(unsafe.Pointer(totalNumberOfBytes)),
 		uintptr(unsafe.Pointer(totalNumberOfFreeBytes)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetStdHandle(stdHandle int, handle syscall.Handle) error {
+	r1, _, e1 := procSetStdHandle.Call(uintptr(stdHandle), uintptr(handle))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
