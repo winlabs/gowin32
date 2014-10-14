@@ -38,6 +38,7 @@ var (
 
 	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetModuleFileNameW  = modkernel32.NewProc("GetModuleFileNameW")
 	procSetStdHandle        = modkernel32.NewProc("SetStdHandle")
 	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
 
@@ -74,6 +75,23 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 		}
 	}
 	return nil
+}
+
+func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetModuleFileNameW.Call(
+		uintptr(module),
+		uintptr(unsafe.Pointer(filename)),
+		uintptr(size))
+	if r1 == 0 || r1 == uintptr(size) {
+		if e1.(syscall.Errno) != 0 {
+			return uint32(r1), e1
+		} else if r1 == uintptr(size) {
+			return uint32(r1), syscall.ERROR_INSUFFICIENT_BUFFER
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }
 
 func SetStdHandle(stdHandle int, handle syscall.Handle) error {
