@@ -40,3 +40,8 @@ const (
 	CLSCTX_ENABLE_CLOAKING        = 0x00100000
 	CLSCTX_PS_DLL                 = 0x80000000
 )
+
+const (
+	VARIANT_TRUE  = -1
+	VARIANT_FALSE = 0
+)
