@@ -20,6 +20,14 @@ import (
 	"syscall"
 )
 
+type Variant struct {
+	Vt        uint16
+	Reserved1 uint16
+	Reserved2 uint16
+	Reserved3 uint16
+	Val       uint64
+}
+
 var (
 	IID_IDispatch = syscall.GUID{0x0020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 )

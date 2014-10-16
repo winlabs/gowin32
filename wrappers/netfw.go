@@ -22,9 +22,13 @@ import (
 )
 
 var (
-	IID_INetFwRule    = syscall.GUID{0xAF230D27, 0xBABA, 0x4E42, [8]byte{0xAC, 0xED, 0xF5, 0x24, 0xF2, 0x2C, 0xFC, 0xE2}}
-	IID_INetFwRules   = syscall.GUID{0x9C4C6277, 0x5027, 0x441E, [8]byte{0xAF, 0xAE, 0xCA, 0x1F, 0x54, 0x2D, 0xA0, 0x09}}
-	IID_INetFwPolicy2 = syscall.GUID{0x98325047, 0xC671, 0x4174, [8]byte{0x8D, 0x81, 0xDE, 0xFC, 0xD3, 0xF0, 0x31, 0x86}}
+	IID_INetFwRule     = syscall.GUID{0xAF230D27, 0xBABA, 0x4E42, [8]byte{0xAC, 0xED, 0xF5, 0x24, 0xF2, 0x2C, 0xFC, 0xE2}}
+	IID_INetFwRules    = syscall.GUID{0x9C4C6277, 0x5027, 0x441E, [8]byte{0xAF, 0xAE, 0xCA, 0x1F, 0x54, 0x2D, 0xA0, 0x09}}
+	IID_INetFwPolicy2  = syscall.GUID{0x98325047, 0xC671, 0x4174, [8]byte{0x8D, 0x81, 0xDE, 0xFC, 0xD3, 0xF0, 0x31, 0x86}}
+	IID_INetFwMgr      = syscall.GUID{0xF7898AF5, 0xCAC4, 0x4632, [8]byte{0xA2, 0xEC, 0xDA, 0x06, 0xE5, 0x11, 0x1A, 0xF2}}
+	CLSID_NetFwRule    = syscall.GUID{0x2C5BC43E, 0x3369, 0x4C33, [8]byte{0xAB, 0x0C, 0xBE, 0x94, 0x69, 0x67, 0x7A, 0xF4}}
+	CLSID_NetFwPolicy2 = syscall.GUID{0xE2B3C97F, 0x6AE1, 0x41AC, [8]byte{0x81, 0x7A, 0xF6, 0xF9, 0x21, 0x66, 0xD7, 0xDD}}
+	CLSID_NetFwMgr     = syscall.GUID{0x304CE942, 0x6E39, 0x40D8, [8]byte{0x94, 0x3A, 0xB9, 0x13, 0xC4, 0x0C, 0x9C, 0xD4}}
 )
 
 type INetFwRuleVtbl struct {
@@ -676,6 +680,79 @@ func (self *INetFwPolicy2) Get_Rules(rules **INetFwRules) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(rules)),
 		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+type INetFwMgrVtbl struct {
+	IDispatchVtbl
+	Get_LocalPolicy        uintptr
+	Get_CurrentProfileType uintptr
+	RestoreDefaults        uintptr
+	IsPortAllowed          uintptr
+	IsIcmpTypeAllowed      uintptr
+}
+
+type INetFwMgr struct {
+	IDispatch
+}
+
+func (self *INetFwMgr) Get_CurrentProfileType(profileType *int32) error {
+	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Get_CurrentProfileType,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(profileType)),
+		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func (self *INetFwMgr) RestoreDefaults() error {
+	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(vtbl.RestoreDefaults, 1, uintptr(unsafe.Pointer(self)), 0, 0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, portNumber int32, localAddress *uint16, ipProtocol int32, allowed *Variant, restricted *Variant) error {
+	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall9(
+		vtbl.IsPortAllowed,
+		8,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(imageFileName)),
+		uintptr(ipVersion),
+		uintptr(portNumber),
+		uintptr(unsafe.Pointer(localAddress)),
+		uintptr(ipProtocol),
+		uintptr(unsafe.Pointer(allowed)),
+		uintptr(unsafe.Pointer(restricted)),
+		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func (self *INetFwMgr) IsIcmpTypeAllowed(ipVersion int32, localAddress *uint16, icmpType *uint16, allowed *Variant, restricted *Variant) error {
+	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall6(
+		vtbl.IsIcmpTypeAllowed,
+		6,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(ipVersion),
+		uintptr(unsafe.Pointer(localAddress)),
+		uintptr(unsafe.Pointer(icmpType)),
+		uintptr(unsafe.Pointer(allowed)),
+		uintptr(unsafe.Pointer(restricted)))
 	if int32(r1) < 0 {
 		return syscall.Errno(r1)
 	}
