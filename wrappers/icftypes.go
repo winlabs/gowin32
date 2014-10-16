@@ -16,22 +16,14 @@
 
 package wrappers
 
-import (
-	"syscall"
+const (
+	NET_FW_RULE_DIR_IN  = 1
+	NET_FW_RULE_DIR_OUT = 2
+	NET_FW_RULE_DIR_MAX = 3
 )
 
-var (
-	IID_IDispatch = syscall.GUID{0x0020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+const (
+	NET_FW_ACTION_BLOCK = 0
+	NET_FW_ACTION_ALLOW = 1
+	NET_FW_ACTION_MAX   = 2
 )
-
-type IDispatchVtbl struct {
-	IUnknownVtbl
-	GetTypeInfoCount uintptr
-	GetTypeInfo      uintptr
-	GetIDsOfNames    uintptr
-	Invoke           uintptr
-}
-
-type IDispatch struct {
-	IUnknown
-}

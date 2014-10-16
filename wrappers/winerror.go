@@ -23,3 +23,7 @@ const (
 	ERROR_MORE_DATA         syscall.Errno = 234
 	ERROR_OLD_WIN_VERSION   syscall.Errno = 1150
 )
+
+const (
+	E_POINTER syscall.Errno = 0x80004003
+)
