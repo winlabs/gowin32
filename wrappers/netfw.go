@@ -22,7 +22,8 @@ import (
 )
 
 var (
-	IID_INetFwRule = syscall.GUID{0xAF230D27, 0xBABA, 0x4E42, [8]byte{0xAC, 0xED, 0xF5, 0x24, 0xF2, 0x2C, 0xFC, 0xE2}}
+	IID_INetFwRule  = syscall.GUID{0xAF230D27, 0xBABA, 0x4E42, [8]byte{0xAC, 0xED, 0xF5, 0x24, 0xF2, 0x2C, 0xFC, 0xE2}}
+	IID_INetFwRules = syscall.GUID{0x9C4C6277, 0x5027, 0x441E, [8]byte{0xAF, 0xAE, 0xCA, 0x1F, 0x54, 0x2D, 0xA0, 0x09}}
 )
 
 type INetFwRuleVtbl struct {
@@ -561,6 +562,75 @@ func (self *INetFwRule) Put_Action(action int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(action),
 		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+type INetFwRulesVtbl struct {
+	IDispatchVtbl
+	Get_Count    uintptr
+	Add          uintptr
+	Remove       uintptr
+	Item         uintptr
+	Get__NewEnum uintptr
+}
+
+type INetFwRules struct {
+	IDispatch
+}
+
+func (self *INetFwRules) Get_Count(count *int32) error {
+	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Get_Count,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(count)),
+		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func (self *INetFwRules) Add(rule *INetFwRule) error {
+	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Add,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(rule)),
+		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func (self *INetFwRules) Remove(name *uint16) error {
+	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Remove,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(name)),
+		0)
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func (self *INetFwRule) Item(name *uint16, rule **INetFwRule) error {
+	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Item,
+		3,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(rule)))
 	if int32(r1) < 0 {
 		return syscall.Errno(r1)
 	}
