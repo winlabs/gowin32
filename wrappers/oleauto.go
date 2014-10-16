@@ -26,6 +26,7 @@ var (
 
 	procSysAllocString = modoleaut32.NewProc("SysAllocString")
 	procSysFreeString  = modoleaut32.NewProc("SysFreeString")
+	procSysStringLen   = modoleaut32.NewProc("SysStringLen")
 	procVariantClear   = modoleaut32.NewProc("VariantClear")
 	procVariantInit    = modoleaut32.NewProc("VariantInit")
 )
@@ -37,6 +38,11 @@ func SysAllocString(psz *uint16) *uint16 {
 
 func SysFreeString(bstrString *uint16) {
 	procSysFreeString.Call(uintptr(unsafe.Pointer(bstrString)))
+}
+
+func SysStringLen(bstr *uint16) uint32 {
+	r1, _, _ := procSysStringLen.Call(uintptr(unsafe.Pointer(bstr)))
+	return uint32(r1)
 }
 
 func VariantClear(variant *Variant) error {

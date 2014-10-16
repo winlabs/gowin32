@@ -628,7 +628,7 @@ func (self *INetFwRules) Remove(name *uint16) error {
 	return nil
 }
 
-func (self *INetFwRule) Item(name *uint16, rule **INetFwRule) error {
+func (self *INetFwRules) Item(name *uint16, rule **INetFwRule) error {
 	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Item,
