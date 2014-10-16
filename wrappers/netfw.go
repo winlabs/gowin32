@@ -22,8 +22,9 @@ import (
 )
 
 var (
-	IID_INetFwRule  = syscall.GUID{0xAF230D27, 0xBABA, 0x4E42, [8]byte{0xAC, 0xED, 0xF5, 0x24, 0xF2, 0x2C, 0xFC, 0xE2}}
-	IID_INetFwRules = syscall.GUID{0x9C4C6277, 0x5027, 0x441E, [8]byte{0xAF, 0xAE, 0xCA, 0x1F, 0x54, 0x2D, 0xA0, 0x09}}
+	IID_INetFwRule    = syscall.GUID{0xAF230D27, 0xBABA, 0x4E42, [8]byte{0xAC, 0xED, 0xF5, 0x24, 0xF2, 0x2C, 0xFC, 0xE2}}
+	IID_INetFwRules   = syscall.GUID{0x9C4C6277, 0x5027, 0x441E, [8]byte{0xAF, 0xAE, 0xCA, 0x1F, 0x54, 0x2D, 0xA0, 0x09}}
+	IID_INetFwPolicy2 = syscall.GUID{0x98325047, 0xC671, 0x4174, [8]byte{0x8D, 0x81, 0xDE, 0xFC, 0xD3, 0xF0, 0x31, 0x86}}
 )
 
 type INetFwRuleVtbl struct {
@@ -631,6 +632,50 @@ func (self *INetFwRule) Item(name *uint16, rule **INetFwRule) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(name)),
 		uintptr(unsafe.Pointer(rule)))
+	if int32(r1) < 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+type INetFwPolicy2Vtbl struct {
+	IDispatchVtbl
+	Get_CurrentProfileTypes                          uintptr
+	Get_FirewallEnabled                              uintptr
+	Put_FirewallEnabled                              uintptr
+	Get_ExcludedInterfaces                           uintptr
+	Put_ExcludedInterfaces                           uintptr
+	Get_BlockAllInboundTraffic                       uintptr
+	Put_BlockAllInboundTraffic                       uintptr
+	Get_NotificationsDisabled                        uintptr
+	Put_NotificationsDisabled                        uintptr
+	Get_UnicastResponsesToMulticastBroadcastDisabled uintptr
+	Put_UnicastRepsonsesToMulticastBroadcastDisabled uintptr
+	Get_Rules                                        uintptr
+	Get_ServiceRestriction                           uintptr
+	EnableRuleGroup                                  uintptr
+	IsRuleGroupEnabled                               uintptr
+	RestoreLocalFirewallDefaults                     uintptr
+	Get_DefaultInboundAction                         uintptr
+	Put_DefaultInboundAction                         uintptr
+	Get_DefaultOutboundAction                        uintptr
+	Put_DefaultOutboundAction                        uintptr
+	Get_IsRuleGroupCurrentlyEnabled                  uintptr
+	Get_LocalPolicyModifyState                       uintptr
+}
+
+type INetFwPolicy2 struct {
+	IDispatch
+}
+
+func (self *INetFwPolicy2) Get_Rules(rules **INetFwRules) error {
+	vtbl := (*INetFwPolicy2Vtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Get_Rules,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(rules)),
+		0)
 	if int32(r1) < 0 {
 		return syscall.Errno(r1)
 	}
