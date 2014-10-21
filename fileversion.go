@@ -152,7 +152,7 @@ func CompareFileVersionNumbers(v1, v2 FileVersionNumber) int {
 		return -1
 	} else if v1.Build > v2.Build {
 		return 1
-	} else if v1.Revision > v2.Revision {
+	} else if v1.Revision < v2.Revision {
 		return -1
 	} else if v1.Revision > v2.Revision {
 		return 1
