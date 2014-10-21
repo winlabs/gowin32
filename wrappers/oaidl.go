@@ -16,14 +16,30 @@
 
 package wrappers
 
-import "syscall"
-
-const (
-	ERROR_INVALID_PARAMETER syscall.Errno = 87
-	ERROR_MORE_DATA         syscall.Errno = 234
-	ERROR_OLD_WIN_VERSION   syscall.Errno = 1150
+import (
+	"syscall"
 )
 
-const (
-	E_POINTER syscall.Errno = 0x80004003
+type Variant struct {
+	Vt        uint16
+	Reserved1 uint16
+	Reserved2 uint16
+	Reserved3 uint16
+	Val       uint64
+}
+
+var (
+	IID_IDispatch = syscall.GUID{0x0020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 )
+
+type IDispatchVtbl struct {
+	IUnknownVtbl
+	GetTypeInfoCount uintptr
+	GetTypeInfo      uintptr
+	GetIDsOfNames    uintptr
+	Invoke           uintptr
+}
+
+type IDispatch struct {
+	IUnknown
+}

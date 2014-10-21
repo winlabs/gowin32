@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-package wrappers
+package gowin32
 
-import "syscall"
+import (
+	"github.com/winlabs/gowin32/wrappers"
 
-const (
-	ERROR_INVALID_PARAMETER syscall.Errno = 87
-	ERROR_MORE_DATA         syscall.Errno = 234
-	ERROR_OLD_WIN_VERSION   syscall.Errno = 1150
+	"syscall"
+	"unsafe"
 )
 
-const (
-	E_POINTER syscall.Errno = 0x80004003
-)
+func BstrToString(bstr *uint16) string {
+	if bstr == nil {
+		return ""
+	}
+	len := int(wrappers.SysStringLen(bstr))
+	buf := make([]uint16, len)
+	ptr := uintptr(unsafe.Pointer(bstr))
+	for i := 0; i < len; i++ {
+		buf[i] = *(*uint16)(unsafe.Pointer(ptr))
+		ptr += 2
+	}
+	return syscall.UTF16ToString(buf)
+}
