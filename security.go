@@ -46,3 +46,28 @@ func GetFileOwner(path string) (*syscall.SID, error) {
 	}
 	return ownerSid, nil
 }
+
+func IsAdmin() (bool, error) {
+	var sid *syscall.SID
+	err := wrappers.AllocateAndInitializeSid(
+		&wrappers.SECURITY_NT_AUTHORITY,
+		2,
+		wrappers.SECURITY_BUILTIN_DOMAIN_RID,
+		wrappers.DOMAIN_ALIAS_RID_ADMINS,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		&sid)
+	if err != nil {
+		return false, err
+	}
+	defer wrappers.FreeSid(sid)
+	var isAdmin bool
+	if err := wrappers.CheckTokenMembership(0, sid, &isAdmin); err != nil {
+		return false, err
+	}
+	return isAdmin, nil
+}

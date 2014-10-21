@@ -42,6 +42,9 @@ var (
 	procSetStdHandle        = modkernel32.NewProc("SetStdHandle")
 	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
 
+	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
+	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
+	procFreeSid                    = modadvapi32.NewProc("FreeSid")
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
 )
@@ -121,6 +124,52 @@ func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionM
 	return nil
 }
 
+func AllocateAndInitializeSid(identifierAuthority *SIDIdentifierAuthority, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **syscall.SID) error {
+	r1, _, e1 := procAllocateAndInitializeSid.Call(
+		uintptr(unsafe.Pointer(identifierAuthority)),
+		uintptr(subAuthorityCount),
+		uintptr(subAuthority0),
+		uintptr(subAuthority1),
+		uintptr(subAuthority2),
+		uintptr(subAuthority3),
+		uintptr(subAuthority4),
+		uintptr(subAuthority5),
+		uintptr(subAuthority6),
+		uintptr(subAuthority7),
+		uintptr(unsafe.Pointer(sid)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func CheckTokenMembership(tokenHandle syscall.Handle, sidToCheck *syscall.SID, isMember *bool) error {
+	var isMemberRaw int32
+	r1, _, e1 := procCheckTokenMembership.Call(
+		uintptr(tokenHandle),
+		uintptr(unsafe.Pointer(sidToCheck)),
+		uintptr(unsafe.Pointer(&isMemberRaw)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	if isMember != nil {
+		*isMember = (isMemberRaw != 0)
+	}
+	return nil
+}
+
+func FreeSid(sid *syscall.SID) {
+	procFreeSid.Call(uintptr(unsafe.Pointer(sid)))
+}
+
 func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDescriptor *uint8, length uint32, lengthNeeded *uint32) error {
 	r1, _, e1 := procGetFileSecurityW.Call(
 		uintptr(unsafe.Pointer(fileName)),
@@ -139,11 +188,11 @@ func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDesc
 }
 
 func GetSecurityDescriptorOwner(securityDescriptor *uint8, owner **syscall.SID, ownerDefaulted *bool) error {
-	rawOwnerDefaulted := int32(0)
+	var ownerDefaultedRaw int32
 	r1, _, e1 := procGetSecurityDescriptorOwner.Call(
 		uintptr(unsafe.Pointer(securityDescriptor)),
 		uintptr(unsafe.Pointer(owner)),
-		uintptr(unsafe.Pointer(&rawOwnerDefaulted)))
+		uintptr(unsafe.Pointer(&ownerDefaultedRaw)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
@@ -152,7 +201,7 @@ func GetSecurityDescriptorOwner(securityDescriptor *uint8, owner **syscall.SID, 
 		}
 	}
 	if ownerDefaulted != nil {
-		*ownerDefaulted = (rawOwnerDefaulted != 0)
+		*ownerDefaulted = (ownerDefaultedRaw != 0)
 	}
 	return nil
 }
