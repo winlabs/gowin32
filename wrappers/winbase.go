@@ -42,6 +42,7 @@ var (
 	procGetSystemDirectoryW = modkernel32.NewProc("GetSystemDirectoryW")
 	procSetStdHandle        = modkernel32.NewProc("SetStdHandle")
 	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
+	proclstrlenW            = modkernel32.NewProc("lstrlenW")
 
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
@@ -137,6 +138,11 @@ func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionM
 		}
 	}
 	return nil
+}
+
+func Lstrlen(string *uint16) int32 {
+	r1, _, _ := proclstrlenW.Call(uintptr(unsafe.Pointer(string)))
+	return int32(r1)
 }
 
 func AllocateAndInitializeSid(identifierAuthority *SIDIdentifierAuthority, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **syscall.SID) error {

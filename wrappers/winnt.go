@@ -16,6 +16,10 @@
 
 package wrappers
 
+import (
+	"unsafe"
+)
+
 const (
 	VER_SUITE_SMALLBUSINESS            = 0x00000001
 	VER_SUITE_ENTERPRISE               = 0x00000002
@@ -197,9 +201,42 @@ const (
 	VER_PLATFORM_WIN32_NT      = 2
 )
 
+const (
+	SERVICE_KERNEL_DRIVER       = 0x00000001
+	SERVICE_FILE_SYSTEM_DRIVER  = 0x00000002
+	SERVICE_ADAPTER             = 0x00000004
+	SERVICE_RECOGNIZER_DRIVER   = 0x00000008
+	SERVICE_WIN32_OWN_PROCESS   = 0x00000010
+	SERVICE_WIN32_SHARE_PROCESS = 0x00000020
+	SERVICE_INTERACTIVE_PROCESS = 0x00000100
+)
+
+const (
+	SERVICE_BOOT_START   = 0x00000000
+	SERVICE_SYSTEM_START = 0x00000001
+	SERVICE_AUTO_START   = 0x00000002
+	SERVICE_DEMAND_START = 0x00000003
+	SERVICE_DISABLED     = 0x00000004
+)
+
+const (
+	SERVICE_ERROR_IGNORE   = 0x00000000
+	SERVICE_ERROR_NORMAL   = 0x00000001
+	SERVICE_ERROR_SEVERE   = 0x00000002
+	SERVICE_ERROR_CRITICAL = 0x00000003
+)
+
 var (
+	procRtlMoveMemory       = modkernel32.NewProc("RtlMoveMemory")
 	procVerSetConditionMask = modkernel32.NewProc("VerSetConditionMask")
 )
+
+func RtlMoveMemory(destination *byte, source *byte, length uintptr) {
+	procRtlMoveMemory.Call(
+		uintptr(unsafe.Pointer(destination)),
+		uintptr(unsafe.Pointer(source)),
+		length)
+}
 
 func VerSetConditionMask(conditionMask uint64, typeBitMask uint32, condition uint8) uint64 {
 	r1, _, _ := procVerSetConditionMask.Call(

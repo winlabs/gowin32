@@ -27,12 +27,24 @@ func BstrToString(bstr *uint16) string {
 	if bstr == nil {
 		return ""
 	}
-	len := int(wrappers.SysStringLen(bstr))
+	len := wrappers.SysStringLen(bstr)
 	buf := make([]uint16, len)
-	ptr := uintptr(unsafe.Pointer(bstr))
-	for i := 0; i < len; i++ {
-		buf[i] = *(*uint16)(unsafe.Pointer(ptr))
-		ptr += 2
+	wrappers.RtlMoveMemory(
+		(*byte)(unsafe.Pointer(&buf[0])),
+		(*byte)(unsafe.Pointer(bstr)),
+		uintptr(len))
+	return syscall.UTF16ToString(buf)
+}
+
+func LpstrToString(lpstr *uint16) string {
+	if lpstr == nil {
+		return ""
 	}
+	len := wrappers.Lstrlen(lpstr)
+	buf := make([]uint16, len)
+	wrappers.RtlMoveMemory(
+		(*byte)(unsafe.Pointer(&buf[0])),
+		(*byte)(unsafe.Pointer(lpstr)),
+		uintptr(len))
 	return syscall.UTF16ToString(buf)
 }
