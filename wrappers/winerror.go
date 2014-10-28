@@ -19,6 +19,7 @@ package wrappers
 import "syscall"
 
 const (
+	ERROR_GEN_FAILURE            syscall.Errno = 31
 	ERROR_INVALID_PARAMETER      syscall.Errno = 87
 	ERROR_MORE_DATA              syscall.Errno = 234
 	ERROR_SERVICE_DOES_NOT_EXIST syscall.Errno = 1060

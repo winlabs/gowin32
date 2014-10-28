@@ -22,6 +22,10 @@ import (
 )
 
 const (
+	PROCESS_NAME_NATIVE = 0x00000001
+)
+
+const (
 	ComputerNameNetBIOS                   = 0
 	ComputerNameDnsHostname               = 1
 	ComputerNameDnsDomain                 = 2
@@ -36,13 +40,14 @@ var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
 
-	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
-	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
-	procGetModuleFileNameW  = modkernel32.NewProc("GetModuleFileNameW")
-	procGetSystemDirectoryW = modkernel32.NewProc("GetSystemDirectoryW")
-	procSetStdHandle        = modkernel32.NewProc("SetStdHandle")
-	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
-	proclstrlenW            = modkernel32.NewProc("lstrlenW")
+	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
+	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
+	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
+	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
+	procVerifyVersionInfoW         = modkernel32.NewProc("VerifyVersionInfoW")
+	proclstrlenW                   = modkernel32.NewProc("lstrlenW")
 
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
@@ -111,6 +116,22 @@ func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
 		}
 	}
 	return uint32(r1), nil
+}
+
+func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *uint16, size *uint32) error {
+	r1, _, e1 := procQueryFullProcessImageNameW.Call(
+		uintptr(process),
+		uintptr(flags),
+		uintptr(unsafe.Pointer(exeName)),
+		uintptr(unsafe.Pointer(size)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func SetStdHandle(stdHandle int, handle syscall.Handle) error {

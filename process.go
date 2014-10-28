@@ -41,6 +41,12 @@ type ModuleInfo struct {
 	ExePath           string
 }
 
+type ProcessNameFlags uint32
+
+const (
+	ProcessNameNative ProcessNameFlags = wrappers.PROCESS_NAME_NATIVE
+)
+
 func GetProcesses() ([]ProcessInfo, error) {
 	hSnapshot, err := wrappers.CreateToolhelp32Snapshot(wrappers.TH32CS_SNAPPROCESS, 0)
 	if err != nil {
@@ -120,7 +126,7 @@ func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 }
 
 func KillProcess(pid uint32, exitCode uint32) error {
-	hProcess, err := syscall.OpenProcess(syscall.PROCESS_TERMINATE, false, pid)
+	hProcess, err := syscall.OpenProcess(wrappers.PROCESS_TERMINATE, false, pid)
 	if err != nil {
 		return err
 	}
@@ -144,4 +150,27 @@ func IsProcessRunning(pid uint32) (bool, error) {
 		return false, err
 	}
 	return event != syscall.WAIT_OBJECT_0, nil
+}
+
+func GetProcessFullPathName(pid uint32, flags ProcessNameFlags) (string, error) {
+	hProcess, err := syscall.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	if err != nil {
+		return "", err
+	}
+	defer syscall.CloseHandle(hProcess)
+
+	buf := make([]uint16, syscall.MAX_PATH)
+	size := uint32(syscall.MAX_PATH)
+	if err := wrappers.QueryFullProcessImageName(hProcess, uint32(flags), &buf[0], &size); err != nil {
+		if err == syscall.ERROR_INSUFFICIENT_BUFFER {
+			buf = make([]uint16, syscall.MAX_LONG_PATH)
+			size = syscall.MAX_LONG_PATH
+			if err := wrappers.QueryFullProcessImageName(hProcess, uint32(flags), &buf[0], &size); err != nil {
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	}
+	return syscall.UTF16ToString(buf[0:size]), nil
 }
