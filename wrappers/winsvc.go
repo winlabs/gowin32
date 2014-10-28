@@ -103,6 +103,10 @@ const (
 )
 
 const (
+	SERVICE_RUNS_IN_SYSTEM_PROCESS = 0x00000001
+)
+
+const (
 	SERVICE_CONFIG_DESCRIPTION              = 1
 	SERVICE_CONFIG_FAILURE_ACTIONS          = 2
 	SERVICE_CONFIG_DELAYED_AUTO_START_INFO  = 3
@@ -189,6 +193,10 @@ type ServicePreferredNodeInfo struct {
 	Delete        uint16
 }
 
+const (
+	SC_STATUS_PROCESS_INFO = 0
+)
+
 type ServiceStatus struct {
 	ServiceType             uint32
 	CurrentState            uint32
@@ -197,6 +205,18 @@ type ServiceStatus struct {
 	ServiceSpecificExitCode uint32
 	CheckPoint              uint32
 	WaitHint                uint32
+}
+
+type ServiceStatusProcess struct {
+	ServiceType             uint32
+	CurrentState            uint32
+	ControlsAccepted        uint32
+	Win32ExitCode           uint32
+	ServiceSpecificExitCode uint32
+	CheckPoint              uint32
+	WaitHint                uint32
+	ProcessId               uint32
+	ServiceFlags            uint32
 }
 
 type EnumServiceStatus struct {
@@ -230,6 +250,7 @@ var (
 	procQueryServiceConfig2W  = modadvapi32.NewProc("QueryServiceConfig2W")
 	procQueryServiceConfigW   = modadvapi32.NewProc("QueryServiceConfigW")
 	procQueryServiceStatus    = modadvapi32.NewProc("QueryServiceStatus")
+	procQueryServiceStatusEx  = modadvapi32.NewProc("QueryServiceStatusEx")
 	procStartServiceW         = modadvapi32.NewProc("StartServiceW")
 )
 
@@ -422,6 +443,23 @@ func QueryServiceStatus(service syscall.Handle, serviceStatus *ServiceStatus) er
 	r1, _, e1 := procQueryServiceStatus.Call(
 		uintptr(service),
 		uintptr(unsafe.Pointer(serviceStatus)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func QueryServiceStatusEx(service syscall.Handle, infoLevel int32, buffer *byte, bufSize uint32, bytesNeeded *uint32) error {
+	r1, _, e1 := procQueryServiceStatusEx.Call(
+		uintptr(service),
+		uintptr(infoLevel),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(bufSize),
+		uintptr(unsafe.Pointer(bytesNeeded)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1

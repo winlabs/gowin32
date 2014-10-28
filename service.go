@@ -235,6 +235,21 @@ func (self *Service) GetDescription() (string, error) {
 	return LpstrToString(desc.Description), nil
 }
 
+func (self *Service) GetProcessID() (uint32, error) {
+	var status wrappers.ServiceStatusProcess
+	size := uint32(unsafe.Sizeof(status))
+	err := wrappers.QueryServiceStatusEx(
+		self.handle,
+		wrappers.SC_STATUS_PROCESS_INFO,
+		(*byte)(unsafe.Pointer(&status)),
+		size,
+		&size)
+	if err != nil {
+		return 0, err
+	}
+	return status.ProcessId, nil
+}
+
 func (self *Service) GetStatus() (*ServiceStatusInfo, error) {
 	var status wrappers.ServiceStatus
 	if err := wrappers.QueryServiceStatus(self.handle, &status); err != nil {
