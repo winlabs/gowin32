@@ -30,6 +30,12 @@ const (
 )
 
 const (
+	SERVICE_ACTIVE    = 0x00000001
+	SERVICE_INACTIVE  = 0x00000002
+	SERVICE_STATE_ALL = SERVICE_ACTIVE | SERVICE_INACTIVE
+)
+
+const (
 	SERVICE_CONTROL_STOP                  = 0x00000001
 	SERVICE_CONTROL_PAUSE                 = 0x00000002
 	SERVICE_CONTROL_CONTINUE              = 0x00000003
@@ -193,6 +199,12 @@ type ServiceStatus struct {
 	WaitHint                uint32
 }
 
+type EnumServiceStatus struct {
+	ServiceName   *uint16
+	DisplayName   *uint16
+	ServiceStatus ServiceStatus
+}
+
 type QueryServiceConfigData struct {
 	ServiceType      uint32
 	StartType        uint32
@@ -212,6 +224,7 @@ var (
 	procControlService        = modadvapi32.NewProc("ControlService")
 	procDeleteService         = modadvapi32.NewProc("DeleteService")
 	procCreateServiceW        = modadvapi32.NewProc("CreateServiceW")
+	procEnumServicesStatusW   = modadvapi32.NewProc("EnumServicesStatusW")
 	procOpenSCManagerW        = modadvapi32.NewProc("OpenSCManagerW")
 	procOpenServiceW          = modadvapi32.NewProc("OpenServiceW")
 	procQueryServiceConfig2W  = modadvapi32.NewProc("QueryServiceConfig2W")
@@ -319,7 +332,27 @@ func DeleteService(service syscall.Handle) error {
 			return syscall.EINVAL
 		}
 	}
-	return e1
+	return nil
+}
+
+func EnumServicesStatus(scManager syscall.Handle, serviceType uint32, serviceState uint32, services *byte, bufSize uint32, bytesNeeded *uint32, servicesReturned *uint32, resumeHandle *uint32) error {
+	r1, _, e1 := procEnumServicesStatusW.Call(
+		uintptr(scManager),
+		uintptr(serviceType),
+		uintptr(serviceState),
+		uintptr(unsafe.Pointer(services)),
+		uintptr(bufSize),
+		uintptr(unsafe.Pointer(bytesNeeded)),
+		uintptr(unsafe.Pointer(servicesReturned)),
+		uintptr(unsafe.Pointer(resumeHandle)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func OpenSCManager(machineName *uint16, databaseName *uint16, desiredAccess uint32) (syscall.Handle, error) {

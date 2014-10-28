@@ -30,8 +30,10 @@ const (
 	ServiceFileSystemDriver   ServiceType = wrappers.SERVICE_FILE_SYSTEM_DRIVER
 	ServiceAdapter            ServiceType = wrappers.SERVICE_ADAPTER
 	ServiceRecognizerDriver   ServiceType = wrappers.SERVICE_RECOGNIZER_DRIVER
+	ServiceDriver             ServiceType = wrappers.SERVICE_DRIVER
 	ServiceWin32OwnProcess    ServiceType = wrappers.SERVICE_WIN32_OWN_PROCESS
 	ServiceWin32ShareProcess  ServiceType = wrappers.SERVICE_WIN32_SHARE_PROCESS
+	ServiceWin32              ServiceType = wrappers.SERVICE_WIN32
 	ServiceInteractiveProcess ServiceType = wrappers.SERVICE_INTERACTIVE_PROCESS
 )
 
@@ -104,6 +106,14 @@ const (
 	ServiceControlTriggerEvent          ServiceControl = wrappers.SERVICE_CONTROL_TRIGGEREVENT
 )
 
+type ServiceEnumState uint32
+
+const (
+	ServiceEnumActive   ServiceEnumState = wrappers.SERVICE_ACTIVE
+	ServiceEnumInactive ServiceEnumState = wrappers.SERVICE_INACTIVE
+	ServiceEnumAll      ServiceEnumState = wrappers.SERVICE_STATE_ALL
+)
+
 type ServiceConfigMask uint32
 
 const (
@@ -140,6 +150,12 @@ type ServiceStatusInfo struct {
 	ServiceSpecificExitCode uint32
 	CheckPoint              uint32
 	WaitHint                uint32
+}
+
+type ServiceInfo struct {
+	ServiceName   string
+	DisplayName   string
+	ServiceStatus ServiceStatusInfo
 }
 
 type Service struct {
@@ -385,6 +401,61 @@ func (self *SCManager) CreateService(serviceName string, config *ServiceConfig, 
 		return nil, err
 	}
 	return &Service{handle: handle}, nil
+}
+
+func (self *SCManager) GetServices(serviceType ServiceType, serviceState ServiceEnumState) ([]ServiceInfo, error) {
+	services := []ServiceInfo{}
+	hasMore := true
+	var resumeHandle uint32
+	for hasMore {
+		var bytesNeeded uint32
+		var servicesReturned uint32
+		err := wrappers.EnumServicesStatus(
+			self.handle,
+			uint32(serviceType),
+			uint32(serviceState),
+			nil,
+			0,
+			&bytesNeeded,
+			&servicesReturned,
+			&resumeHandle)
+		if err != syscall.ERROR_INSUFFICIENT_BUFFER && err != syscall.ERROR_MORE_DATA {
+			return nil, err
+		}
+		buf := make([]byte, bytesNeeded)
+		err = wrappers.EnumServicesStatus(
+			self.handle,
+			uint32(serviceType),
+			uint32(serviceState),
+			&buf[0],
+			bytesNeeded,
+			&bytesNeeded,
+			&servicesReturned,
+			&resumeHandle)
+		if err == nil {
+			hasMore = false
+		} else if err != syscall.ERROR_MORE_DATA {
+			return nil, err
+		}
+		dataSize := int(unsafe.Sizeof(wrappers.EnumServiceStatus{}))
+		for i := 0; i < int(servicesReturned); i++ {
+			data := (*wrappers.EnumServiceStatus)(unsafe.Pointer(&buf[i*dataSize]))
+			services = append(services, ServiceInfo{
+				ServiceName:   LpstrToString(data.ServiceName),
+				DisplayName:   LpstrToString(data.DisplayName),
+				ServiceStatus: ServiceStatusInfo{
+					ServiceType:             ServiceType(data.ServiceStatus.ServiceType),
+					CurrentState:            ServiceState(data.ServiceStatus.CurrentState),
+					ControlsAccepted:        ServiceControlsAccepted(data.ServiceStatus.ControlsAccepted),
+					Win32ExitCode:           data.ServiceStatus.Win32ExitCode,
+					ServiceSpecificExitCode: data.ServiceStatus.ServiceSpecificExitCode,
+					CheckPoint:              data.ServiceStatus.CheckPoint,
+					WaitHint:                data.ServiceStatus.WaitHint,
+				},
+			})
+		}
+	}
+	return services, nil
 }
 
 func (self *SCManager) OpenService(serviceName string) (*Service, error) {

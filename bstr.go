@@ -32,7 +32,7 @@ func BstrToString(bstr *uint16) string {
 	wrappers.RtlMoveMemory(
 		(*byte)(unsafe.Pointer(&buf[0])),
 		(*byte)(unsafe.Pointer(bstr)),
-		uintptr(len))
+		uintptr(2*len))
 	return syscall.UTF16ToString(buf)
 }
 
@@ -41,10 +41,13 @@ func LpstrToString(lpstr *uint16) string {
 		return ""
 	}
 	len := wrappers.Lstrlen(lpstr)
+	if len == 0 {
+		return ""
+	}
 	buf := make([]uint16, len)
 	wrappers.RtlMoveMemory(
 		(*byte)(unsafe.Pointer(&buf[0])),
 		(*byte)(unsafe.Pointer(lpstr)),
-		uintptr(len))
+		uintptr(2*len))
 	return syscall.UTF16ToString(buf)
 }
