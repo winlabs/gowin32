@@ -39,6 +39,7 @@ var (
 	procGetComputerNameExW  = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW = modkernel32.NewProc("GetDiskFreeSpaceExW")
 	procGetModuleFileNameW  = modkernel32.NewProc("GetModuleFileNameW")
+	procGetSystemDirectoryW = modkernel32.NewProc("GetSystemDirectoryW")
 	procSetStdHandle        = modkernel32.NewProc("SetStdHandle")
 	procVerifyVersionInfoW  = modkernel32.NewProc("VerifyVersionInfoW")
 
@@ -90,6 +91,20 @@ func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (ui
 			return uint32(r1), e1
 		} else if r1 == uintptr(size) {
 			return uint32(r1), syscall.ERROR_INSUFFICIENT_BUFFER
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
+func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetSystemDirectoryW.Call(
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return uint32(r1), e1
 		} else {
 			return uint32(r1), syscall.EINVAL
 		}
