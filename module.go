@@ -26,10 +26,8 @@ func GetCurrentExePath() (string, error) {
 	buf := make([]uint16, syscall.MAX_PATH)
 	if _, err := wrappers.GetModuleFileName(0, &buf[0], syscall.MAX_PATH); err != nil {
 		if err == syscall.ERROR_INSUFFICIENT_BUFFER {
-			// See http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath.
-			const MaxLongPath = 32768
-			buf = make([]uint16, MaxLongPath)
-			if _, err := wrappers.GetModuleFileName(0, &buf[0], MaxLongPath); err != nil {
+			buf = make([]uint16, syscall.MAX_LONG_PATH)
+			if _, err := wrappers.GetModuleFileName(0, &buf[0], syscall.MAX_LONG_PATH); err != nil {
 				return "", err
 			}
 		}  else {

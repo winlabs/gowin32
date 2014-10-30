@@ -16,6 +16,11 @@
 
 package wrappers
 
+import (
+	"syscall"
+	"unsafe"
+)
+
 const (
 	VER_SUITE_SMALLBUSINESS            = 0x00000001
 	VER_SUITE_ENTERPRISE               = 0x00000002
@@ -146,6 +151,23 @@ const (
 	UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000
 )
 
+const (
+	PROCESS_TERMINATE                 = 0x0001
+	PROCESS_CREATE_THREAD             = 0x0002
+	PROCESS_SET_SESSIONID             = 0x0004
+	PROCESS_VM_OPERATION              = 0x0008
+	PROCESS_VM_READ                   = 0x0010
+	PROCESS_VM_WRITE                  = 0x0020
+	PROCESS_DUP_HANDLE                = 0x0040
+	PROCESS_CREATE_PROCESS            = 0x0080
+	PROCESS_SET_QUOTA                 = 0x0100
+	PROCESS_SET_INFORMATION           = 0x0200
+	PROCESS_QUERY_INFORMATION         = 0x0400
+	PROCESS_SUSPEND_RESUME            = 0x0800
+	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+	PROCESS_ALL_ACCESS                = syscall.STANDARD_RIGHTS_REQUIRED | syscall.SYNCHRONIZE | 0xFFFF
+)
+
 type OSVERSIONINFO struct {
 	OSVersionInfoSize uint32
 	MajorVersion      uint32
@@ -197,9 +219,44 @@ const (
 	VER_PLATFORM_WIN32_NT      = 2
 )
 
+const (
+	SERVICE_KERNEL_DRIVER       = 0x00000001
+	SERVICE_FILE_SYSTEM_DRIVER  = 0x00000002
+	SERVICE_ADAPTER             = 0x00000004
+	SERVICE_RECOGNIZER_DRIVER   = 0x00000008
+	SERVICE_DRIVER              = SERVICE_KERNEL_DRIVER | SERVICE_FILE_SYSTEM_DRIVER | SERVICE_RECOGNIZER_DRIVER
+	SERVICE_WIN32_OWN_PROCESS   = 0x00000010
+	SERVICE_WIN32_SHARE_PROCESS = 0x00000020
+	SERVICE_WIN32               = SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS
+	SERVICE_INTERACTIVE_PROCESS = 0x00000100
+)
+
+const (
+	SERVICE_BOOT_START   = 0x00000000
+	SERVICE_SYSTEM_START = 0x00000001
+	SERVICE_AUTO_START   = 0x00000002
+	SERVICE_DEMAND_START = 0x00000003
+	SERVICE_DISABLED     = 0x00000004
+)
+
+const (
+	SERVICE_ERROR_IGNORE   = 0x00000000
+	SERVICE_ERROR_NORMAL   = 0x00000001
+	SERVICE_ERROR_SEVERE   = 0x00000002
+	SERVICE_ERROR_CRITICAL = 0x00000003
+)
+
 var (
+	procRtlMoveMemory       = modkernel32.NewProc("RtlMoveMemory")
 	procVerSetConditionMask = modkernel32.NewProc("VerSetConditionMask")
 )
+
+func RtlMoveMemory(destination *byte, source *byte, length uintptr) {
+	procRtlMoveMemory.Call(
+		uintptr(unsafe.Pointer(destination)),
+		uintptr(unsafe.Pointer(source)),
+		length)
+}
 
 func VerSetConditionMask(conditionMask uint64, typeBitMask uint32, condition uint8) uint64 {
 	r1, _, _ := procVerSetConditionMask.Call(
