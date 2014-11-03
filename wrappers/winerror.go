@@ -24,6 +24,7 @@ const (
 	ERROR_MORE_DATA              syscall.Errno = 234
 	ERROR_SERVICE_DOES_NOT_EXIST syscall.Errno = 1060
 	ERROR_OLD_WIN_VERSION        syscall.Errno = 1150
+	ERROR_UNSUPPORTED_TYPE       syscall.Errno = 1630
 )
 
 const (
