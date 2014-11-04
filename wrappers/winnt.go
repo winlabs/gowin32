@@ -139,6 +139,10 @@ const (
 	SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000
 )
 
+type TokenOwnerData struct {
+	Owner *syscall.SID
+}
+
 const (
 	OWNER_SECURITY_INFORMATION            = 0x00000001
 	GROUP_SECURITY_INFORMATION            = 0x00000002

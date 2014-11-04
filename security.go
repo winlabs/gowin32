@@ -20,6 +20,7 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 
 	"syscall"
+	"unsafe"
 )
 
 func GetFileOwner(path string) (*syscall.SID, error) {
@@ -45,6 +46,32 @@ func GetFileOwner(path string) (*syscall.SID, error) {
 		return nil, err
 	}
 	return ownerSid, nil
+}
+
+func GetTokenOwner(token syscall.Token) (*syscall.SID, error) {
+	needed := uint32(0)
+	syscall.GetTokenInformation(
+		token,
+		syscall.TokenOwner,
+		nil,
+		0,
+		&needed)
+	buf := make([]byte, needed)
+	err := syscall.GetTokenInformation(
+		token,
+		syscall.TokenOwner,
+		&buf[0],
+		needed,
+		&needed)
+	if err != nil {
+		return nil, err
+	}
+	ownerData := (*wrappers.TokenOwnerData)(unsafe.Pointer(&buf[0]))
+	sid, err := ownerData.Owner.Copy()
+	if err != nil {
+		return nil, err
+	}
+	return sid, nil
 }
 
 func IsAdmin() (bool, error) {

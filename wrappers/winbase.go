@@ -51,6 +51,7 @@ var (
 
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
+	procEqualSid                   = modadvapi32.NewProc("EqualSid")
 	procFreeSid                    = modadvapi32.NewProc("FreeSid")
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
@@ -206,6 +207,13 @@ func CheckTokenMembership(tokenHandle syscall.Handle, sidToCheck *syscall.SID, i
 		*isMember = (isMemberRaw != 0)
 	}
 	return nil
+}
+
+func EqualSid(sid1 *syscall.SID, sid2 *syscall.SID) bool {
+	r1, _, _ := procEqualSid.Call(
+		uintptr(unsafe.Pointer(sid1)),
+		uintptr(unsafe.Pointer(sid2)))
+	return r1 != 0
 }
 
 func FreeSid(sid *syscall.SID) {
