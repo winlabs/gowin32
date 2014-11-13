@@ -35,6 +35,21 @@ const (
 	RegRootHKDD RegRoot = syscall.HKEY_DYN_DATA
 )
 
+func DeleteRegValue(root RegRoot, subKey string, valueName string) error {
+	var hKey syscall.Handle
+	err := syscall.RegOpenKeyEx(
+		syscall.Handle(root),
+		syscall.StringToUTF16Ptr(subKey),
+		0,
+		syscall.KEY_WRITE,
+		&hKey)
+	if err != nil {
+		return err
+	}
+	defer syscall.RegCloseKey(hKey)
+	return wrappers.RegDeleteValue(hKey, syscall.StringToUTF16Ptr(valueName))
+}
+
 func GetRegValueString(root RegRoot, subKey string, valueName string) (string, error) {
 	var hKey syscall.Handle
 	err := syscall.RegOpenKeyEx(
@@ -76,4 +91,29 @@ func GetRegValueString(root RegRoot, subKey string, valueName string) (string, e
 		return "", err
 	}
 	return syscall.UTF16ToString(buf), nil
+}
+
+func SetRegValueString(root RegRoot, subKey string, valueName string, data string) error {
+	var hKey syscall.Handle
+	err := wrappers.RegCreateKeyEx(
+		syscall.Handle(root),
+		syscall.StringToUTF16Ptr(subKey),
+		0,
+		nil,
+		0,
+		syscall.KEY_WRITE,
+		nil,
+		&hKey,
+		nil)
+	if err != nil {
+		return err
+	}
+	defer syscall.RegCloseKey(hKey)
+	return wrappers.RegSetValueEx(
+		hKey,
+		syscall.StringToUTF16Ptr(valueName),
+		0,
+		syscall.REG_SZ,
+		(*byte)(unsafe.Pointer(syscall.StringToUTF16Ptr(data))),
+		uint32(2*(len(data)+1)))
 }
