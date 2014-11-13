@@ -534,8 +534,8 @@ func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion Firew
 		&allowedRaw,
 		&restrictedRaw)
 	if err == nil {
-		allowed = allowedRaw.Vt == wrappers.VT_BOOL && int16(allowedRaw.Val) != wrappers.VARIANT_FALSE
-		restricted = restrictedRaw.Vt == wrappers.VT_BOOL && int16(restrictedRaw.Val) != wrappers.VARIANT_FALSE
+		allowed = allowedRaw.Vt == wrappers.VT_BOOL && int16(allowedRaw.Val[0]) != wrappers.VARIANT_FALSE
+		restricted = restrictedRaw.Vt == wrappers.VT_BOOL && int16(restrictedRaw.Val[0]) != wrappers.VARIANT_FALSE
 	}
 	return
 }
