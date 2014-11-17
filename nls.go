@@ -1,0 +1,46 @@
+/*
+ * Copyright (c) 2014 MongoDB, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the license is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package gowin32
+
+import (
+	"github.com/winlabs/gowin32/wrappers"
+
+	"syscall"
+)
+
+type LocaleNameFlags uint32
+
+const (
+	LocaleNameAllowNeutralNames LocaleNameFlags = wrappers.LOCALE_ALLOW_NEUTRAL_NAMES
+)
+
+type Language uint16
+type Locale   uint32
+
+func (locale Locale) Language() Language {
+	return Language(wrappers.LangIDFromLCID(uint32(locale)))
+}
+
+func LocaleFromLocaleName(localeName string, flags LocaleNameFlags) (Locale, error) {
+	lcid, err := wrappers.LocaleNameToLCID(
+		syscall.StringToUTF16Ptr(localeName),
+		uint32(flags))
+	if err != nil {
+		return 0, err
+	}
+	return Locale(lcid), nil
+}
