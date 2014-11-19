@@ -29,7 +29,23 @@ const (
 )
 
 type Language uint16
+
+var (
+	LanguageSystemDefault = Language(wrappers.LANG_SYSTEM_DEFAULT)
+	LanguageUserDefault   = Language(wrappers.LANG_USER_DEFAULT)
+)
+
 type Locale   uint32
+
+var (
+	LocaleSystemDefault     = Locale(wrappers.LOCALE_SYSTEM_DEFAULT)
+	LocaleUserDefault       = Locale(wrappers.LOCALE_USER_DEFAULT)
+	LocaleCustomDefault     = Locale(wrappers.LOCALE_CUSTOM_DEFAULT)
+	LocaleCustomUnspecified = Locale(wrappers.LOCALE_CUSTOM_UNSPECIFIED)
+	LocaleCustomUIDefault   = Locale(wrappers.LOCALE_CUSTOM_UI_DEFAULT)
+	LocaleNeutral           = Locale(wrappers.LOCALE_NEUTRAL)
+	LocaleInvariant         = Locale(wrappers.LOCALE_INVARIANT)
+)
 
 func (locale Locale) Language() Language {
 	return Language(wrappers.LangIDFromLCID(uint32(locale)))
