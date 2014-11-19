@@ -82,7 +82,6 @@ const (
 	VerFileDriverInstallable      VerFileSubtype = wrappers.VFT2_DRV_INSTALLABLE
 	VerFileDriverSound            VerFileSubtype = wrappers.VFT2_DRV_SOUND
 	VerFileDriverComm             VerFileSubtype = wrappers.VFT2_DRV_COMM
-	VerFileDriverInputMethod      VerFileSubtype = wrappers.VFT2_DRV_INPUTMETHOD
 	VerFileDriverVersionedPrinter VerFileSubtype = wrappers.VFT2_DRV_VERSIONED_PRINTER
 	VerFileFontRaster             VerFileSubtype = wrappers.VFT2_FONT_RASTER
 	VerFileFontVector             VerFileSubtype = wrappers.VFT2_FONT_VECTOR
