@@ -16,14 +16,33 @@
 
 package wrappers
 
-func MakeLong(low uint16, high uint16) uint32 {
-	return uint32(low) | (uint32(high) << 16)
-}
+import (
+	"syscall"
+	"unsafe"
+)
 
-func LoWord(value uint32) uint16 {
-	return uint16(value & 0x0000FFFF)
-}
+const (
+	LOCALE_NOUSEROVERRIDE        = 0x80000000
+	LOCALE_USE_CP_ACP            = 0x40000000
+	LOCALE_RETURN_NUMBER         = 0x20000000
+	LOCALE_RETURN_GENITIVE_NAMES = 0x10000000
+	LOCALE_ALLOW_NEUTRAL_NAMES   = 0x08000000
+)
 
-func HiWord(value uint32) uint16 {
-	return uint16((value >> 16) & 0x0000FFFF)
+var (
+	procLocaleNameToLCID = modkernel32.NewProc("LocaleNameToLCID")
+)
+
+func LocaleNameToLCID(name *uint16, flags uint32) (uint32, error) {
+	r1, _, e1 := procLocaleNameToLCID.Call(
+		uintptr(unsafe.Pointer(name)),
+		uintptr(flags))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }

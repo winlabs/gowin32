@@ -40,12 +40,15 @@ var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
 
+	procBeginUpdateResourceW       = modkernel32.NewProc("BeginUpdateResourceW")
+	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
+	procUpdateResourceW            = modkernel32.NewProc("UpdateResourceW")
 	procVerifyVersionInfoW         = modkernel32.NewProc("VerifyVersionInfoW")
 	proclstrlenW                   = modkernel32.NewProc("lstrlenW")
 
@@ -56,6 +59,46 @@ var (
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
 )
+
+func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscall.Handle, error) {
+	var deleteExistingResourcesRaw int32
+	if deleteExistingResources {
+		deleteExistingResourcesRaw = 1
+	} else {
+		deleteExistingResourcesRaw = 0
+	}
+	r1, _, e1 := procBeginUpdateResourceW.Call(
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(deleteExistingResourcesRaw))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
+func EndUpdateResource(update syscall.Handle, discard bool) error {
+	var discardRaw int32
+	if discard {
+		discardRaw = 1
+	} else {
+		discardRaw = 0
+	}
+	r1, _, e1 := procEndUpdateResourceW.Call(
+		uintptr(update),
+		uintptr(discardRaw))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
 
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 	r1, _, e1 := procGetComputerNameExW.Call(
@@ -137,6 +180,24 @@ func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *ui
 
 func SetStdHandle(stdHandle int, handle syscall.Handle) error {
 	r1, _, e1 := procSetStdHandle.Call(uintptr(stdHandle), uintptr(handle))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func UpdateResource(update syscall.Handle, resourceType *uint16, name *uint16, language uint16, data *byte, cbData uint32) error {
+	r1, _, e1 := procUpdateResourceW.Call(
+		uintptr(update),
+		uintptr(unsafe.Pointer(resourceType)),
+		uintptr(unsafe.Pointer(name)),
+		uintptr(language),
+		uintptr(unsafe.Pointer(data)),
+		uintptr(cbData))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
 			return e1
