@@ -124,6 +124,16 @@ const (
 )
 
 const (
+	DRIVE_UNKNOWN     = 0
+	DRIVE_NO_ROOT_DIR = 1
+	DRIVE_REMOVABLE   = 2
+	DRIVE_FIXED       = 3
+	DRIVE_REMOTE      = 4
+	DRIVE_CDROM       = 5
+	DRIVE_RAMDISK     = 6
+)
+
+const (
 	STD_INPUT_HANDLE  = ^uint32(10) + 1
 	STD_OUTPUT_HANDLE = ^uint32(11) + 1
 	STD_ERROR_HANDLE  = ^uint32(12) + 1
@@ -193,16 +203,20 @@ var (
 	procCloseHandle                = modkernel32.NewProc("CloseHandle")
 	procCreateFileW                = modkernel32.NewProc("CreateFileW")
 	procCreateProcessW             = modkernel32.NewProc("CreateProcessW")
+	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
+	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetStdHandle               = modkernel32.NewProc("GetStdHandle")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
 	procGetSystemInfo              = modkernel32.NewProc("GetSystemInfo")
 	procGetSystemTimeAsFileTime    = modkernel32.NewProc("GetSystemTimeAsFileTime")
+	procGetSystemTimes             = modkernel32.NewProc("GetSystemTimes")
+	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
 	procOpenProcess                = modkernel32.NewProc("OpenProcess")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procSetFileTime                = modkernel32.NewProc("SetFileTime")
@@ -308,6 +322,26 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 	return nil
 }
 
+func DeviceIoControl(device syscall.Handle, ioControlCode uint32, inBuffer *byte, inBufferSize uint32, outBuffer *byte, outBufferSize uint32, bytesReturned *uint32, overlapped *syscall.Overlapped) error {
+	r1, _, e1 := procDeviceIoControl.Call(
+		uintptr(device),
+		uintptr(ioControlCode),
+		uintptr(unsafe.Pointer(inBuffer)),
+		uintptr(inBufferSize),
+		uintptr(unsafe.Pointer(outBuffer)),
+		uintptr(outBufferSize),
+		uintptr(unsafe.Pointer(bytesReturned)),
+		uintptr(unsafe.Pointer(overlapped)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func EndUpdateResource(update syscall.Handle, discard bool) error {
 	var discardRaw int32
 	if discard {
@@ -379,6 +413,11 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 	return nil
 }
 
+func GetDriveType(rootPathName *uint16) uint32 {
+	r1, _, _ := procGetDriveTypeW.Call(uintptr(unsafe.Pointer(rootPathName)))
+	return uint32(r1)
+}
+
 func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
 	r1, _, e1 := procGetModuleFileNameW.Call(
 		uintptr(module),
@@ -429,6 +468,41 @@ func GetSystemInfo(systemInfo *SYSTEM_INFO) {
 
 func GetSystemTimeAsFileTime(systemTimeAsFileTime *FILETIME) {
 	procGetSystemTimeAsFileTime.Call(uintptr(unsafe.Pointer(systemTimeAsFileTime)))
+}
+
+func GetSystemTimes(idleTime *int64, kernelTime *int64, userTime *int64) error {
+	r1, _, e1 := procGetSystemTimes.Call(
+		uintptr(unsafe.Pointer(idleTime)),
+		uintptr(unsafe.Pointer(kernelTime)),
+		uintptr(unsafe.Pointer(userTime)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volumeNameSize uint32, volumeSerialNumber *uint32, maximumComponentLength *uint32, fileSystemFlags *uint32, fileSystemNameBuffer *uint16, fileSystemNameSize uint32) error {
+	r1, _, e1 := procGetVolumeInformationW.Call(
+		uintptr(unsafe.Pointer(rootPathName)),
+		uintptr(unsafe.Pointer(volumeNameBuffer)),
+		uintptr(volumeNameSize),
+		uintptr(unsafe.Pointer(volumeSerialNumber)),
+		uintptr(unsafe.Pointer(maximumComponentLength)),
+		uintptr(unsafe.Pointer(fileSystemFlags)),
+		uintptr(unsafe.Pointer(fileSystemNameBuffer)),
+		uintptr(fileSystemNameSize))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (syscall.Handle, error) {
