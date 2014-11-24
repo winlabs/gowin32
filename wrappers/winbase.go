@@ -42,6 +42,7 @@ var (
 
 	procBeginUpdateResourceW       = modkernel32.NewProc("BeginUpdateResourceW")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
+	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
@@ -98,6 +99,21 @@ func EndUpdateResource(update syscall.Handle, discard bool) error {
 		}
 	}
 	return nil
+}
+
+func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procExpandEnvironmentStringsW.Call(
+		uintptr(unsafe.Pointer(src)),
+		uintptr(unsafe.Pointer(dst)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }
 
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
