@@ -21,6 +21,20 @@ import (
 	"unsafe"
 )
 
+type SystemInfo struct {
+	ProcessorArchitecture     uint16
+	Reserved                  uint16
+	PageSize                  uint32
+	MinimumApplicationAddress *byte
+	MaximumApplicationAddress *byte
+	ActiveProcessorMask       uintptr
+	NumberOfProcessors        uint32
+	ProcessorType             uint32
+	AllocationGranularity     uint32
+	ProcessorLevel            uint16
+	ProcessorRevision         uint16
+}
+
 const (
 	PROCESS_NAME_NATIVE = 0x00000001
 )
@@ -46,6 +60,7 @@ var (
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
+	procGetSystemInfo              = modkernel32.NewProc("GetSystemInfo")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
 	procUpdateResourceW            = modkernel32.NewProc("UpdateResourceW")
@@ -160,6 +175,10 @@ func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
 		}
 	}
 	return uint32(r1), nil
+}
+
+func GetSystemInfo(systemInfo *SystemInfo) {
+	procGetSystemInfo.Call(uintptr(unsafe.Pointer(systemInfo)))
 }
 
 func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *uint16, size *uint32) error {
