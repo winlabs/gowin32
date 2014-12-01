@@ -50,6 +50,49 @@ func DeleteRegValue(root RegRoot, subKey string, valueName string) error {
 	return wrappers.RegDeleteValue(hKey, syscall.StringToUTF16Ptr(valueName))
 }
 
+func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, error) {
+	var hKey syscall.Handle
+	err := syscall.RegOpenKeyEx(
+		syscall.Handle(root),
+		syscall.StringToUTF16Ptr(subKey),
+		0,
+		syscall.KEY_READ,
+		&hKey)
+	if err != nil {
+		return 0, err
+	}
+	defer syscall.RegCloseKey(hKey)
+	var valueType uint32
+	var size uint32
+	err = syscall.RegQueryValueEx(
+		hKey,
+		syscall.StringToUTF16Ptr(valueName),
+		nil,
+		&valueType,
+		nil,
+		&size)
+	if err != nil {
+		return 0, err
+	}
+	if valueType != syscall.REG_DWORD {
+		// use the same error code as RegGetValue, although that function is not used here in order to maintain
+		// compatibility with older versions of Windows
+		return 0, wrappers.ERROR_UNSUPPORTED_TYPE
+	}
+	var value uint32
+	err = syscall.RegQueryValueEx(
+		hKey,
+		syscall.StringToUTF16Ptr(valueName),
+		nil,
+		nil,
+		(*byte)(unsafe.Pointer(&value)),
+		&size)
+	if err != nil {
+		return 0, err
+	}
+	return value, nil
+}
+
 func GetRegValueString(root RegRoot, subKey string, valueName string) (string, error) {
 	var hKey syscall.Handle
 	err := syscall.RegOpenKeyEx(
@@ -91,6 +134,31 @@ func GetRegValueString(root RegRoot, subKey string, valueName string) (string, e
 		return "", err
 	}
 	return syscall.UTF16ToString(buf), nil
+}
+
+func SetRegValueDWORD(root RegRoot, subKey string, valueName string, data uint32) error {
+	var hKey syscall.Handle
+	err := wrappers.RegCreateKeyEx(
+		syscall.Handle(root),
+		syscall.StringToUTF16Ptr(subKey),
+		0,
+		nil,
+		0,
+		syscall.KEY_WRITE,
+		nil,
+		&hKey,
+		nil)
+	if err != nil {
+		return err
+	}
+	defer syscall.RegCloseKey(hKey)
+	return wrappers.RegSetValueEx(
+		hKey,
+		syscall.StringToUTF16Ptr(valueName),
+		0,
+		syscall.REG_DWORD,
+		(*byte)(unsafe.Pointer(&data)),
+		uint32(unsafe.Sizeof(data)))
 }
 
 func SetRegValueString(root RegRoot, subKey string, valueName string, data string) error {
