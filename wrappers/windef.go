@@ -16,14 +16,14 @@
 
 package wrappers
 
-func MakeLong(low uint16, high uint16) uint32 {
+func MAKELONG(low uint16, high uint16) uint32 {
 	return uint32(low) | (uint32(high) << 16)
 }
 
-func LoWord(value uint32) uint16 {
+func LOWORD(value uint32) uint16 {
 	return uint16(value & 0x0000FFFF)
 }
 
-func HiWord(value uint32) uint16 {
+func HIWORD(value uint32) uint16 {
 	return uint16((value >> 16) & 0x0000FFFF)
 }

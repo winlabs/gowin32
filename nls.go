@@ -48,7 +48,7 @@ var (
 )
 
 func (locale Locale) Language() Language {
-	return Language(wrappers.LangIDFromLCID(uint32(locale)))
+	return Language(wrappers.LANGIDFROMLCID(uint32(locale)))
 }
 
 func LocaleFromLocaleName(localeName string, flags LocaleNameFlags) (Locale, error) {

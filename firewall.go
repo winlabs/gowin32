@@ -519,10 +519,10 @@ func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion Firew
 		localAddressRaw = wrappers.SysAllocString(syscall.StringToUTF16Ptr(localAddress))
 		defer wrappers.SysFreeString(localAddressRaw)
 	}
-	var allowedRaw wrappers.Variant
+	var allowedRaw wrappers.VARIANT
 	wrappers.VariantInit(&allowedRaw)
 	defer wrappers.VariantClear(&allowedRaw)
-	var restrictedRaw wrappers.Variant
+	var restrictedRaw wrappers.VARIANT
 	wrappers.VariantInit(&restrictedRaw)
 	defer wrappers.VariantClear(&restrictedRaw)
 	err = self.object.IsPortAllowed(

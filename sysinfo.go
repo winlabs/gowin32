@@ -40,7 +40,7 @@ type ProcessorInfo struct {
 }
 
 func GetProcessorInfo() *ProcessorInfo {
-	var si wrappers.SystemInfo
+	var si wrappers.SYSTEM_INFO
 	wrappers.GetSystemInfo(&si)
 	return &ProcessorInfo{
 		ProcessorArchitecture: ProcessorArchitecture(si.ProcessorArchitecture),

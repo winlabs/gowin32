@@ -20,7 +20,7 @@ import (
 	"syscall"
 )
 
-type Variant struct {
+type VARIANT struct {
 	Vt        uint16
 	Reserved1 uint16
 	Reserved2 uint16

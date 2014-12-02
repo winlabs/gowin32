@@ -21,7 +21,7 @@ import (
 	"unsafe"
 )
 
-type SystemInfo struct {
+type SYSTEM_INFO struct {
 	ProcessorArchitecture     uint16
 	Reserved                  uint16
 	PageSize                  uint32
@@ -196,7 +196,7 @@ func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
 	return uint32(r1), nil
 }
 
-func GetSystemInfo(systemInfo *SystemInfo) {
+func GetSystemInfo(systemInfo *SYSTEM_INFO) {
 	procGetSystemInfo.Call(uintptr(unsafe.Pointer(systemInfo)))
 }
 
@@ -266,7 +266,7 @@ func Lstrlen(string *uint16) int32 {
 	return int32(r1)
 }
 
-func AllocateAndInitializeSid(identifierAuthority *SIDIdentifierAuthority, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **syscall.SID) error {
+func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **syscall.SID) error {
 	r1, _, e1 := procAllocateAndInitializeSid.Call(
 		uintptr(unsafe.Pointer(identifierAuthority)),
 		uintptr(subAuthorityCount),

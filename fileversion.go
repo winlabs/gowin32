@@ -187,7 +187,7 @@ func GetFileVersion(filename string) (*FileVersion, error) {
 }
 
 func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
-	var ffi *wrappers.VSFixedFileInfo
+	var ffi *wrappers.VS_FIXEDFILEINFO
 	var len uint32
 	err := wrappers.VerQueryValue(
 		&self.data[0],
@@ -199,17 +199,17 @@ func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
 	}
 	return &FixedFileInfo{
 		FileVersion: FileVersionNumber{
-			Major:    wrappers.HiWord(ffi.FileVersionMS),
-			Minor:    wrappers.LoWord(ffi.FileVersionMS),
-			Build:    wrappers.HiWord(ffi.FileVersionLS),
-			Revision: wrappers.LoWord(ffi.FileVersionLS),
+			Major:    wrappers.HIWORD(ffi.FileVersionMS),
+			Minor:    wrappers.LOWORD(ffi.FileVersionMS),
+			Build:    wrappers.HIWORD(ffi.FileVersionLS),
+			Revision: wrappers.LOWORD(ffi.FileVersionLS),
 		},
 
 		ProductVersion: FileVersionNumber{
-			Major:    wrappers.HiWord(ffi.ProductVersionMS),
-			Minor:    wrappers.LoWord(ffi.ProductVersionMS),
-			Build:    wrappers.HiWord(ffi.ProductVersionLS),
-			Revision: wrappers.LoWord(ffi.ProductVersionLS),
+			Major:    wrappers.HIWORD(ffi.ProductVersionMS),
+			Minor:    wrappers.LOWORD(ffi.ProductVersionMS),
+			Build:    wrappers.HIWORD(ffi.ProductVersionLS),
+			Revision: wrappers.LOWORD(ffi.ProductVersionLS),
 		},
 
 		FileFlags:   VerFileFlags(ffi.FileFlags),
