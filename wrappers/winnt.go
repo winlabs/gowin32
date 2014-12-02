@@ -591,6 +591,23 @@ const (
 	PROCESS_ALL_ACCESS                = syscall.STANDARD_RIGHTS_REQUIRED | syscall.SYNCHRONIZE | 0xFFFF
 )
 
+type MessageResourceEntry struct {
+	Length uint16
+	Flags  uint16
+	//Text []byte
+}
+
+type MessageResourceBlock struct {
+	LowId           uint32
+	HighId          uint32
+	OffsetToEntries uint32
+}
+
+type MessageResourceData struct {
+	NumberOfBlocks uint32
+	//Blocks       []MessageResourceBlock
+}
+
 type OSVERSIONINFO struct {
 	OSVersionInfoSize uint32
 	MajorVersion      uint32
