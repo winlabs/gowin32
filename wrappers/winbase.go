@@ -70,10 +70,13 @@ var (
 
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
+	procDeregisterEventSource      = modadvapi32.NewProc("DeregisterEventSource")
 	procEqualSid                   = modadvapi32.NewProc("EqualSid")
 	procFreeSid                    = modadvapi32.NewProc("FreeSid")
 	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
+	procRegisterEventSourceW       = modadvapi32.NewProc("RegisterEventSourceW")
+	procReportEventW               = modadvapi32.NewProc("ReportEventW")
 )
 
 func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscall.Handle, error) {
@@ -305,6 +308,18 @@ func CheckTokenMembership(tokenHandle syscall.Handle, sidToCheck *syscall.SID, i
 	return nil
 }
 
+func DeregisterEventSource(eventLog syscall.Handle) error {
+	r1, _, e1 := procDeregisterEventSource.Call(uintptr(eventLog))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func EqualSid(sid1 *syscall.SID, sid2 *syscall.SID) bool {
 	r1, _, _ := procEqualSid.Call(
 		uintptr(unsafe.Pointer(sid1)),
@@ -348,6 +363,41 @@ func GetSecurityDescriptorOwner(securityDescriptor *uint8, owner **syscall.SID, 
 	}
 	if ownerDefaulted != nil {
 		*ownerDefaulted = (ownerDefaultedRaw != 0)
+	}
+	return nil
+}
+
+func RegisterEventSource(uncServerName *uint16, sourceName *uint16) (syscall.Handle, error) {
+	r1, _, e1 := procRegisterEventSourceW.Call(
+		uintptr(unsafe.Pointer(uncServerName)),
+		uintptr(unsafe.Pointer(sourceName)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
+func ReportEvent(eventLog syscall.Handle, eventType uint16, category uint16, eventID uint32, userSid *syscall.SID, numStrings uint16, dataSize uint32, strings **uint16, rawData *byte) error {
+	r1, _, e1 := procReportEventW.Call(
+		uintptr(eventLog),
+		uintptr(eventType),
+		uintptr(category),
+		uintptr(eventID),
+		uintptr(unsafe.Pointer(userSid)),
+		uintptr(numStrings),
+		uintptr(dataSize),
+		uintptr(unsafe.Pointer(strings)),
+		uintptr(unsafe.Pointer(rawData)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
 	}
 	return nil
 }
