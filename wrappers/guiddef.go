@@ -16,18 +16,9 @@
 
 package wrappers
 
-const (
-	MAX_PATH = 260
-)
-
-func MAKELONG(low uint16, high uint16) uint32 {
-	return uint32(low) | (uint32(high) << 16)
-}
-
-func LOWORD(value uint32) uint16 {
-	return uint16(value & 0x0000FFFF)
-}
-
-func HIWORD(value uint32) uint16 {
-	return uint16((value >> 16) & 0x0000FFFF)
+type GUID struct {
+	Data1 uint32
+	Data2 uint16
+	Data3 uint16
+	Data4 [8]byte
 }

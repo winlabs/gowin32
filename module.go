@@ -23,9 +23,9 @@ import (
 )
 
 func GetCurrentExePath() (string, error) {
-	buf := make([]uint16, syscall.MAX_PATH)
-	if _, err := wrappers.GetModuleFileName(0, &buf[0], syscall.MAX_PATH); err != nil {
-		if err == syscall.ERROR_INSUFFICIENT_BUFFER {
+	buf := make([]uint16, wrappers.MAX_PATH)
+	if _, err := wrappers.GetModuleFileName(0, &buf[0], wrappers.MAX_PATH); err != nil {
+		if err == wrappers.ERROR_INSUFFICIENT_BUFFER {
 			buf = make([]uint16, syscall.MAX_LONG_PATH)
 			if _, err := wrappers.GetModuleFileName(0, &buf[0], syscall.MAX_LONG_PATH); err != nil {
 				return "", err

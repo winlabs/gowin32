@@ -21,11 +21,35 @@ import (
 	"unsafe"
 )
 
-var (
-	procRegCreateKeyExW = modadvapi32.NewProc("RegCreateKeyExW")
-	procRegDeleteValueW = modadvapi32.NewProc("RegDeleteValueW")
-	procRegSetValueExW  = modadvapi32.NewProc("RegSetValueExW")
+const (
+	HKEY_CLASSES_ROOT                = 0x80000000
+	HKEY_CURRENT_USER                = 0x80000001
+	HKEY_LOCAL_MACHINE               = 0x80000002
+	HKEY_USERS                       = 0x80000003
+	HKEY_PERFORMANCE_DATA            = 0x80000004
+	HKEY_PERFORMANCE_TEXT            = 0x80000050
+	HKEY_PERFORMANCE_NLSTEXT         = 0x80000060
+	HKEY_CURRENT_CONFIG              = 0x80000005
+	HKEY_DYN_DATA                    = 0x80000006
+	HKEY_CURRENT_USER_LOCAL_SETTINGS = 0x80000007
 )
+
+var (
+	procRegCloseKey      = modadvapi32.NewProc("RegCloseKey")
+	procRegCreateKeyExW  = modadvapi32.NewProc("RegCreateKeyExW")
+	procRegDeleteValueW  = modadvapi32.NewProc("RegDeleteValueW")
+	procRegOpenKeyExW    = modadvapi32.NewProc("RegOpenKeyExW")
+	procRegQueryValueExW = modadvapi32.NewProc("RegQueryValueExW")
+	procRegSetValueExW   = modadvapi32.NewProc("RegSetValueExW")
+)
+
+func RegCloseKey(key syscall.Handle) error {
+	r1, _, _ := procRegCloseKey.Call(uintptr(key))
+	if r1 != 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
 
 func RegCreateKeyEx(key syscall.Handle, subKey *uint16, reserved uint32, class *uint16, options uint32, samDesired uint32, securityAttributes *syscall.SecurityAttributes, result *syscall.Handle, disposition *uint32) error {
 	r1, _, _ := procRegCreateKeyExW.Call(
@@ -48,6 +72,33 @@ func RegDeleteValue(key syscall.Handle, valueName *uint16) error {
 	r1, _, _ := procRegDeleteValueW.Call(
 		uintptr(key),
 		uintptr(unsafe.Pointer(valueName)))
+	if r1 != 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func RegOpenKeyEx(key syscall.Handle, subKey *uint16, options uint32, samDesired uint32, result *syscall.Handle) error {
+	r1, _, _ := procRegOpenKeyExW.Call(
+		uintptr(key),
+		uintptr(unsafe.Pointer(subKey)),
+		uintptr(options),
+		uintptr(samDesired),
+		uintptr(unsafe.Pointer(result)))
+	if r1 != 0 {
+		return syscall.Errno(r1)
+	}
+	return nil
+}
+
+func RegQueryValueEx(key syscall.Handle, valueName *uint16, reserved *uint32, valueType *uint32, data *byte, cbData *uint32) error {
+	r1, _, _ := procRegQueryValueExW.Call(
+		uintptr(key),
+		uintptr(unsafe.Pointer(valueName)),
+		uintptr(unsafe.Pointer(reserved)),
+		uintptr(unsafe.Pointer(valueType)),
+		uintptr(unsafe.Pointer(data)),
+		uintptr(unsafe.Pointer(cbData)))
 	if r1 != 0 {
 		return syscall.Errno(r1)
 	}
