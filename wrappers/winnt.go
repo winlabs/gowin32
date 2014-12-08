@@ -412,64 +412,64 @@ const (
 	SORT_GEORGIAN_MODERN        = 0x1
 )
 
-func MakeLCID(languageID uint16, sortID uint16) uint32 {
+func MAKELCID(languageID uint16, sortID uint16) uint32 {
 	return (uint32)(sortID) << 16 | uint32(languageID)
 }
 
-func MakeSortLCID(languageID uint16, sortID uint16, sortVersion uint16) uint32 {
-	return MakeLCID(languageID, sortID) | (uint32)(sortVersion) << 20
+func MAKESORTLCID(languageID uint16, sortID uint16, sortVersion uint16) uint32 {
+	return MAKELCID(languageID, sortID) | (uint32)(sortVersion) << 20
 }
 
-func LangIDFromLCID(lcid uint32) uint16 {
+func LANGIDFROMLCID(lcid uint32) uint16 {
 	return uint16(lcid)
 }
 
-func SortIDFromLCID(lcid uint32) uint16 {
+func SORTIDFROMLCID(lcid uint32) uint16 {
 	return uint16((lcid >> 16) & 0xF)
 }
 
-func SortVersionFromLCID(lcid uint32) uint16 {
+func SORTVERSIONFROMLCID(lcid uint32) uint16 {
 	return uint16((lcid >> 20) & 0xF)
 }
 
-func MakeLangID(primaryLanguage uint16, subLanguage uint16) uint16 {
+func MAKELANGID(primaryLanguage uint16, subLanguage uint16) uint16 {
 	return (subLanguage << 10) | primaryLanguage
 }
 
-func PrimaryLangID(lgid uint16) uint16 {
+func PRIMARYLANGID(lgid uint16) uint16 {
 	return lgid & 0x03FF
 }
 
-func SubLangID(lgid uint16) uint16 {
+func SUBLANGID(lgid uint16) uint16 {
 	return lgid >> 10
 }
 
 var (
-	LANG_SYSTEM_DEFAULT = MakeLangID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT)
-	LANG_USER_DEFAULT   = MakeLangID(LANG_NEUTRAL, SUBLANG_DEFAULT)
+	LANG_SYSTEM_DEFAULT = MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT)
+	LANG_USER_DEFAULT   = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT)
 )
 
 var (
-	LOCALE_SYSTEM_DEFAULT     = MakeLCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT)
-	LOCALE_USER_DEFAULT       = MakeLCID(LANG_USER_DEFAULT, SORT_DEFAULT)
-	LOCALE_CUSTOM_DEFAULT     = MakeLCID(MakeLangID(LANG_NEUTRAL, SUBLANG_CUSTOM_DEFAULT), SORT_DEFAULT)
-	LOCALE_CUSTOM_UNSPECIFIED = MakeLCID(MakeLangID(LANG_NEUTRAL, SUBLANG_CUSTOM_UNSPECIFIED), SORT_DEFAULT)
-	LOCALE_CUSTOM_UI_DEFAULT  = MakeLCID(MakeLangID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)
-	LOCALE_NEUTRAL            = MakeLCID(MakeLangID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)
-	LOCALE_INVARIANT          = MakeLCID(MakeLangID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
+	LOCALE_SYSTEM_DEFAULT     = MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT)
+	LOCALE_USER_DEFAULT       = MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)
+	LOCALE_CUSTOM_DEFAULT     = MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_DEFAULT), SORT_DEFAULT)
+	LOCALE_CUSTOM_UNSPECIFIED = MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_CUSTOM_UNSPECIFIED), SORT_DEFAULT)
+	LOCALE_CUSTOM_UI_DEFAULT  = MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_UI_CUSTOM_DEFAULT), SORT_DEFAULT)
+	LOCALE_NEUTRAL            = MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)
+	LOCALE_INVARIANT          = MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
 )
 
-type SIDIdentifierAuthority struct {
+type SID_IDENTIFIER_AUTHORITY struct {
 	Value [6]byte
 }
 
 var (
-	SECURITY_NULL_SID_AUTHORITY        = SIDIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 0}}
-	SECURITY_WORLD_SID_AUTHORITY       = SIDIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 1}}
-	SECURITY_LOCAL_SID_AUTHORITY       = SIDIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 2}}
-	SECURITY_CREATOR_SID_AUTHORITY     = SIDIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 3}}
-	SECURITY_NT_AUTHORITY              = SIDIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 5}}
-	SECURITY_MANDATORY_LABEL_AUTHORITY = SIDIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 16}}
+	SECURITY_NULL_SID_AUTHORITY        = SID_IDENTIFIER_AUTHORITY{[6]byte{0, 0, 0, 0, 0, 0}}
+	SECURITY_WORLD_SID_AUTHORITY       = SID_IDENTIFIER_AUTHORITY{[6]byte{0, 0, 0, 0, 0, 1}}
+	SECURITY_LOCAL_SID_AUTHORITY       = SID_IDENTIFIER_AUTHORITY{[6]byte{0, 0, 0, 0, 0, 2}}
+	SECURITY_CREATOR_SID_AUTHORITY     = SID_IDENTIFIER_AUTHORITY{[6]byte{0, 0, 0, 0, 0, 3}}
+	SECURITY_NT_AUTHORITY              = SID_IDENTIFIER_AUTHORITY{[6]byte{0, 0, 0, 0, 0, 5}}
+	SECURITY_MANDATORY_LABEL_AUTHORITY = SID_IDENTIFIER_AUTHORITY{[6]byte{0, 0, 0, 0, 0, 16}}
 )
 
 const (
@@ -558,7 +558,7 @@ const (
 	SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000
 )
 
-type TokenOwnerData struct {
+type TOKEN_OWNER struct {
 	Owner *syscall.SID
 }
 
@@ -610,19 +610,19 @@ const (
 	PROCESSOR_ARCHITECTURE_UNKNOWN = 0xFFFF
 )
 
-type MessageResourceEntry struct {
+type MESSAGE_RESOURCE_ENTRY struct {
 	Length uint16
 	Flags  uint16
 	//Text []byte
 }
 
-type MessageResourceBlock struct {
+type MESSAGE_RESOURCE_BLOCK struct {
 	LowId           uint32
 	HighId          uint32
 	OffsetToEntries uint32
 }
 
-type MessageResourceData struct {
+type MESSAGE_RESOURCE_DATA struct {
 	NumberOfBlocks uint32
 	//Blocks       []MessageResourceBlock
 }

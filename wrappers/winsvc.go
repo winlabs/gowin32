@@ -124,7 +124,7 @@ const (
 	SERVICE_SID_TYPE_RESTRICTED   = 0x00000002 | SERVICE_SID_TYPE_UNRESTRICTED
 )
 
-type ServiceDescription struct {
+type SERVICE_DESCRIPTION struct {
 	Description *uint16
 }
 
@@ -135,60 +135,60 @@ const (
 	SC_ACTION_RUN_COMMAND = 3
 )
 
-type SCAction struct {
+type SC_ACTION struct {
 	Type  int32
 	Delay uint32
 }
 
-type ServiceFailureActions struct {
+type SERVICE_FAILURE_ACTIONS struct {
 	ResetPeriod uint32
 	RebootMsg   *uint16
 	Command     *uint16
 	CActions    uint32
-	Actions     *SCAction
+	Actions     *SC_ACTION
 }
 
-type ServiceDelayedAutoStartInfo struct {
+type SERVICE_DELAYED_AUTO_START_INFO struct {
 	DelayedAutostart int32
 }
 
-type ServiceFailureActionsFlag struct {
+type SERVICE_FAILURE_ACTIONS_FLAG struct {
 	FailureActionsOnNonCrashFailures int32
 }
 
-type ServiceSidInfo struct {
+type SERVICE_SID_INFO struct {
 	ServiceSidType uint32
 }
 
-type ServiceRequiredPrivilegesInfo struct {
+type SERVICE_REQUIRED_PRIVILEGES_INFO struct {
 	RequiredPrivileges *uint16
 }
 
-type ServicePreshutdownInfo struct {
+type SERVICE_PRESHUTDOWN_INFO struct {
 	PreshutdownTimeout uint32
 }
 
-type ServiceTriggerSpecificDataItem struct {
+type SERVICE_TRIGGER_SPECIFIC_DATA_ITEM struct {
 	DataType uint32
 	CbData   uint32
 	Data     *byte
 }
 
-type ServiceTrigger struct {
+type SERVICE_TRIGGER struct {
 	TriggerType    uint32
 	Action         uint32
 	TriggerSubtype *syscall.GUID
 	CDataItems     uint32
-	DataItems      *ServiceTriggerSpecificDataItem
+	DataItems      *SERVICE_TRIGGER_SPECIFIC_DATA_ITEM
 }
 
-type ServiceTriggerInfo struct {
+type SERVICE_TRIGGER_INFO struct {
 	CTriggers uint32
-	Triggers  *ServiceTrigger
+	Triggers  *SERVICE_TRIGGER
 	Reserved  *byte
 }
 
-type ServicePreferredNodeInfo struct {
+type SERVICE_PREFERRED_NODE_INFO struct {
 	PreferredNode uint16
 	Delete        uint16
 }
@@ -197,7 +197,7 @@ const (
 	SC_STATUS_PROCESS_INFO = 0
 )
 
-type ServiceStatus struct {
+type SERVICE_STATUS struct {
 	ServiceType             uint32
 	CurrentState            uint32
 	ControlsAccepted        uint32
@@ -207,7 +207,7 @@ type ServiceStatus struct {
 	WaitHint                uint32
 }
 
-type ServiceStatusProcess struct {
+type SERVICE_STATUS_PROCESS struct {
 	ServiceType             uint32
 	CurrentState            uint32
 	ControlsAccepted        uint32
@@ -219,13 +219,13 @@ type ServiceStatusProcess struct {
 	ServiceFlags            uint32
 }
 
-type EnumServiceStatus struct {
+type ENUM_SERVICE_STATUS struct {
 	ServiceName   *uint16
 	DisplayName   *uint16
-	ServiceStatus ServiceStatus
+	ServiceStatus SERVICE_STATUS
 }
 
-type QueryServiceConfigData struct {
+type QUERY_SERVICE_CONFIG struct {
 	ServiceType      uint32
 	StartType        uint32
 	ErrorControl     uint32
@@ -304,7 +304,7 @@ func CloseServiceHandle(scObject syscall.Handle) error {
 	return nil
 }
 
-func ControlService(service syscall.Handle, control uint32, serviceStatus *ServiceStatus) error {
+func ControlService(service syscall.Handle, control uint32, serviceStatus *SERVICE_STATUS) error {
 	r1, _, e1 := procControlService.Call(
 		uintptr(service),
 		uintptr(control),
@@ -406,7 +406,7 @@ func OpenService(scManager syscall.Handle, serviceName *uint16, desiredAccess ui
 	return syscall.Handle(r1), nil
 }
 
-func QueryServiceConfig(service syscall.Handle, serviceConfig *QueryServiceConfigData, bufSize uint32, bytesNeeded *uint32) error {
+func QueryServiceConfig(service syscall.Handle, serviceConfig *QUERY_SERVICE_CONFIG, bufSize uint32, bytesNeeded *uint32) error {
 	r1, _, e1 := procQueryServiceConfigW.Call(
 		uintptr(service),
 		uintptr(unsafe.Pointer(serviceConfig)),
@@ -439,7 +439,7 @@ func QueryServiceConfig2(service syscall.Handle, infoLevel uint32, buffer *byte,
 	return nil
 }
 
-func QueryServiceStatus(service syscall.Handle, serviceStatus *ServiceStatus) error {
+func QueryServiceStatus(service syscall.Handle, serviceStatus *SERVICE_STATUS) error {
 	r1, _, e1 := procQueryServiceStatus.Call(
 		uintptr(service),
 		uintptr(unsafe.Pointer(serviceStatus)))

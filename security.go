@@ -66,7 +66,7 @@ func GetTokenOwner(token syscall.Token) (*syscall.SID, error) {
 	if err != nil {
 		return nil, err
 	}
-	ownerData := (*wrappers.TokenOwnerData)(unsafe.Pointer(&buf[0]))
+	ownerData := (*wrappers.TOKEN_OWNER)(unsafe.Pointer(&buf[0]))
 	sid, err := ownerData.Owner.Copy()
 	if err != nil {
 		return nil, err

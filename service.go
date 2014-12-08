@@ -173,7 +173,7 @@ func (self *Service) Close() error {
 }
 
 func (self *Service) Control(control ServiceControl) (*ServiceStatusInfo, error) {
-	var status wrappers.ServiceStatus
+	var status wrappers.SERVICE_STATUS
 	if err := wrappers.ControlService(self.handle, uint32(control), &status); err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (self *Service) GetConfig() (*ServiceConfig, error) {
 		return nil, err
 	}
 	buf := make([]byte, bytesNeeded)
-	config := (*wrappers.QueryServiceConfigData)(unsafe.Pointer(&buf[0]))
+	config := (*wrappers.QUERY_SERVICE_CONFIG)(unsafe.Pointer(&buf[0]))
 	if err := wrappers.QueryServiceConfig(self.handle, config, bytesNeeded, &bytesNeeded); err != nil {
 		return nil, err
 	}
@@ -231,12 +231,12 @@ func (self *Service) GetDescription() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	desc := (*wrappers.ServiceDescription)(unsafe.Pointer(&buf[0]))
+	desc := (*wrappers.SERVICE_DESCRIPTION)(unsafe.Pointer(&buf[0]))
 	return LpstrToString(desc.Description), nil
 }
 
 func (self *Service) GetProcessID() (uint32, error) {
-	var status wrappers.ServiceStatusProcess
+	var status wrappers.SERVICE_STATUS_PROCESS
 	size := uint32(unsafe.Sizeof(status))
 	err := wrappers.QueryServiceStatusEx(
 		self.handle,
@@ -251,7 +251,7 @@ func (self *Service) GetProcessID() (uint32, error) {
 }
 
 func (self *Service) GetStatus() (*ServiceStatusInfo, error) {
-	var status wrappers.ServiceStatus
+	var status wrappers.SERVICE_STATUS
 	if err := wrappers.QueryServiceStatus(self.handle, &status); err != nil {
 		return nil, err
 	}
@@ -328,7 +328,7 @@ func (self *Service) SetConfig(config *ServiceConfig, mask ServiceConfigMask) er
 }
 
 func (self *Service) SetDescription(description string) error {
-	info := &wrappers.ServiceDescription{Description: syscall.StringToUTF16Ptr(description)}
+	info := &wrappers.SERVICE_DESCRIPTION{Description: syscall.StringToUTF16Ptr(description)}
 	return wrappers.ChangeServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, (*byte)(unsafe.Pointer(info)))
 }
 
@@ -452,9 +452,9 @@ func (self *SCManager) GetServices(serviceType ServiceType, serviceState Service
 		} else if err != syscall.ERROR_MORE_DATA {
 			return nil, err
 		}
-		dataSize := int(unsafe.Sizeof(wrappers.EnumServiceStatus{}))
+		dataSize := int(unsafe.Sizeof(wrappers.ENUM_SERVICE_STATUS{}))
 		for i := 0; i < int(servicesReturned); i++ {
-			data := (*wrappers.EnumServiceStatus)(unsafe.Pointer(&buf[i*dataSize]))
+			data := (*wrappers.ENUM_SERVICE_STATUS)(unsafe.Pointer(&buf[i*dataSize]))
 			services = append(services, ServiceInfo{
 				ServiceName:   LpstrToString(data.ServiceName),
 				DisplayName:   LpstrToString(data.DisplayName),

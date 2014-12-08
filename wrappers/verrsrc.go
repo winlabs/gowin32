@@ -70,7 +70,7 @@ const (
 	VFT2_FONT_TRUETYPE         = 0x00000003
 )
 
-type VSFixedFileInfo struct {
+type VS_FIXEDFILEINFO struct {
 	Signature        uint32
 	StrucVersion     uint32
 	FileVersionMS    uint32

@@ -53,7 +53,7 @@ func GetProcesses() ([]ProcessInfo, error) {
 		return nil, err
 	}
 	defer syscall.CloseHandle(hSnapshot)
-	pe := wrappers.ProcessEntry32{}
+	pe := wrappers.PROCESSENTRY32{}
 	pe.Size = uint32(unsafe.Sizeof(pe))
 	if err := wrappers.Process32First(hSnapshot, &pe); err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 		return nil, err
 	}
 	defer syscall.CloseHandle(hSnapshot)
-	me := wrappers.ModuleEntry32{}
+	me := wrappers.MODULEENTRY32{}
 	me.Size = uint32(unsafe.Sizeof(me))
 	if err := wrappers.Module32First(hSnapshot, &me); err != nil {
 		return nil, err

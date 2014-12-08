@@ -722,7 +722,7 @@ func (self *INetFwMgr) RestoreDefaults() error {
 	return nil
 }
 
-func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, portNumber int32, localAddress *uint16, ipProtocol int32, allowed *Variant, restricted *Variant) error {
+func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, portNumber int32, localAddress *uint16, ipProtocol int32, allowed *VARIANT, restricted *VARIANT) error {
 	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall9(
 		vtbl.IsPortAllowed,
@@ -742,7 +742,7 @@ func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, por
 	return nil
 }
 
-func (self *INetFwMgr) IsIcmpTypeAllowed(ipVersion int32, localAddress *uint16, icmpType *uint16, allowed *Variant, restricted *Variant) error {
+func (self *INetFwMgr) IsIcmpTypeAllowed(ipVersion int32, localAddress *uint16, icmpType *uint16, allowed *VARIANT, restricted *VARIANT) error {
 	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall6(
 		vtbl.IsIcmpTypeAllowed,

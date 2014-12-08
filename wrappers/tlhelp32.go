@@ -33,7 +33,7 @@ const (
 	TH32CS_INHERIT      = 0x80000000
 )
 
-type ProcessEntry32 struct {
+type PROCESSENTRY32 struct {
 	Size            uint32
 	Usage           uint32
 	ProcessID       uint32
@@ -46,7 +46,7 @@ type ProcessEntry32 struct {
 	ExeFile         [syscall.MAX_PATH]uint16
 }
 
-type ModuleEntry32 struct {
+type MODULEENTRY32 struct {
 	Size         uint32
 	ModuleID     uint32
 	ProcessID    uint32
@@ -80,7 +80,7 @@ func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, e
 	return handle, nil
 }
 
-func Module32First(snapshot syscall.Handle, me *ModuleEntry32) error {
+func Module32First(snapshot syscall.Handle, me *MODULEENTRY32) error {
 	r1, _, e1 := procModule32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
@@ -92,7 +92,7 @@ func Module32First(snapshot syscall.Handle, me *ModuleEntry32) error {
 	return nil
 }
 
-func Module32Next(snapshot syscall.Handle, me *ModuleEntry32) error {
+func Module32Next(snapshot syscall.Handle, me *MODULEENTRY32) error {
 	r1, _, e1 := procModule32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
@@ -104,7 +104,7 @@ func Module32Next(snapshot syscall.Handle, me *ModuleEntry32) error {
 	return nil
 }
 
-func Process32First(snapshot syscall.Handle, pe *ProcessEntry32) error {
+func Process32First(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
 	r1, _, e1 := procProcess32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(pe)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
@@ -116,7 +116,7 @@ func Process32First(snapshot syscall.Handle, pe *ProcessEntry32) error {
 	return nil
 }
 
-func Process32Next(snapshot syscall.Handle, pe *ProcessEntry32) error {
+func Process32Next(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
 	r1, _, e1 := procProcess32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(pe)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
