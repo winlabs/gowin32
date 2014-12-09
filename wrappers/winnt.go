@@ -22,6 +22,15 @@ import (
 )
 
 const (
+	ANYSIZE_ARRAY = 1
+)
+
+type LUID struct {
+	LowPart  uint32
+	HighPart int32
+}
+
+const (
 	VER_SUITE_SMALLBUSINESS            = 0x00000001
 	VER_SUITE_ENTERPRISE               = 0x00000002
 	VER_SUITE_BACKOFFICE               = 0x00000004
@@ -459,8 +468,111 @@ var (
 	LOCALE_INVARIANT          = MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
 )
 
+const (
+	STATUS_WAIT_0                     = 0x00000000
+	STATUS_ABANDONED_WAIT_0           = 0x00000080
+	STATUS_USER_APC                   = 0x000000C0
+	STATUS_TIMEOUT                    = 0x00000102
+	STATUS_PENDING                    = 0x00000103
+	DBG_EXCEPTION_HANDLED             = 0x00010001
+	DBG_CONTINUE                      = 0x00010002
+	STATUS_SEGMENT_NOTIFICATION       = 0x40000005
+	DBG_TERMINATE_THREAD              = 0x40010003
+	DBG_TERMINATE_PROCESS             = 0x40010004
+	DBG_CONTROL_C                     = 0x40010005
+	DBG_PRINTEXCEPTION_C              = 0x40010006
+	DBG_RIPEXCEPTION                  = 0x40010007
+	DBG_CONTROL_BREAK                 = 0x40010008
+	DBG_COMMAND_EXCEPTION             = 0x40010009
+	STATUS_GUARD_PAGE_VIOLATION       = 0x80000001
+	STATUS_DATATYPE_MISALIGNMENT      = 0x80000002
+	STATUS_BREAKPOINT                 = 0x80000003
+	STATUS_SINGLE_STEP                = 0x80000004
+	STATUS_LONGJUMP                   = 0x80000026
+	STATUS_UNWIND_CONSOLIDATE         = 0x80000029
+	DBG_EXCEPTION_NOT_HANDLED         = 0x80010001
+	STATUS_ACCESS_VIOLATION           = 0xC0000005
+	STATUS_IN_PAGE_ERROR              = 0xC0000006
+	STATUS_INVALID_HANDLE             = 0xC0000008
+	STATUS_INVALID_PARAMETER          = 0xC000000D
+	STATUS_NO_MEMORY                  = 0xC0000017
+	STATUS_ILLEGAL_INSTRUCTION        = 0xC000001D
+	STATUS_NONCONTINUABLE_EXCEPTION   = 0xC0000025
+	STATUS_INVALID_DISPOSITION        = 0xC0000026
+	STATUS_ARRAY_BOUNDS_EXCEEDED      = 0xC000008C
+	STATUS_FLOAT_DENORMAL_OPERAND     = 0xC000008D
+	STATUS_FLOAT_DIVIDE_BY_ZERO       = 0xC000008E
+	STATUS_FLOAT_INEXACT_RESULT       = 0xC000008F
+	STATUS_FLOAT_INVALID_OPERATION    = 0xC0000090
+	STATUS_FLOAT_OVERFLOW             = 0xC0000091
+	STATUS_FLOAT_STACK_CHECK          = 0xC0000092
+	STATUS_FLOAT_UNDERFLOW            = 0xC0000093
+	STATUS_INTEGER_DIVIDE_BY_ZERO     = 0xC0000094
+	STATUS_INTEGER_OVERFLOW           = 0xC0000095
+	STATUS_PRIVILEGED_INSTRUCTION     = 0xC0000096
+	STATUS_STACK_OVERFLOW             = 0xC00000FD
+	STATUS_DLL_NOT_FOUND              = 0xC0000135
+	STATUS_ORDINAL_NOT_FOUND          = 0xC0000138
+	STATUS_ENTRYPOINT_NOT_FOUND       = 0xC0000139
+	STATUS_CONTROL_C_EXIT             = 0xC000013A
+	STATUS_DLL_INIT_FAILED            = 0xC0000142
+	STATUS_FLOAT_MULTIPLE_FAULTS      = 0xC00002B4
+	STATUS_FLOAT_MULTIPLE_TRAPS       = 0xC00002B5
+	STATUS_REG_NAT_CONSUMPTION        = 0xC00002C9
+	STATUS_STACK_BUFFER_OVERRUN       = 0xC0000409
+	STATUS_INVALID_CRUNTIME_PARAMETER = 0xC0000417
+	STATUS_ASSERTION_FAILURE          = 0xC0000420
+	STATUS_SXS_EARLY_DEACTIVATION     = 0xC015000F
+	STATUS_SXS_INVALID_DEACTIVATION   = 0xC0150010
+)
+
+const (
+	DELETE                   = 0x00010000
+	READ_CONTROL             = 0x00020000
+	WRITE_DAC                = 0x00040000
+	WRITE_OWNER              = 0x00080000
+	SYNCHRONIZE              = 0x00100000
+	STANDARD_RIGHTS_REQUIRED = 0x000F0000
+	STANDARD_RIGHTS_READ     = READ_CONTROL
+	STANDARD_RIGHTS_WRITE    = READ_CONTROL
+	STANDARD_RIGHTS_EXECUTE  = READ_CONTROL
+	STANDARD_RIGHTS_ALL      = 0x001F0000
+	SPECIFIC_RIGHTS_ALL      = 0x0000FFFF
+	ACCESS_SYSTEM_SECURITY   = 0x01000000
+	MAXIMUM_ALLOWED          = 0x02000000
+)
+
+const (
+	GENERIC_READ    = 0x80000000
+	GENERIC_WRITE   = 0x40000000
+	GENERIC_EXECUTE = 0x20000000
+	GENERIC_ALL     = 0x10000000
+)
+
+type LUID_AND_ATTRIBUTES struct {
+	Luid       LUID
+	Attributes uint32
+}
+
 type SID_IDENTIFIER_AUTHORITY struct {
 	Value [6]byte
+}
+
+type SID struct {}
+
+type SID_AND_ATTRIBUTES struct {
+	Sid        *SID
+	Attributes uint32
+}
+
+const (
+	SID_HASH_SIZE = 32
+)
+
+type SID_AND_ATTRIBUTES_HASH struct {
+	SidCount uint32
+	SidAttr  *SID_AND_ATTRIBUTES
+	Hash     [SID_HASH_SIZE]uintptr
 }
 
 var (
@@ -558,8 +670,201 @@ const (
 	SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000
 )
 
+const (
+	SE_GROUP_MANDATORY          = 0x00000001
+	SE_GROUP_ENABLED_BY_DEFAULT = 0x00000002
+	SE_GROUP_ENABLED            = 0x00000004
+	SE_GROUP_OWNER              = 0x00000008
+	SE_GROUP_USE_FOR_DENY_ONLY  = 0x00000010
+	SE_GROUP_INTEGRITY          = 0x00000020
+	SE_GROUP_INTEGRITY_ENABLED  = 0x00000040
+	SE_GROUP_LOGON_ID           = 0xC0000000
+	SE_GROUP_RESOURCE           = 0x20000000
+)
+
+const (
+	ACL_REVISION    = 2
+	ACL_REVISION_DS = 4
+)
+
+type ACL struct {
+	AclRevision byte
+	Sbz1        byte
+	AclSize     uint16
+	AceCount    uint16
+	Sbz2        uint16
+}
+
+const (
+	SE_PRIVILEGE_ENABLED_BY_DEFAULT = 0x00000001
+	SE_PRIVILEGE_ENABLED            = 0x00000002
+	SE_PRIVILEGE_REMOVED            = 0x00000004
+	SE_PRIVILEGE_USED_FOR_ACCESS    = 0x80000000
+)
+
+const (
+	SecurityAnonymous      = 0
+	SecurityIdentification = 1
+	SecurityImpersonation  = 2
+	SecurityDelegation     = 3
+)
+
+const (
+	TOKEN_ASSIGN_PRIMARY    = 0x0001
+	TOKEN_DUPLICATE         = 0x0002
+	TOKEN_IMPERSONATE       = 0x0004
+	TOKEN_QUERY             = 0x0008
+	TOKEN_QUERY_SOURCE      = 0x0010
+	TOKEN_ADJUST_PRIVILEGES = 0x0020
+	TOKEN_ADJUST_GROUPS     = 0x0040
+	TOKEN_ADJUST_DEFAULT    = 0x0080
+	TOKEN_ADJUST_SESSIONID  = 0x0100
+	TOKEN_ALL_ACCESS        = STANDARD_RIGHTS_REQUIRED | TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_QUERY | TOKEN_QUERY_SOURCE | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_GROUPS | TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_SESSIONID
+	TOKEN_READ              = STANDARD_RIGHTS_READ | TOKEN_QUERY
+	TOKEN_WRITE             = STANDARD_RIGHTS_WRITE | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_GROUPS | TOKEN_ADJUST_DEFAULT
+	TOKEN_EXECUTE           = STANDARD_RIGHTS_EXECUTE
+)
+
+const (
+	TokenPrimary       = 1
+	TokenImpersonation = 2
+)
+
+const (
+	TokenElevationTypeDefault = 1
+	TokenElevationTypeFull    = 2
+	TokenElevationTypeLimited = 3
+)
+
+const (
+	TokenUser                  = 1
+	TokenGroups                = 2
+	TokenPrivileges            = 3
+	TokenOwner                 = 4
+	TokenPrimaryGroup          = 5
+	TokenDefaultDacl           = 6
+	TokenSource                = 7
+	TokenType                  = 8
+	TokenImpersonationLevel    = 9
+	TokenStatistics            = 10
+	TokenRestrictedSids        = 11
+	TokenSessionId             = 12
+	TokenGroupsAndPrivileges   = 13
+	TokenSessionReference      = 14
+	TokenSandBoxInert          = 15
+	TokenAuditPolicy           = 16
+	TokenOrigin                = 17
+	TokenElevationType         = 18
+	TokenLinkedToken           = 19
+	TokenElevation             = 20
+	TokenHasRestrictions       = 21
+	TokenAccessInformation     = 22
+	TokenVirtualizationAllowed = 23
+	TokenVirtualizationEnabled = 24
+	TokenIntegrityLevel        = 25
+	TokenUIAccess              = 26
+	TokenMandatoryPolicy       = 27
+	TokenLogonSid              = 28
+	MaxTokenInfoClass          = 29
+)
+
+type TOKEN_USER struct {
+	User SID_AND_ATTRIBUTES
+}
+
+type TOKEN_GROUPS struct {
+	GroupCount uint32
+	Groups     [ANYSIZE_ARRAY]SID_AND_ATTRIBUTES
+}
+
+type TOKEN_PRIVILEGES struct {
+	PrivilegeCount uint32
+	Privileges     [ANYSIZE_ARRAY]LUID_AND_ATTRIBUTES
+}
+
 type TOKEN_OWNER struct {
-	Owner *syscall.SID
+	Owner *SID
+}
+
+type TOKEN_PRIMARY_GROUP struct {
+	PrimaryGroup *SID
+}
+
+type TOKEN_DEFAULT_DACL struct {
+	DefaultDacl *ACL
+}
+
+type TOKEN_GROUPS_AND_PRIVILEGES struct {
+	SidCount            uint32
+	SidLength           uint32
+	Sids                *SID_AND_ATTRIBUTES
+	RestrictedSidCount  uint32
+	RestrictedSidLength uint32
+	RestrictedSids      *SID_AND_ATTRIBUTES
+	PrivilegeCount      uint32
+	PrivilegeLength     uint32
+	Privileges          *LUID_AND_ATTRIBUTES
+	AuthenticationId    LUID
+}
+
+type TOKEN_LINKED_TOKEN struct {
+	LinkedToken syscall.Handle
+}
+
+type TOKEN_ELEVATION struct {
+	TokenIsElevated uint32
+}
+
+type TOKEN_MANDATORY_LABEL struct {
+	Label SID_AND_ATTRIBUTES
+}
+
+const (
+	TOKEN_MANDATORY_POLICY_OFF             = 0x00000000
+	TOKEN_MANDATORY_POLICY_NO_WRITE_UP     = 0x00000001
+	TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN = 0x00000002
+	TOKEN_MANDATORY_POLICY_VALID_MASK      = TOKEN_MANDATORY_POLICY_NO_WRITE_UP | TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN
+)
+
+type TOKEN_MANDATORY_POLICY struct {
+	Policy uint32
+}
+
+type TOKEN_ACCESS_INFORMATION struct {
+	SidHash            *SID_AND_ATTRIBUTES_HASH
+	RestrictedSidHash  *SID_AND_ATTRIBUTES_HASH
+	Privileges         *TOKEN_PRIVILEGES
+	AuthenticationId   LUID
+	TokenType          int32
+	ImpersonationLevel int32
+	MandatoryPolicy    TOKEN_MANDATORY_POLICY
+	Flags              uint32
+}
+
+const (
+	TOKEN_SOURCE_LENGTH = 8
+)
+
+type TOKEN_SOURCE struct {
+	SourceName       [TOKEN_SOURCE_LENGTH]byte
+	SourceIdentifier LUID
+}
+
+type TOKEN_STATISTICS struct {
+	TokenId            LUID
+	AuthenticationId   LUID
+	ExpirationTime     int64
+	TokenType          int32
+	ImpersonationLevel int32
+	DynamicCharged     uint32
+	DynamicAvailable   uint32
+	GroupCount         uint32
+	PrivilegeCount     uint32
+	ModifiedId         LUID
+}
+
+type TOKEN_ORIGIN struct {
+	OriginatingLogonSession LUID
 }
 
 const (
@@ -588,7 +893,7 @@ const (
 	PROCESS_QUERY_INFORMATION         = 0x0400
 	PROCESS_SUSPEND_RESUME            = 0x0800
 	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-	PROCESS_ALL_ACCESS                = syscall.STANDARD_RIGHTS_REQUIRED | syscall.SYNCHRONIZE | 0xFFFF
+	PROCESS_ALL_ACCESS                = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0xFFFF
 )
 
 const (
@@ -608,6 +913,51 @@ const (
 	PROCESSOR_ARCHITECTURE_IA64    = 6
 	PROCESSOR_ARCHITECTURE_AMD64   = 9
 	PROCESSOR_ARCHITECTURE_UNKNOWN = 0xFFFF
+)
+
+const (
+	FILE_READ_DATA            = 0x0001
+	FILE_LIST_DIRECTORY       = 0x0001
+	FILE_WRITE_DATA           = 0x0002
+	FILE_ADD_FILE             = 0x0002
+	FILE_APPEND_DATA          = 0x0004
+	FILE_ADD_SUBDIRECTORY     = 0x0004
+	FILE_CREATE_PIPE_INSTANCE = 0x0004
+	FILE_READ_EA              = 0x0008
+	FILE_WRITE_EA             = 0x0010
+	FILE_EXECUTE              = 0x0020
+	FILE_TRAVERSE             = 0x0020
+	FILE_DELETE_CHILD         = 0x0040
+	FILE_READ_ATTRIBUTES      = 0x0080
+	FILE_WRITE_ATTRIBUTES     = 0x0100
+	FILE_ALL_ACCESS           = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x01FF
+	FILE_GENERIC_READ         = STANDARD_RIGHTS_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES | FILE_READ_EA | SYNCHRONIZE
+	FILE_GENERIC_WRITE        = STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA | FILE_APPEND_DATA | SYNCHRONIZE
+	FILE_GENERIC_EXECUTE      = STANDARD_RIGHTS_EXECUTE | FILE_READ_ATTRIBUTES | FILE_EXECUTE | SYNCHRONIZE
+)
+
+const (
+	FILE_SHARE_READ   = 0x00000001
+	FILE_SHARE_WRITE  = 0x00000002
+	FILE_SHARE_DELETE = 0x00000004
+)
+
+const (
+	FILE_ATTRIBUTE_READONLY            = 0x00000001
+	FILE_ATTRIBUTE_HIDDEN              = 0x00000002
+	FILE_ATTRIBUTE_SYSTEM              = 0x00000004
+	FILE_ATTRIBUTE_DIRECTORY           = 0x00000010
+	FILE_ATTRIBUTE_ARCHIVE             = 0x00000020
+	FILE_ATTRIBUTE_DEVICE              = 0x00000040
+	FILE_ATTRIBUTE_NORMAL              = 0x00000080
+	FILE_ATTRIBUTE_TEMPORARY           = 0x00000100
+	FILE_ATTRIBUTE_SPARSE_FILE         = 0x00000200
+	FILE_ATTRIBUTE_REPARSE_POINT       = 0x00000400
+	FILE_ATTRIBUTE_COMPRESSED          = 0x00000800
+	FILE_ATTRIBUTE_OFFLINE             = 0x00001000
+	FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x00002000
+	FILE_ATTRIBUTE_ENCRYPTED           = 0x00004000
+	FILE_ATTRIBUTE_VIRTUAL             = 0x00010000
 )
 
 type MESSAGE_RESOURCE_ENTRY struct {
@@ -688,6 +1038,21 @@ const (
 )
 
 const (
+	KEY_QUERY_VALUE        = 0x0001
+	KEY_SET_VALUE          = 0x0002
+	KEY_CREATE_SUB_KEY     = 0x0004
+	KEY_ENUMERATE_SUB_KEYS = 0x0008
+	KEY_NOTIFY             = 0x0010
+	KEY_CREATE_LINK        = 0x0020
+	KEY_WOW64_32KEY        = 0x0200
+	KEY_WOW64_64KEY        = 0x0100
+	KEY_READ               = (STANDARD_RIGHTS_READ | KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY) & ^SYNCHRONIZE
+	KEY_WRITE              = (STANDARD_RIGHTS_WRITE | KEY_SET_VALUE | KEY_CREATE_SUB_KEY) & ^SYNCHRONIZE
+	KEY_EXECUTE            = KEY_READ & ^SYNCHRONIZE
+	KEY_ALL_ACCESS         = (STANDARD_RIGHTS_ALL | KEY_QUERY_VALUE | KEY_SET_VALUE | KEY_CREATE_SUB_KEY | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY | KEY_CREATE_LINK) & ^SYNCHRONIZE
+)
+
+const (
 	REG_OPTION_NON_VOLATILE   = 0x00000000
 	REG_OPTION_VOLATILE       = 0x00000001
 	REG_OPTION_CREATE_LINK    = 0x00000002
@@ -697,6 +1062,20 @@ const (
 const (
 	REG_CREATED_NEW_KEY     = 0x00000001
 	REG_OPENED_EXISTING_KEY = 0x00000002
+)
+
+const (
+	REG_NONE                = 0
+	REG_SZ                  = 1
+	REG_EXPAND_SZ           = 2
+	REG_BINARY              = 3
+	REG_DWORD               = 4
+	REG_DWORD_LITTLE_ENDIAN = 4
+	REG_DWORD_BIG_ENDIAN    = 5
+	REG_LINK                = 6
+	REG_MULTI_SZ            = 7
+	REG_QWORD               = 11
+	REG_QWORD_LITTLE_ENDIAN = 11
 )
 
 const (

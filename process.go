@@ -52,7 +52,7 @@ func GetProcesses() ([]ProcessInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer syscall.CloseHandle(hSnapshot)
+	defer wrappers.CloseHandle(hSnapshot)
 	pe := wrappers.PROCESSENTRY32{}
 	pe.Size = uint32(unsafe.Sizeof(pe))
 	if err := wrappers.Process32First(hSnapshot, &pe); err != nil {
@@ -68,7 +68,7 @@ func GetProcesses() ([]ProcessInfo, error) {
 			ExeFile:         syscall.UTF16ToString((&pe.ExeFile)[:]),
 		})
 		err := wrappers.Process32Next(hSnapshot, &pe)
-		if err == syscall.ERROR_NO_MORE_FILES {
+		if err == wrappers.ERROR_NO_MORE_FILES {
 			return pi, nil
 		} else if err != nil {
 			return nil, err
@@ -81,7 +81,7 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer syscall.CloseHandle(hSnapshot)
+	defer wrappers.CloseHandle(hSnapshot)
 	me := wrappers.MODULEENTRY32{}
 	me.Size = uint32(unsafe.Sizeof(me))
 	if err := wrappers.Module32First(hSnapshot, &me); err != nil {
@@ -98,7 +98,7 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 			ExePath:           syscall.UTF16ToString((&me.ExePath)[:]),
 		})
 		err := wrappers.Module32Next(hSnapshot, &me)
-		if err == syscall.ERROR_NO_MORE_FILES {
+		if err == wrappers.ERROR_NO_MORE_FILES {
 			return mi, nil
 		} else if err != nil {
 			return nil, err
@@ -109,60 +109,60 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 	milliseconds := uint32(timeout / time.Millisecond)
 	if timeout < 0 {
-		milliseconds = syscall.INFINITE
+		milliseconds = wrappers.INFINITE
 	}
-	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
+	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, pid)
 	if err != nil {
 		return err
 	}
-	defer syscall.CloseHandle(hProcess)
+	defer wrappers.CloseHandle(hProcess)
 	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, pid); err != nil {
 		return err
 	}
-	if _, err := syscall.WaitForSingleObject(hProcess, milliseconds); err != nil {
+	if _, err := wrappers.WaitForSingleObject(hProcess, milliseconds); err != nil {
 		return err
 	}
 	return nil
 }
 
 func KillProcess(pid uint32, exitCode uint32) error {
-	hProcess, err := syscall.OpenProcess(wrappers.PROCESS_TERMINATE, false, pid)
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_TERMINATE, false, pid)
 	if err != nil {
 		return err
 	}
-	defer syscall.CloseHandle(hProcess)
-	return syscall.TerminateProcess(hProcess, exitCode)
+	defer wrappers.CloseHandle(hProcess)
+	return wrappers.TerminateProcess(hProcess, exitCode)
 }
 
 func IsProcessRunning(pid uint32) (bool, error) {
-	hProcess, err := syscall.OpenProcess(syscall.SYNCHRONIZE, false, pid)
+	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, pid)
 	if err == wrappers.ERROR_INVALID_PARAMETER {
 		// the process no longer exists
 		return false, nil
 	} else if err != nil {
 		return false, err
 	}
-	defer syscall.CloseHandle(hProcess)
+	defer wrappers.CloseHandle(hProcess)
 
 	// wait with a timeout of 0 to check the process's status and make sure it's not a zombie
-	event, err := syscall.WaitForSingleObject(hProcess, 0)
+	event, err := wrappers.WaitForSingleObject(hProcess, 0)
 	if err != nil {
 		return false, err
 	}
-	return event != syscall.WAIT_OBJECT_0, nil
+	return event != wrappers.WAIT_OBJECT_0, nil
 }
 
 func GetProcessFullPathName(pid uint32, flags ProcessNameFlags) (string, error) {
-	hProcess, err := syscall.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
 	if err != nil {
 		return "", err
 	}
-	defer syscall.CloseHandle(hProcess)
+	defer wrappers.CloseHandle(hProcess)
 
-	buf := make([]uint16, syscall.MAX_PATH)
-	size := uint32(syscall.MAX_PATH)
+	buf := make([]uint16, wrappers.MAX_PATH)
+	size := uint32(wrappers.MAX_PATH)
 	if err := wrappers.QueryFullProcessImageName(hProcess, uint32(flags), &buf[0], &size); err != nil {
-		if err == syscall.ERROR_INSUFFICIENT_BUFFER {
+		if err == wrappers.ERROR_INSUFFICIENT_BUFFER {
 			buf = make([]uint16, syscall.MAX_LONG_PATH)
 			size = syscall.MAX_LONG_PATH
 			if err := wrappers.QueryFullProcessImageName(hProcess, uint32(flags), &buf[0], &size); err != nil {

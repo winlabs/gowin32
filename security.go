@@ -23,8 +23,31 @@ import (
 	"unsafe"
 )
 
-func GetFileOwner(path string) (*syscall.SID, error) {
-	needed := uint32(0)
+type SecurityID struct {
+	sid *wrappers.SID
+}
+
+func (self SecurityID) GetLength() uint32 {
+	return wrappers.GetLengthSid(self.sid)
+}
+
+func (self SecurityID) Copy() (SecurityID, error) {
+	length := self.GetLength()
+	buf := make([]byte, length)
+	sid := (*wrappers.SID)(unsafe.Pointer(&buf[0]))
+	err := wrappers.CopySid(length, sid, self.sid)
+	if err != nil {
+		return SecurityID{}, err
+	}
+	return SecurityID{sid}, nil
+}
+
+func (self SecurityID) Equal(other SecurityID) bool {
+	return wrappers.EqualSid(self.sid, other.sid)
+}
+
+func GetFileOwner(path string) (SecurityID, error) {
+	var needed uint32
 	wrappers.GetFileSecurity(
 		syscall.StringToUTF16Ptr(path),
 		wrappers.OWNER_SECURITY_INFORMATION,
@@ -39,43 +62,66 @@ func GetFileOwner(path string) (*syscall.SID, error) {
 		needed,
 		&needed)
 	if err != nil {
-		return nil, err
+		return SecurityID{}, err
 	}
-	ownerSid := (*syscall.SID)(nil)
+	var ownerSid *wrappers.SID
 	if err := wrappers.GetSecurityDescriptorOwner(&buf[0], &ownerSid, nil); err != nil {
-		return nil, err
+		return SecurityID{}, err
 	}
-	return ownerSid, nil
+	return SecurityID{ownerSid}, nil
 }
 
-func GetTokenOwner(token syscall.Token) (*syscall.SID, error) {
-	needed := uint32(0)
-	syscall.GetTokenInformation(
-		token,
-		syscall.TokenOwner,
+type Token struct {
+	handle syscall.Handle
+}
+
+func OpenCurrentProcessToken() (*Token, error) {
+	hProcess := wrappers.GetCurrentProcess()
+	var hToken syscall.Handle
+	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_QUERY, &hToken); err != nil {
+		return nil, err
+	}
+	return &Token{handle: hToken}, nil
+}
+
+func (self *Token) Close() error {
+	if self.handle != 0 {
+		if err := wrappers.CloseHandle(self.handle); err != nil {
+			return err
+		}
+		self.handle = 0
+	}
+	return nil
+}
+
+func (self *Token) GetOwner() (SecurityID, error) {
+	var needed uint32
+	wrappers.GetTokenInformation(
+		self.handle,
+		wrappers.TokenOwner,
 		nil,
 		0,
 		&needed)
 	buf := make([]byte, needed)
-	err := syscall.GetTokenInformation(
-		token,
-		syscall.TokenOwner,
+	err := wrappers.GetTokenInformation(
+		self.handle,
+		wrappers.TokenOwner,
 		&buf[0],
 		needed,
 		&needed)
 	if err != nil {
-		return nil, err
+		return SecurityID{}, err
 	}
 	ownerData := (*wrappers.TOKEN_OWNER)(unsafe.Pointer(&buf[0]))
-	sid, err := ownerData.Owner.Copy()
+	sid, err := SecurityID{ownerData.Owner}.Copy()
 	if err != nil {
-		return nil, err
+		return SecurityID{}, err
 	}
 	return sid, nil
 }
 
 func IsAdmin() (bool, error) {
-	var sid *syscall.SID
+	var sid *wrappers.SID
 	err := wrappers.AllocateAndInitializeSid(
 		&wrappers.SECURITY_NT_AUTHORITY,
 		2,

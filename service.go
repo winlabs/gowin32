@@ -194,7 +194,7 @@ func (self *Service) Delete() error {
 
 func (self *Service) GetConfig() (*ServiceConfig, error) {
 	var bytesNeeded uint32
-	if err := wrappers.QueryServiceConfig(self.handle, nil, 0, &bytesNeeded); err != syscall.ERROR_INSUFFICIENT_BUFFER {
+	if err := wrappers.QueryServiceConfig(self.handle, nil, 0, &bytesNeeded); err != wrappers.ERROR_INSUFFICIENT_BUFFER {
 		return nil, err
 	}
 	buf := make([]byte, bytesNeeded)
@@ -218,7 +218,7 @@ func (self *Service) GetConfig() (*ServiceConfig, error) {
 func (self *Service) GetDescription() (string, error) {
 	var bytesNeeded uint32
 	err := wrappers.QueryServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, nil, 0, &bytesNeeded)
-	if err != syscall.ERROR_INSUFFICIENT_BUFFER {
+	if err != wrappers.ERROR_INSUFFICIENT_BUFFER {
 		return "", err
 	}
 	buf := make([]byte, bytesNeeded)
@@ -434,7 +434,7 @@ func (self *SCManager) GetServices(serviceType ServiceType, serviceState Service
 			&bytesNeeded,
 			&servicesReturned,
 			&resumeHandle)
-		if err != syscall.ERROR_INSUFFICIENT_BUFFER && err != syscall.ERROR_MORE_DATA {
+		if err != wrappers.ERROR_INSUFFICIENT_BUFFER && err != wrappers.ERROR_MORE_DATA {
 			return nil, err
 		}
 		buf := make([]byte, bytesNeeded)
@@ -449,7 +449,7 @@ func (self *SCManager) GetServices(serviceType ServiceType, serviceState Service
 			&resumeHandle)
 		if err == nil {
 			hasMore = false
-		} else if err != syscall.ERROR_MORE_DATA {
+		} else if err != wrappers.ERROR_MORE_DATA {
 			return nil, err
 		}
 		dataSize := int(unsafe.Sizeof(wrappers.ENUM_SERVICE_STATUS{}))

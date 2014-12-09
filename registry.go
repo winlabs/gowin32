@@ -26,37 +26,37 @@ import (
 type RegRoot syscall.Handle
 
 const (
-	RegRootHKCR RegRoot = syscall.HKEY_CLASSES_ROOT
-	RegRootHKCU RegRoot = syscall.HKEY_CURRENT_USER
-	RegRootHKLM RegRoot = syscall.HKEY_LOCAL_MACHINE
-	RegRootHKU  RegRoot = syscall.HKEY_USERS
-	RegRootHKPD RegRoot = syscall.HKEY_PERFORMANCE_DATA
-	RegRootHKCC RegRoot = syscall.HKEY_CURRENT_CONFIG
-	RegRootHKDD RegRoot = syscall.HKEY_DYN_DATA
+	RegRootHKCR RegRoot = wrappers.HKEY_CLASSES_ROOT
+	RegRootHKCU RegRoot = wrappers.HKEY_CURRENT_USER
+	RegRootHKLM RegRoot = wrappers.HKEY_LOCAL_MACHINE
+	RegRootHKU  RegRoot = wrappers.HKEY_USERS
+	RegRootHKPD RegRoot = wrappers.HKEY_PERFORMANCE_DATA
+	RegRootHKCC RegRoot = wrappers.HKEY_CURRENT_CONFIG
+	RegRootHKDD RegRoot = wrappers.HKEY_DYN_DATA
 )
 
 func DeleteRegValue(root RegRoot, subKey string, valueName string) error {
 	var hKey syscall.Handle
-	err := syscall.RegOpenKeyEx(
+	err := wrappers.RegOpenKeyEx(
 		syscall.Handle(root),
 		syscall.StringToUTF16Ptr(subKey),
 		0,
-		syscall.KEY_WRITE,
+		wrappers.KEY_WRITE,
 		&hKey)
 	if err != nil {
 		return err
 	}
-	defer syscall.RegCloseKey(hKey)
+	defer wrappers.RegCloseKey(hKey)
 	return wrappers.RegDeleteValue(hKey, syscall.StringToUTF16Ptr(valueName))
 }
 
 func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, error) {
 	var hKey syscall.Handle
-	err := syscall.RegOpenKeyEx(
+	err := wrappers.RegOpenKeyEx(
 		syscall.Handle(root),
 		syscall.StringToUTF16Ptr(subKey),
 		0,
-		syscall.KEY_READ,
+		wrappers.KEY_READ,
 		&hKey)
 	if err != nil {
 		return 0, err
@@ -64,7 +64,7 @@ func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, er
 	defer syscall.RegCloseKey(hKey)
 	var valueType uint32
 	var size uint32
-	err = syscall.RegQueryValueEx(
+	err = wrappers.RegQueryValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		nil,
@@ -74,13 +74,13 @@ func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, er
 	if err != nil {
 		return 0, err
 	}
-	if valueType != syscall.REG_DWORD {
+	if valueType != wrappers.REG_DWORD {
 		// use the same error code as RegGetValue, although that function is not used here in order to maintain
 		// compatibility with older versions of Windows
 		return 0, wrappers.ERROR_UNSUPPORTED_TYPE
 	}
 	var value uint32
-	err = syscall.RegQueryValueEx(
+	err = wrappers.RegQueryValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		nil,
@@ -95,19 +95,19 @@ func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, er
 
 func GetRegValueString(root RegRoot, subKey string, valueName string) (string, error) {
 	var hKey syscall.Handle
-	err := syscall.RegOpenKeyEx(
+	err := wrappers.RegOpenKeyEx(
 		syscall.Handle(root),
 		syscall.StringToUTF16Ptr(subKey),
 		0,
-		syscall.KEY_READ,
+		wrappers.KEY_READ,
 		&hKey)
 	if err != nil {
 		return "", err
 	}
-	defer syscall.RegCloseKey(hKey)
+	defer wrappers.RegCloseKey(hKey)
 	var valueType uint32
 	var size uint32
-	err = syscall.RegQueryValueEx(
+	err = wrappers.RegQueryValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		nil,
@@ -117,13 +117,13 @@ func GetRegValueString(root RegRoot, subKey string, valueName string) (string, e
 	if err != nil {
 		return "", err
 	}
-	if valueType != syscall.REG_SZ {
+	if valueType != wrappers.REG_SZ {
 		// use the same error code as RegGetValue, although that function is not used here in order to maintain
 		// compatibility with older versions of Windows
 		return "", wrappers.ERROR_UNSUPPORTED_TYPE
 	}
 	buf := make([]uint16, size/2)
-	err = syscall.RegQueryValueEx(
+	err = wrappers.RegQueryValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		nil,
@@ -144,19 +144,19 @@ func SetRegValueDWORD(root RegRoot, subKey string, valueName string, data uint32
 		0,
 		nil,
 		0,
-		syscall.KEY_WRITE,
+		wrappers.KEY_WRITE,
 		nil,
 		&hKey,
 		nil)
 	if err != nil {
 		return err
 	}
-	defer syscall.RegCloseKey(hKey)
+	defer wrappers.RegCloseKey(hKey)
 	return wrappers.RegSetValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		0,
-		syscall.REG_DWORD,
+		wrappers.REG_DWORD,
 		(*byte)(unsafe.Pointer(&data)),
 		uint32(unsafe.Sizeof(data)))
 }
@@ -169,19 +169,19 @@ func SetRegValueString(root RegRoot, subKey string, valueName string, data strin
 		0,
 		nil,
 		0,
-		syscall.KEY_WRITE,
+		wrappers.KEY_WRITE,
 		nil,
 		&hKey,
 		nil)
 	if err != nil {
 		return err
 	}
-	defer syscall.RegCloseKey(hKey)
+	defer wrappers.RegCloseKey(hKey)
 	return wrappers.RegSetValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		0,
-		syscall.REG_SZ,
+		wrappers.REG_SZ,
 		(*byte)(unsafe.Pointer(syscall.StringToUTF16Ptr(data))),
 		uint32(2*(len(data)+1)))
 }

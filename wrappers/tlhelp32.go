@@ -43,7 +43,7 @@ type PROCESSENTRY32 struct {
 	ParentProcessID uint32
 	PriClassBase    int32
 	Flags           uint32
-	ExeFile         [syscall.MAX_PATH]uint16
+	ExeFile         [MAX_PATH]uint16
 }
 
 type MODULEENTRY32 struct {
@@ -56,7 +56,7 @@ type MODULEENTRY32 struct {
 	ModBaseSize  uint32
 	Module       syscall.Handle
 	ModuleName   [MAX_MODULE_NAME32 + 1]uint16
-	ExePath      [syscall.MAX_PATH]uint16
+	ExePath      [MAX_PATH]uint16
 }
 
 var (
@@ -70,11 +70,11 @@ var (
 func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, error) {
 	r1, _, e1 := procCreateToolhelp32Snapshot.Call(uintptr(flags), uintptr(processID))
 	handle := syscall.Handle(r1)
-	if handle == syscall.InvalidHandle {
+	if handle == INVALID_HANDLE_VALUE {
 		if e1.(syscall.Errno) != 0 {
-			return syscall.InvalidHandle, e1
+			return handle, e1
 		} else {
-			return syscall.InvalidHandle, syscall.EINVAL
+			return handle, syscall.EINVAL
 		}
 	}
 	return handle, nil

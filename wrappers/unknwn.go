@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	IID_IUnknown = syscall.GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+	IID_IUnknown = GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 )
 
 type IUnknownVtbl struct {
@@ -35,7 +35,7 @@ type IUnknown struct {
 	Vtbl *IUnknownVtbl
 }
 
-func (self *IUnknown) QueryInterface(iid *syscall.GUID, object *uintptr) error {
+func (self *IUnknown) QueryInterface(iid *GUID, object *uintptr) error {
 	r1, _, _ := syscall.Syscall(
 		self.Vtbl.QueryInterface,
 		3,

@@ -85,7 +85,7 @@ const (
 )
 
 func GetSpecialFolderPath(folder SpecialFolder) (string, error) {
-	buf := [syscall.MAX_PATH]uint16{}
+	buf := [wrappers.MAX_PATH]uint16{}
 	if err := wrappers.SHGetFolderPath(0, uint32(folder), 0, 0, &buf[0]); err != nil {
 		return "", err
 	}

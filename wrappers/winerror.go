@@ -19,9 +19,15 @@ package wrappers
 import "syscall"
 
 const (
+	ERROR_FILE_NOT_FOUND          syscall.Errno = 2
+	ERROR_ACCESS_DENIED           syscall.Errno = 5
+	ERROR_NO_MORE_FILES           syscall.Errno = 18
 	ERROR_GEN_FAILURE             syscall.Errno = 31
 	ERROR_INVALID_PARAMETER       syscall.Errno = 87
+	ERROR_BROKEN_PIPE             syscall.Errno = 109
+	ERROR_INSUFFICIENT_BUFFER     syscall.Errno = 122
 	ERROR_MORE_DATA               syscall.Errno = 234
+	WAIT_TIMEOUT                  syscall.Errno = 258
 	ERROR_NO_MORE_ITEMS           syscall.Errno = 259
 	ERROR_SERVICE_DOES_NOT_EXIST  syscall.Errno = 1060
 	ERROR_OLD_WIN_VERSION         syscall.Errno = 1150
