@@ -27,6 +27,7 @@ const (
 	ERROR_BROKEN_PIPE             syscall.Errno = 109
 	ERROR_INSUFFICIENT_BUFFER     syscall.Errno = 122
 	ERROR_MORE_DATA               syscall.Errno = 234
+	WAIT_TIMEOUT                  syscall.Errno = 258
 	ERROR_NO_MORE_ITEMS           syscall.Errno = 259
 	ERROR_SERVICE_DOES_NOT_EXIST  syscall.Errno = 1060
 	ERROR_OLD_WIN_VERSION         syscall.Errno = 1150
