@@ -75,7 +75,7 @@ type INetFwRule struct {
 	IDispatch
 }
 
-func (self *INetFwRule) Get_Name(name **uint16) error {
+func (self *INetFwRule) Get_Name(name **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Name,
@@ -83,13 +83,10 @@ func (self *INetFwRule) Get_Name(name **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(name)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Name(name *uint16) error {
+func (self *INetFwRule) Put_Name(name *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Name,
@@ -97,13 +94,10 @@ func (self *INetFwRule) Put_Name(name *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(name)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Description(desc **uint16) error {
+func (self *INetFwRule) Get_Description(desc **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Description,
@@ -111,13 +105,10 @@ func (self *INetFwRule) Get_Description(desc **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(desc)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Description(desc *uint16) error {
+func (self *INetFwRule) Put_Description(desc *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Description,
@@ -125,13 +116,10 @@ func (self *INetFwRule) Put_Description(desc *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(desc)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_ApplicationName(imageFileName **uint16) error {
+func (self *INetFwRule) Get_ApplicationName(imageFileName **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_ApplicationName,
@@ -139,13 +127,10 @@ func (self *INetFwRule) Get_ApplicationName(imageFileName **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(imageFileName)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_ApplicationName(imageFileName *uint16) error {
+func (self *INetFwRule) Put_ApplicationName(imageFileName *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_ApplicationName,
@@ -153,13 +138,10 @@ func (self *INetFwRule) Put_ApplicationName(imageFileName *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(imageFileName)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_ServiceName(serviceName **uint16) error {
+func (self *INetFwRule) Get_ServiceName(serviceName **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_ServiceName,
@@ -167,13 +149,10 @@ func (self *INetFwRule) Get_ServiceName(serviceName **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(serviceName)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_ServiceName(serviceName *uint16) error {
+func (self *INetFwRule) Put_ServiceName(serviceName *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_ServiceName,
@@ -181,13 +160,10 @@ func (self *INetFwRule) Put_ServiceName(serviceName *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(serviceName)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Protocol(protocol *int32) error {
+func (self *INetFwRule) Get_Protocol(protocol *int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Protocol,
@@ -195,13 +171,10 @@ func (self *INetFwRule) Get_Protocol(protocol *int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(protocol)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Protocol(protocol int32) error {
+func (self *INetFwRule) Put_Protocol(protocol int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Protocol,
@@ -209,13 +182,10 @@ func (self *INetFwRule) Put_Protocol(protocol int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(protocol),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_LocalPorts(portNumbers **uint16) error {
+func (self *INetFwRule) Get_LocalPorts(portNumbers **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_LocalPorts,
@@ -223,13 +193,10 @@ func (self *INetFwRule) Get_LocalPorts(portNumbers **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(portNumbers)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_LocalPorts(portNumbers *uint16) error {
+func (self *INetFwRule) Put_LocalPorts(portNumbers *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_LocalPorts,
@@ -237,13 +204,10 @@ func (self *INetFwRule) Put_LocalPorts(portNumbers *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(portNumbers)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_RemotePorts(portNumbers **uint16) error {
+func (self *INetFwRule) Get_RemotePorts(portNumbers **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_RemotePorts,
@@ -251,13 +215,10 @@ func (self *INetFwRule) Get_RemotePorts(portNumbers **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(portNumbers)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_RemotePorts(portNumbers *uint16) error {
+func (self *INetFwRule) Put_RemotePorts(portNumbers *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_RemotePorts,
@@ -265,13 +226,10 @@ func (self *INetFwRule) Put_RemotePorts(portNumbers *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(portNumbers)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_LocalAddresses(localAddrs **uint16) error {
+func (self *INetFwRule) Get_LocalAddresses(localAddrs **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_LocalAddresses,
@@ -279,13 +237,10 @@ func (self *INetFwRule) Get_LocalAddresses(localAddrs **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(localAddrs)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_LocalAddresses(localAddrs *uint16) error {
+func (self *INetFwRule) Put_LocalAddresses(localAddrs *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_LocalAddresses,
@@ -293,13 +248,10 @@ func (self *INetFwRule) Put_LocalAddresses(localAddrs *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(localAddrs)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_RemoteAddresses(remoteAddrs **uint16) error {
+func (self *INetFwRule) Get_RemoteAddresses(remoteAddrs **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_RemoteAddresses,
@@ -307,13 +259,10 @@ func (self *INetFwRule) Get_RemoteAddresses(remoteAddrs **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(remoteAddrs)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_RemoteAddresses(remoteAddrs *uint16) error {
+func (self *INetFwRule) Put_RemoteAddresses(remoteAddrs *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_RemoteAddresses,
@@ -321,13 +270,10 @@ func (self *INetFwRule) Put_RemoteAddresses(remoteAddrs *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(remoteAddrs)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_IcmpTypesAndCodes(icmpTypesAndCodes **uint16) error {
+func (self *INetFwRule) Get_IcmpTypesAndCodes(icmpTypesAndCodes **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_IcmpTypesAndCodes,
@@ -335,13 +281,10 @@ func (self *INetFwRule) Get_IcmpTypesAndCodes(icmpTypesAndCodes **uint16) error 
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(icmpTypesAndCodes)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_IcmpTypesAndCodes(icmpTypesAndCodes *uint16) error {
+func (self *INetFwRule) Put_IcmpTypesAndCodes(icmpTypesAndCodes *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_IcmpTypesAndCodes,
@@ -349,13 +292,10 @@ func (self *INetFwRule) Put_IcmpTypesAndCodes(icmpTypesAndCodes *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(icmpTypesAndCodes)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Direction(dir *int32) error {
+func (self *INetFwRule) Get_Direction(dir *int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Direction,
@@ -363,13 +303,10 @@ func (self *INetFwRule) Get_Direction(dir *int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(dir)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Direction(dir int32) error {
+func (self *INetFwRule) Put_Direction(dir int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Direction,
@@ -377,13 +314,10 @@ func (self *INetFwRule) Put_Direction(dir int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(dir),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_InterfaceTypes(interfaceTypes **uint16) error {
+func (self *INetFwRule) Get_InterfaceTypes(interfaceTypes **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_InterfaceTypes,
@@ -391,13 +325,10 @@ func (self *INetFwRule) Get_InterfaceTypes(interfaceTypes **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(interfaceTypes)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_InterfaceTypes(interfaceTypes *uint16) error {
+func (self *INetFwRule) Put_InterfaceTypes(interfaceTypes *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_InterfaceTypes,
@@ -405,13 +336,10 @@ func (self *INetFwRule) Put_InterfaceTypes(interfaceTypes *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(interfaceTypes)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Enabled(enabled *bool) error {
+func (self *INetFwRule) Get_Enabled(enabled *bool) uint32 {
 	if enabled == nil {
 		return E_POINTER
 	}
@@ -423,14 +351,11 @@ func (self *INetFwRule) Get_Enabled(enabled *bool) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(&enabledRaw)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
 	*enabled = (enabledRaw != VARIANT_FALSE)
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Enabled(enabled bool) error {
+func (self *INetFwRule) Put_Enabled(enabled bool) uint32 {
 	var enabledRaw int16
 	if enabled {
 		enabledRaw = VARIANT_TRUE
@@ -444,13 +369,10 @@ func (self *INetFwRule) Put_Enabled(enabled bool) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(enabledRaw),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Grouping(context **uint16) error {
+func (self *INetFwRule) Get_Grouping(context **uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Grouping,
@@ -458,13 +380,10 @@ func (self *INetFwRule) Get_Grouping(context **uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(context)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Grouping(context *uint16) error {
+func (self *INetFwRule) Put_Grouping(context *uint16) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Grouping,
@@ -472,13 +391,10 @@ func (self *INetFwRule) Put_Grouping(context *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(context)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Profiles(profileTypesBitmask *int32) error {
+func (self *INetFwRule) Get_Profiles(profileTypesBitmask *int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Profiles,
@@ -486,13 +402,10 @@ func (self *INetFwRule) Get_Profiles(profileTypesBitmask *int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(profileTypesBitmask)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Profiles(profileTypesBitmask int32) error {
+func (self *INetFwRule) Put_Profiles(profileTypesBitmask int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Profiles,
@@ -500,13 +413,10 @@ func (self *INetFwRule) Put_Profiles(profileTypesBitmask int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(profileTypesBitmask),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_EdgeTraversal(enabled *bool) error {
+func (self *INetFwRule) Get_EdgeTraversal(enabled *bool) uint32 {
 	if enabled == nil {
 		return E_POINTER
 	}
@@ -518,14 +428,11 @@ func (self *INetFwRule) Get_EdgeTraversal(enabled *bool) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(&enabledRaw)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
 	*enabled = (enabledRaw != VARIANT_FALSE)
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_EdgeTraversal(enabled bool) error {
+func (self *INetFwRule) Put_EdgeTraversal(enabled bool) uint32 {
 	var enabledRaw int16
 	if enabled {
 		enabledRaw = VARIANT_TRUE
@@ -539,13 +446,10 @@ func (self *INetFwRule) Put_EdgeTraversal(enabled bool) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(enabledRaw),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Get_Action(action *int32) error {
+func (self *INetFwRule) Get_Action(action *int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Action,
@@ -553,13 +457,10 @@ func (self *INetFwRule) Get_Action(action *int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(action)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRule) Put_Action(action int32) error {
+func (self *INetFwRule) Put_Action(action int32) uint32 {
 	vtbl := (*INetFwRuleVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Put_Action,
@@ -567,10 +468,7 @@ func (self *INetFwRule) Put_Action(action int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(action),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
 type INetFwRulesVtbl struct {
@@ -586,7 +484,7 @@ type INetFwRules struct {
 	IDispatch
 }
 
-func (self *INetFwRules) Get_Count(count *int32) error {
+func (self *INetFwRules) Get_Count(count *int32) uint32 {
 	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Count,
@@ -594,13 +492,10 @@ func (self *INetFwRules) Get_Count(count *int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(count)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRules) Add(rule *INetFwRule) error {
+func (self *INetFwRules) Add(rule *INetFwRule) uint32 {
 	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Add,
@@ -608,13 +503,10 @@ func (self *INetFwRules) Add(rule *INetFwRule) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(rule)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRules) Remove(name *uint16) error {
+func (self *INetFwRules) Remove(name *uint16) uint32 {
 	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Remove,
@@ -622,13 +514,10 @@ func (self *INetFwRules) Remove(name *uint16) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(name)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwRules) Item(name *uint16, rule **INetFwRule) error {
+func (self *INetFwRules) Item(name *uint16, rule **INetFwRule) uint32 {
 	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Item,
@@ -636,10 +525,7 @@ func (self *INetFwRules) Item(name *uint16, rule **INetFwRule) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(name)),
 		uintptr(unsafe.Pointer(rule)))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
 type INetFwPolicy2Vtbl struct {
@@ -672,7 +558,7 @@ type INetFwPolicy2 struct {
 	IDispatch
 }
 
-func (self *INetFwPolicy2) Get_Rules(rules **INetFwRules) error {
+func (self *INetFwPolicy2) Get_Rules(rules **INetFwRules) uint32 {
 	vtbl := (*INetFwPolicy2Vtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_Rules,
@@ -680,10 +566,7 @@ func (self *INetFwPolicy2) Get_Rules(rules **INetFwRules) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(rules)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
 type INetFwMgrVtbl struct {
@@ -699,7 +582,7 @@ type INetFwMgr struct {
 	IDispatch
 }
 
-func (self *INetFwMgr) Get_CurrentProfileType(profileType *int32) error {
+func (self *INetFwMgr) Get_CurrentProfileType(profileType *int32) uint32 {
 	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(
 		vtbl.Get_CurrentProfileType,
@@ -707,22 +590,16 @@ func (self *INetFwMgr) Get_CurrentProfileType(profileType *int32) error {
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(profileType)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwMgr) RestoreDefaults() error {
+func (self *INetFwMgr) RestoreDefaults() uint32 {
 	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall(vtbl.RestoreDefaults, 1, uintptr(unsafe.Pointer(self)), 0, 0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, portNumber int32, localAddress *uint16, ipProtocol int32, allowed *VARIANT, restricted *VARIANT) error {
+func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, portNumber int32, localAddress *uint16, ipProtocol int32, allowed *VARIANT, restricted *VARIANT) uint32 {
 	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall9(
 		vtbl.IsPortAllowed,
@@ -736,13 +613,10 @@ func (self *INetFwMgr) IsPortAllowed(imageFileName *uint16, ipVersion int32, por
 		uintptr(unsafe.Pointer(allowed)),
 		uintptr(unsafe.Pointer(restricted)),
 		0)
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func (self *INetFwMgr) IsIcmpTypeAllowed(ipVersion int32, localAddress *uint16, icmpType *uint16, allowed *VARIANT, restricted *VARIANT) error {
+func (self *INetFwMgr) IsIcmpTypeAllowed(ipVersion int32, localAddress *uint16, icmpType *uint16, allowed *VARIANT, restricted *VARIANT) uint32 {
 	vtbl := (*INetFwMgrVtbl)(unsafe.Pointer(self.Vtbl))
 	r1, _, _ := syscall.Syscall6(
 		vtbl.IsIcmpTypeAllowed,
@@ -753,8 +627,5 @@ func (self *INetFwMgr) IsIcmpTypeAllowed(ipVersion int32, localAddress *uint16, 
 		uintptr(unsafe.Pointer(icmpType)),
 		uintptr(unsafe.Pointer(allowed)),
 		uintptr(unsafe.Pointer(restricted)))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }

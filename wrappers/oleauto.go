@@ -45,12 +45,9 @@ func SysStringLen(bstr *uint16) uint32 {
 	return uint32(r1)
 }
 
-func VariantClear(variant *VARIANT) error {
+func VariantClear(variant *VARIANT) uint32 {
 	r1, _, _ := procVariantClear.Call(uintptr(unsafe.Pointer(variant)))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
 func VariantInit(variant *VARIANT) {

@@ -93,15 +93,12 @@ var (
 	procSHGetFolderPathW = modshell32.NewProc("SHGetFolderPathW")
 )
 
-func SHGetFolderPath(owner syscall.Handle, folder uint32, token syscall.Handle, flags uint32, path *uint16) error {
+func SHGetFolderPath(owner syscall.Handle, folder uint32, token syscall.Handle, flags uint32, path *uint16) uint32 {
 	r1, _, _ := procSHGetFolderPathW.Call(
 		uintptr(owner),
 		uintptr(folder),
 		uintptr(token),
 		uintptr(flags),
 		uintptr(unsafe.Pointer(path)))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
