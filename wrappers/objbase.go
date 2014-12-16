@@ -36,25 +36,19 @@ var (
 	procCoUninitialize   = modole32.NewProc("CoUninitialize")
 )
 
-func CoCreateInstance(clsid *GUID, outer *IUnknown, clsContext uint32, iid *GUID, object *uintptr) error {
+func CoCreateInstance(clsid *GUID, outer *IUnknown, clsContext uint32, iid *GUID, object *uintptr) uint32 {
 	r1, _, _ := procCoCreateInstance.Call(
 		uintptr(unsafe.Pointer(clsid)),
 		uintptr(unsafe.Pointer(outer)),
 		uintptr(clsContext),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(object)))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
-func CoInitializeEx(flags uint32) error {
+func CoInitializeEx(flags uint32) uint32 {
 	r1, _, _ := procCoInitializeEx.Call(0, uintptr(flags))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
 func CoUninitialize() {

@@ -59,14 +59,14 @@ type FirewallRule struct {
 
 func NewFirewallRule() (*FirewallRule, error) {
 	var object uintptr
-	err := wrappers.CoCreateInstance(
+	hr := wrappers.CoCreateInstance(
 		&wrappers.CLSID_NetFwRule,
 		nil,
 		wrappers.CLSCTX_INPROC_SERVER,
 		&wrappers.IID_INetFwRule,
 		&object)
-	if err != nil {
-		return nil, err
+	if wrappers.FAILED(hr) {
+		return nil, COMError(hr)
 	}
 	return &FirewallRule{object: (*wrappers.INetFwRule)(unsafe.Pointer(object))}, nil
 }
@@ -81,312 +81,360 @@ func (self *FirewallRule) Close() error {
 
 func (self *FirewallRule) GetName() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var nameRaw *uint16
-	if err := self.object.Get_Name(&nameRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_Name(&nameRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(nameRaw), nil
 }
 
 func (self *FirewallRule) SetName(name string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	nameRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(name))
 	defer wrappers.SysFreeString(nameRaw)
-	return self.object.Put_Name(nameRaw)
+	if hr := self.object.Put_Name(nameRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetDescription() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var descRaw *uint16
-	if err := self.object.Get_Description(&descRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_Description(&descRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(descRaw), nil
 }
 
 func (self *FirewallRule) SetDescription(desc string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	descRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(desc))
 	defer wrappers.SysFreeString(descRaw)
-	return self.object.Put_Description(descRaw)
+	if hr := self.object.Put_Description(descRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetApplicationName() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var imageFileNameRaw *uint16
-	if err := self.object.Get_ApplicationName(&imageFileNameRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_ApplicationName(&imageFileNameRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(imageFileNameRaw), nil
 }
 
 func (self *FirewallRule) SetApplicationName(imageFileName string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	imageFileNameRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(imageFileName))
 	defer wrappers.SysFreeString(imageFileNameRaw)
-	return self.object.Put_ApplicationName(imageFileNameRaw)
+	if hr := self.object.Put_ApplicationName(imageFileNameRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetServiceName() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var serviceNameRaw *uint16
-	if err := self.object.Get_ServiceName(&serviceNameRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_ServiceName(&serviceNameRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(serviceNameRaw), nil
 }
 
 func (self *FirewallRule) SetServiceName(serviceName string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	serviceNameRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(serviceName))
 	defer wrappers.SysFreeString(serviceNameRaw)
-	return self.object.Put_ServiceName(serviceNameRaw)
+	if hr := self.object.Put_ServiceName(serviceNameRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetProtocol() (FirewallProtocol, error) {
 	if self.object == nil {
-		return 0, wrappers.E_POINTER
+		return 0, COMErrorPointer
 	}
 	var protocolRaw int32
-	if err := self.object.Get_Protocol(&protocolRaw); err != nil {
-		return 0, err
+	if hr := self.object.Get_Protocol(&protocolRaw); wrappers.FAILED(hr) {
+		return 0, COMError(hr)
 	}
 	return FirewallProtocol(protocolRaw), nil
 }
 
-func (self *FirewallRule) SetProtocol(protocol FirewallProtocol) error{
+func (self *FirewallRule) SetProtocol(protocol FirewallProtocol) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
-	return self.object.Put_Protocol(int32(protocol))
+	if hr := self.object.Put_Protocol(int32(protocol)); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetLocalPorts() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var portNumbersRaw *uint16
-	if err := self.object.Get_LocalPorts(&portNumbersRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_LocalPorts(&portNumbersRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(portNumbersRaw), nil
 }
 
 func (self *FirewallRule) SetLocalPorts(portNumbers string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	portNumbersRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(portNumbers))
 	defer wrappers.SysFreeString(portNumbersRaw)
-	return self.object.Put_LocalPorts(portNumbersRaw)
+	if hr := self.object.Put_LocalPorts(portNumbersRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetRemotePorts() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var portNumbersRaw *uint16
-	if err := self.object.Get_RemotePorts(&portNumbersRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_RemotePorts(&portNumbersRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(portNumbersRaw), nil
 }
 
 func (self *FirewallRule) SetRemotePorts(portNumbers string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	portNumbersRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(portNumbers))
 	defer wrappers.SysFreeString(portNumbersRaw)
-	return self.object.Put_RemotePorts(portNumbersRaw)
+	if hr := self.object.Put_RemotePorts(portNumbersRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetLocalAddresses() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var localAddrsRaw *uint16
-	if err := self.object.Get_LocalAddresses(&localAddrsRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_LocalAddresses(&localAddrsRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(localAddrsRaw), nil
 }
 
 func (self *FirewallRule) SetLocalAddresses(localAddrs string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	localAddrsRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(localAddrs))
 	defer wrappers.SysFreeString(localAddrsRaw)
-	return self.object.Put_LocalAddresses(localAddrsRaw)
+	if hr := self.object.Put_LocalAddresses(localAddrsRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetRemoteAddresses() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var remoteAddrsRaw *uint16
-	if err := self.object.Get_RemoteAddresses(&remoteAddrsRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_RemoteAddresses(&remoteAddrsRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(remoteAddrsRaw), nil
 }
 
 func (self *FirewallRule) SetRemoteAddresses(remoteAddrs string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	remoteAddrsRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(remoteAddrs))
 	defer wrappers.SysFreeString(remoteAddrsRaw)
-	return self.object.Put_RemoteAddresses(remoteAddrsRaw)
+	if hr := self.object.Put_RemoteAddresses(remoteAddrsRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetIcmpTypesAndCodes() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var icmpTypesAndCodesRaw *uint16
-	if err := self.object.Get_IcmpTypesAndCodes(&icmpTypesAndCodesRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_IcmpTypesAndCodes(&icmpTypesAndCodesRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(icmpTypesAndCodesRaw), nil
 }
 
 func (self *FirewallRule) SetIcmpTypesAndCodes(icmpTypesAndCodes string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	icmpTypesAndCodesRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(icmpTypesAndCodes))
 	defer wrappers.SysFreeString(icmpTypesAndCodesRaw)
-	return self.object.Put_IcmpTypesAndCodes(icmpTypesAndCodesRaw)
+	if hr := self.object.Put_IcmpTypesAndCodes(icmpTypesAndCodesRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetDirection() (FirewallDirection, error) {
 	if self.object == nil {
-		return 0, wrappers.E_POINTER
+		return 0, COMErrorPointer
 	}
 	var dirRaw int32
-	if err := self.object.Get_Direction(&dirRaw); err != nil {
-		return 0, err
+	if hr := self.object.Get_Direction(&dirRaw); wrappers.FAILED(hr) {
+		return 0, COMError(hr)
 	}
 	return FirewallDirection(dirRaw), nil
 }
 
 func (self *FirewallRule) SetDirection(dir FirewallDirection) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
-	return self.object.Put_Direction(int32(dir))
+	if hr := self.object.Put_Direction(int32(dir)); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetInterfaceTypes() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var interfaceTypesRaw *uint16
-	if err := self.object.Get_InterfaceTypes(&interfaceTypesRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_InterfaceTypes(&interfaceTypesRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(interfaceTypesRaw), nil
 }
 
 func (self *FirewallRule) SetInterfaceTypes(interfaceTypes string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	interfaceTypesRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(interfaceTypes))
 	defer wrappers.SysFreeString(interfaceTypesRaw)
-	return self.object.Put_InterfaceTypes(interfaceTypesRaw)
+	if hr := self.object.Put_InterfaceTypes(interfaceTypesRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetEnabled() (bool, error) {
 	if self.object == nil {
-		return false, wrappers.E_POINTER
+		return false, COMErrorPointer
 	}
 	var enabled bool
-	if err := self.object.Get_Enabled(&enabled); err != nil {
-		return false, err
+	if hr := self.object.Get_Enabled(&enabled); wrappers.FAILED(hr) {
+		return false, COMError(hr)
 	}
 	return enabled, nil
 }
 
 func (self *FirewallRule) SetEnabled(enabled bool) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
-	return self.object.Put_Enabled(enabled)
+	if hr := self.object.Put_Enabled(enabled); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetGrouping() (string, error) {
 	if self.object == nil {
-		return "", wrappers.E_POINTER
+		return "", COMErrorPointer
 	}
 	var contextRaw *uint16
-	if err := self.object.Get_Grouping(&contextRaw); err != nil {
-		return "", err
+	if hr := self.object.Get_Grouping(&contextRaw); wrappers.FAILED(hr) {
+		return "", COMError(hr)
 	}
 	return BstrToString(contextRaw), nil
 }
 
 func (self *FirewallRule) SetGrouping(context string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	contextRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(context))
 	defer wrappers.SysFreeString(contextRaw)
-	return self.object.Put_Grouping(contextRaw)
+	if hr := self.object.Put_Grouping(contextRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetEdgeTraversal() (bool, error) {
 	if self.object == nil {
-		return false, wrappers.E_POINTER
+		return false, COMErrorPointer
 	}
 	var enabled bool
-	if err := self.object.Get_EdgeTraversal(&enabled); err != nil {
-		return false, err
+	if hr := self.object.Get_EdgeTraversal(&enabled); wrappers.FAILED(hr) {
+		return false, COMError(hr)
 	}
 	return enabled, nil
 }
 
 func (self *FirewallRule) SetEdgeTraversal(enabled bool) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
-	return self.object.Put_EdgeTraversal(enabled)
+	if hr := self.object.Put_EdgeTraversal(enabled); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRule) GetAction() (FirewallAction, error) {
 	if self.object == nil {
-		return 0, wrappers.E_POINTER
+		return 0, COMErrorPointer
 	}
 	var actionRaw int32
-	if err := self.object.Get_Action(&actionRaw); err != nil {
-		return 0, err
+	if hr := self.object.Get_Action(&actionRaw); wrappers.FAILED(hr) {
+		return 0, COMError(hr)
 	}
 	return FirewallAction(actionRaw), nil
 }
 
 func (self *FirewallRule) SetAction(action FirewallAction) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
-	return self.object.Put_Action(int32(action))
+	if hr := self.object.Put_Action(int32(action)); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 type FirewallRuleCollection struct {
@@ -403,40 +451,46 @@ func (self *FirewallRuleCollection) Close() error {
 
 func (self *FirewallRuleCollection) GetCount() (int32, error) {
 	if self.object == nil {
-		return 0, wrappers.E_POINTER
+		return 0, COMErrorPointer
 	}
 	var count int32
-	if err := self.object.Get_Count(&count); err != nil {
-		return 0, err
+	if hr := self.object.Get_Count(&count); wrappers.FAILED(hr) {
+		return 0, COMError(hr)
 	}
 	return count, nil
 }
 
 func (self *FirewallRuleCollection) Add(rule *FirewallRule) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
-	return self.object.Add(rule.object)
+	if hr := self.object.Add(rule.object); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRuleCollection) Remove(name string) error {
 	if self.object == nil {
-		return wrappers.E_POINTER
+		return COMErrorPointer
 	}
 	nameRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(name))
 	defer wrappers.SysFreeString(nameRaw)
-	return self.object.Remove(nameRaw)
+	if hr := self.object.Remove(nameRaw); wrappers.FAILED(hr) {
+		return COMError(hr)
+	}
+	return nil
 }
 
 func (self *FirewallRuleCollection) Item(name string) (*FirewallRule, error) {
 	if self.object == nil {
-		return nil, wrappers.E_POINTER
+		return nil, COMErrorPointer
 	}
 	nameRaw := wrappers.SysAllocString(syscall.StringToUTF16Ptr(name))
 	defer wrappers.SysFreeString(nameRaw)
 	var rule *wrappers.INetFwRule
-	if err := self.object.Item(nameRaw, &rule); err != nil {
-		return nil, err
+	if hr := self.object.Item(nameRaw, &rule); wrappers.FAILED(hr) {
+		return nil, COMError(hr)
 	}
 	return &FirewallRule{object: rule}, nil
 }
@@ -447,14 +501,14 @@ type FirewallPolicy struct {
 
 func NewFirewallPolicy() (*FirewallPolicy, error) {
 	var object uintptr
-	err := wrappers.CoCreateInstance(
+	hr := wrappers.CoCreateInstance(
 		&wrappers.CLSID_NetFwPolicy2,
 		nil,
 		wrappers.CLSCTX_INPROC_SERVER,
 		&wrappers.IID_INetFwPolicy2,
 		&object)
-	if err != nil {
-		return nil, err
+	if wrappers.FAILED(hr) {
+		return nil, COMError(hr)
 	}
 	return &FirewallPolicy{object: (*wrappers.INetFwPolicy2)(unsafe.Pointer(object))}, nil
 }
@@ -469,11 +523,11 @@ func (self *FirewallPolicy) Close() error {
 
 func (self *FirewallPolicy) GetRules() (*FirewallRuleCollection, error) {
 	if self.object == nil {
-		return nil, wrappers.E_POINTER
+		return nil, COMErrorPointer
 	}
 	var rules *wrappers.INetFwRules
-	if err := self.object.Get_Rules(&rules); err != nil {
-		return nil, err
+	if hr := self.object.Get_Rules(&rules); wrappers.FAILED(hr) {
+		return nil, COMError(hr)
 	}
 	return &FirewallRuleCollection{object: rules}, nil
 }
@@ -484,14 +538,14 @@ type FirewallManager struct {
 
 func NewFirewallManager() (*FirewallManager, error) {
 	var object uintptr
-	err := wrappers.CoCreateInstance(
+	hr := wrappers.CoCreateInstance(
 		&wrappers.CLSID_NetFwMgr,
 		nil,
 		wrappers.CLSCTX_INPROC_SERVER,
 		&wrappers.IID_INetFwMgr,
 		&object)
-	if err != nil {
-		return nil, err
+	if wrappers.FAILED(hr) {
+		return nil, COMError(hr)
 	}
 	return &FirewallManager{object: (*wrappers.INetFwMgr)(unsafe.Pointer(object))}, nil
 }
@@ -506,7 +560,7 @@ func (self *FirewallManager) Close() error {
 
 func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion FirewallIPVersion, portNumber int32, localAddress string, ipProtocol FirewallProtocol) (allowed bool, restricted bool, err error) {
 	if self.object == nil {
-		err = wrappers.E_POINTER
+		err = COMErrorPointer
 		return
 	}
 	var imageFileNameRaw *uint16
@@ -525,7 +579,7 @@ func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion Firew
 	var restrictedRaw wrappers.VARIANT
 	wrappers.VariantInit(&restrictedRaw)
 	defer wrappers.VariantClear(&restrictedRaw)
-	err = self.object.IsPortAllowed(
+	hr := self.object.IsPortAllowed(
 		imageFileNameRaw,
 		int32(ipVersion),
 		portNumber,
@@ -533,9 +587,11 @@ func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion Firew
 		int32(ipProtocol),
 		&allowedRaw,
 		&restrictedRaw)
-	if err == nil {
+	if wrappers.SUCCEEDED(hr) {
 		allowed = allowedRaw.Vt == wrappers.VT_BOOL && int16(allowedRaw.Val[0]) != wrappers.VARIANT_FALSE
 		restricted = restrictedRaw.Vt == wrappers.VT_BOOL && int16(restrictedRaw.Val[0]) != wrappers.VARIANT_FALSE
+	} else {
+		err = COMError(hr)
 	}
 	return
 }

@@ -143,6 +143,16 @@ const (
 	INFINITE = 0xFFFFFFFF
 )
 
+const (
+	FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
+	FORMAT_MESSAGE_IGNORE_INSERTS  = 0x00000200
+	FORMAT_MESSAGE_FROM_STRING     = 0x00000400
+	FORMAT_MESSAGE_FROM_HMODULE    = 0x00000800
+	FORMAT_MESSAGE_FROM_SYSTEM     = 0x00001000
+	FORMAT_MESSAGE_ARGUMENT_ARRAY  = 0x00002000
+	FORMAT_MESSAGE_MAX_WIDTH_MASK  = 0x000000FF
+)
+
 type STARTUPINFO struct {
 	Cb            uint32
 	Reserved      *uint16
@@ -206,6 +216,7 @@ var (
 	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
+	procFormatMessageW             = modkernel32.NewProc("FormatMessageW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
 	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
@@ -217,6 +228,7 @@ var (
 	procGetSystemTimeAsFileTime    = modkernel32.NewProc("GetSystemTimeAsFileTime")
 	procGetSystemTimes             = modkernel32.NewProc("GetSystemTimes")
 	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
+	procLocalFree                  = modkernel32.NewProc("LocalFree")
 	procOpenProcess                = modkernel32.NewProc("OpenProcess")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procSetFileTime                = modkernel32.NewProc("SetFileTime")
@@ -377,6 +389,25 @@ func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, er
 	return uint32(r1), nil
 }
 
+func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId uint32, buffer *uint16, size uint32, arguments *byte) (uint32, error) {
+	r1, _, e1 := procFormatMessageW.Call(
+		uintptr(flags),
+		source,
+		uintptr(messageId),
+		uintptr(languageId),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size),
+		uintptr(unsafe.Pointer(arguments)))
+	if r1 == 0 {
+		if e1.(syscall.Errno) != 0 {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 	r1, _, e1 := procGetComputerNameExW.Call(
 		uintptr(nameType),
@@ -503,6 +534,19 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 		}
 	}
 	return nil
+}
+
+func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
+	// LocalFree returns NULL to indicate success!
+	r1, _, e1 := procLocalFree.Call(uintptr(mem))
+	if r1 != 0 {
+		if e1.(syscall.Errno) != 0 {
+			return syscall.Handle(r1), e1
+		} else {
+			return syscall.Handle(r1), syscall.EINVAL
+		}
+	}
+	return 0, nil
 }
 
 func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (syscall.Handle, error) {
