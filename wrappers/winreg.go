@@ -45,8 +45,8 @@ var (
 
 func RegCloseKey(key syscall.Handle) error {
 	r1, _, _ := procRegCloseKey.Call(uintptr(key))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -62,8 +62,8 @@ func RegCreateKeyEx(key syscall.Handle, subKey *uint16, reserved uint32, class *
 		uintptr(unsafe.Pointer(securityAttributes)),
 		uintptr(unsafe.Pointer(result)),
 		uintptr(unsafe.Pointer(disposition)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -72,8 +72,8 @@ func RegDeleteValue(key syscall.Handle, valueName *uint16) error {
 	r1, _, _ := procRegDeleteValueW.Call(
 		uintptr(key),
 		uintptr(unsafe.Pointer(valueName)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -85,8 +85,8 @@ func RegOpenKeyEx(key syscall.Handle, subKey *uint16, options uint32, samDesired
 		uintptr(options),
 		uintptr(samDesired),
 		uintptr(unsafe.Pointer(result)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -99,8 +99,8 @@ func RegQueryValueEx(key syscall.Handle, valueName *uint16, reserved *uint32, va
 		uintptr(unsafe.Pointer(valueType)),
 		uintptr(unsafe.Pointer(data)),
 		uintptr(unsafe.Pointer(cbData)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -113,8 +113,8 @@ func RegSetValueEx(key syscall.Handle, valueName *uint16, reserved uint32, value
 		uintptr(valueType),
 		uintptr(unsafe.Pointer(data)),
 		uintptr(cbData))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }

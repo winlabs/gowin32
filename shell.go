@@ -87,7 +87,7 @@ const (
 func GetSpecialFolderPath(folder SpecialFolder) (string, error) {
 	buf := [wrappers.MAX_PATH]uint16{}
 	if hr := wrappers.SHGetFolderPath(0, uint32(folder), 0, 0, &buf[0]); wrappers.FAILED(hr) {
-		return "", COMError(hr)
+		return "", NewWindowsError("SHGetFolderPath", COMError(hr))
 	}
 	return syscall.UTF16ToString((&buf)[:]), nil
 }

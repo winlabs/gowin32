@@ -46,7 +46,7 @@ var (
 func GenerateConsoleCtrlEvent(ctrlEvent uint32, processGroupId uint32) error {
 	r1, _, e1 := procGenerateConsoleCtrlEvent.Call(uintptr(ctrlEvent), uintptr(processGroupId))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL

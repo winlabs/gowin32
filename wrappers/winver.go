@@ -36,7 +36,7 @@ func GetFileVersionInfo(filename *uint16, handle uint32, len uint32, data *byte)
 		uintptr(len),
 		uintptr(unsafe.Pointer(data)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -50,7 +50,7 @@ func GetFileVersionInfoSize(filename *uint16, handle *uint32) (uint32, error) {
 		uintptr(unsafe.Pointer(filename)),
 		uintptr(unsafe.Pointer(handle)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -66,7 +66,7 @@ func VerQueryValue(block *byte, subBlock *uint16, buffer **byte, len *uint32) er
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(unsafe.Pointer(len)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL

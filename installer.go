@@ -135,7 +135,7 @@ type InstallerPackage struct {
 func OpenInstalledProduct(productCode string) (*InstallerPackage, error) {
 	var handle uint32
 	if err := wrappers.MsiOpenProduct(syscall.StringToUTF16Ptr(productCode), &handle); err != nil {
-		return nil, err
+		return nil, NewWindowsError("MsiOpenProduct", err)
 	}
 	return &InstallerPackage{handle: handle}, nil
 }
@@ -143,7 +143,7 @@ func OpenInstalledProduct(productCode string) (*InstallerPackage, error) {
 func OpenInstallerPackage(packagePath string) (*InstallerPackage, error) {
 	var handle uint32
 	if err := wrappers.MsiOpenPackage(syscall.StringToUTF16Ptr(packagePath), &handle); err != nil {
-		return nil, err
+		return nil, NewWindowsError("MsiOpenPackage", err)
 	}
 	return &InstallerPackage{handle: handle}, nil
 }
@@ -151,7 +151,7 @@ func OpenInstallerPackage(packagePath string) (*InstallerPackage, error) {
 func (self *InstallerPackage) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.MsiCloseHandle(self.handle); err != nil {
-			return err
+			return NewWindowsError("MsiCloseHandle", err)
 		}
 		self.handle = 0
 	}
@@ -166,7 +166,7 @@ func (self *InstallerPackage) GetProductProperty(property string) (string, error
 		nil,
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("MsiGetProductProperty", err)
 	}
 	size++
 	buf := make([]uint16, size)
@@ -176,7 +176,7 @@ func (self *InstallerPackage) GetProductProperty(property string) (string, error
 		&buf[0],
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("MsiGetProductProperty", err)
 	}
 	return syscall.UTF16ToString(buf), nil
 }
@@ -189,7 +189,7 @@ func (self *InstallerPackage) GetProperty(name string) (string, error) {
 		syscall.StringToUTF16Ptr(""),
 		&size)
 	if err != wrappers.ERROR_MORE_DATA {
-		return "", err
+		return "", NewWindowsError("MsiGetProperty", err)
 	}
 	size++
 	buf := make([]uint16, size)
@@ -199,28 +199,40 @@ func (self *InstallerPackage) GetProperty(name string) (string, error) {
 		&buf[0],
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("MsiGetProperty", err)
 	}
 	return syscall.UTF16ToString(buf), nil
 }
 
 func ConfigureInstalledProduct(productCode string, installLevel InstallLevel, installState InstallState, commandLine string) error {
-	return wrappers.MsiConfigureProductEx(
+	err := wrappers.MsiConfigureProductEx(
 		syscall.StringToUTF16Ptr(productCode),
 		int32(installLevel),
 		int32(installState),
 		syscall.StringToUTF16Ptr(commandLine))
+	if err != nil {
+		return NewWindowsError("MsiConfigureProductEx", err)
+	}
+	return nil
 }
 
 func DisableInstallerLog() error {
-	return wrappers.MsiEnableLog(0, nil, 0)
+	err := wrappers.MsiEnableLog(0, nil, 0)
+	if err != nil {
+		return NewWindowsError("MsiEnableLog", err)
+	}
+	return nil
 }
 
 func EnableInstallerLog(logMode InstallLogMode, logFile string, logAttributes InstallLogAttributes) error {
-	return wrappers.MsiEnableLog(
+	err := wrappers.MsiEnableLog(
 		uint32(logMode),
 		syscall.StringToUTF16Ptr(logFile),
 		uint32(logAttributes))
+	if err != nil {
+		return NewWindowsError("MsiEnableLog", err)
+	}
+	return nil
 }
 
 func GetInstalledComponentPath(productCode string, componentID string) (string, InstallState) {
@@ -248,7 +260,7 @@ func GetInstalledProductProperty(productCode string, property InstallProperty) (
 		nil,
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("MsiGetProductInfo", err)
 	}
 	size++
 	buf := make([]uint16, size)
@@ -258,7 +270,7 @@ func GetInstalledProductProperty(productCode string, property InstallProperty) (
 		&buf[0],
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("MsiGetProductInfo", err)
 	}
 	return syscall.UTF16ToString(buf), nil
 }
@@ -275,16 +287,20 @@ func GetInstalledProductsByUpgradeCode(upgradeCode string) ([]string, error) {
 		if err == wrappers.ERROR_NO_MORE_ITEMS {
 			return productCodes, nil
 		} else if err != nil {
-			return nil, err
+			return nil, NewWindowsError("MsiEnumRelatedProducts", err)
 		}
 		productCodes = append(productCodes, syscall.UTF16ToString(buf))
 	}
 }
 
 func InstallProduct(packagePath string, commandLine string) error {
-	return wrappers.MsiInstallProduct(
+	err := wrappers.MsiInstallProduct(
 		syscall.StringToUTF16Ptr(packagePath),
 		syscall.StringToUTF16Ptr(commandLine))
+	if err != nil {
+		return NewWindowsError("MsiInstallProduct", err)
+	}
+	return nil
 }
 
 func SetInstallerInternalUI(uiLevel InstallUILevel) InstallUILevel {
@@ -292,10 +308,14 @@ func SetInstallerInternalUI(uiLevel InstallUILevel) InstallUILevel {
 }
 
 func UninstallProduct(productCode string) error {
-	return wrappers.MsiConfigureProduct(
+	err := wrappers.MsiConfigureProduct(
 		syscall.StringToUTF16Ptr(productCode),
 		0,
 		wrappers.INSTALLSTATE_ABSENT)
+	if err != nil {
+		return NewWindowsError("MsiConfigureProduct", err)
+	}
+	return nil
 }
 
 func VerifyInstallerPackage(packagePath string) (bool, error) {
@@ -303,7 +323,7 @@ func VerifyInstallerPackage(packagePath string) (bool, error) {
 		if err == wrappers.ERROR_INSTALL_PACKAGE_INVALID {
 			return false, nil
 		} else {
-			return false, err
+			return false, NewWindowsError("MsiVerifyPackage", err)
 		}
 	}
 	return true, nil

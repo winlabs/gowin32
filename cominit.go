@@ -18,18 +18,24 @@ package gowin32
 
 import (
 	"github.com/winlabs/gowin32/wrappers"
-
-	"syscall"
 )
 
-func ExpandEnvironment(text string) (string, error) {
-	size, err := wrappers.ExpandEnvironmentStrings(syscall.StringToUTF16Ptr(text), nil, 0)
-	if err != nil {
-		return "", NewWindowsError("ExpandEnvironmentStrings", err)
+type COMInitFlags uint32
+
+const (
+	COMInitApartmentThreaded COMInitFlags = wrappers.COINIT_APARTMENTTHREADED
+	COMInitMultithreaded     COMInitFlags = wrappers.COINIT_MULTITHREADED
+	COMInitDisableOLE1DDE    COMInitFlags = wrappers.COINIT_DISABLE_OLE1DDE
+	COMInitSpeedOverMemory   COMInitFlags = wrappers.COINIT_SPEED_OVER_MEMORY
+)
+
+func InitializeCOM(flags COMInitFlags) error {
+	if hr := wrappers.CoInitializeEx(nil, uint32(flags)); wrappers.FAILED(hr) {
+		return NewWindowsError("CoInitializeEx", COMError(hr))
 	}
-	buf := make([]uint16, size)
-	if _, err := wrappers.ExpandEnvironmentStrings(syscall.StringToUTF16Ptr(text), &buf[0], size); err != nil {
-		return "", NewWindowsError("ExpandEnvironmentStrings", err)
-	}
-	return syscall.UTF16ToString(buf), nil
+	return nil
+}
+
+func UninitializeCOM() {
+	wrappers.CoUninitialize()
 }

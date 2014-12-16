@@ -25,11 +25,11 @@ import (
 func GetWindowsSystemPath() (string, error) {
 	len, err := wrappers.GetSystemDirectory(nil, 0)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("GetSystemDirectory", err)
 	}
 	buf := make([]uint16, len)
 	if _, err := wrappers.GetSystemDirectory(&buf[0], len); err != nil {
-		return "", nil
+		return "", NewWindowsError("GetSystemDirectory", err)
 	}
 	return syscall.UTF16ToString(buf), nil
 }

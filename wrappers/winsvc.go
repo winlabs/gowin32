@@ -268,7 +268,7 @@ func ChangeServiceConfig(service syscall.Handle, serviceType uint32, startType u
 		uintptr(unsafe.Pointer(password)),
 		uintptr(unsafe.Pointer(displayName)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -283,7 +283,7 @@ func ChangeServiceConfig2(service syscall.Handle, infoLevel uint32, info *byte) 
 		uintptr(infoLevel),
 		uintptr(unsafe.Pointer(info)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -295,7 +295,7 @@ func ChangeServiceConfig2(service syscall.Handle, infoLevel uint32, info *byte) 
 func CloseServiceHandle(scObject syscall.Handle) error {
 	r1, _, e1 := procCloseServiceHandle.Call(uintptr(scObject))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -310,7 +310,7 @@ func ControlService(service syscall.Handle, control uint32, serviceStatus *SERVI
 		uintptr(control),
 		uintptr(unsafe.Pointer(serviceStatus)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -335,7 +335,7 @@ func CreateService(scManager syscall.Handle, serviceName *uint16, databaseName *
 		uintptr(unsafe.Pointer(serviceStartName)),
 		uintptr(unsafe.Pointer(password)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -347,7 +347,7 @@ func CreateService(scManager syscall.Handle, serviceName *uint16, databaseName *
 func DeleteService(service syscall.Handle) error {
 	r1, _, e1 := procDeleteService.Call(uintptr(service))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -367,7 +367,7 @@ func EnumServicesStatus(scManager syscall.Handle, serviceType uint32, serviceSta
 		uintptr(unsafe.Pointer(servicesReturned)),
 		uintptr(unsafe.Pointer(resumeHandle)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -382,7 +382,7 @@ func OpenSCManager(machineName *uint16, databaseName *uint16, desiredAccess uint
 		uintptr(unsafe.Pointer(databaseName)),
 		uintptr(desiredAccess))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -397,7 +397,7 @@ func OpenService(scManager syscall.Handle, serviceName *uint16, desiredAccess ui
 		uintptr(unsafe.Pointer(serviceName)),
 		uintptr(desiredAccess))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -413,7 +413,7 @@ func QueryServiceConfig(service syscall.Handle, serviceConfig *QUERY_SERVICE_CON
 		uintptr(bufSize),
 		uintptr(unsafe.Pointer(bytesNeeded)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -430,7 +430,7 @@ func QueryServiceConfig2(service syscall.Handle, infoLevel uint32, buffer *byte,
 		uintptr(bufSize),
 		uintptr(unsafe.Pointer(bytesNeeded)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -444,7 +444,7 @@ func QueryServiceStatus(service syscall.Handle, serviceStatus *SERVICE_STATUS) e
 		uintptr(service),
 		uintptr(unsafe.Pointer(serviceStatus)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -461,7 +461,7 @@ func QueryServiceStatusEx(service syscall.Handle, infoLevel int32, buffer *byte,
 		uintptr(bufSize),
 		uintptr(unsafe.Pointer(bytesNeeded)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -476,7 +476,7 @@ func StartService(service syscall.Handle, numServiceArgs uint32, serviceArgVecto
 		uintptr(numServiceArgs),
 		uintptr(unsafe.Pointer(serviceArgVectors)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL

@@ -56,7 +56,7 @@ func LocaleFromLocaleName(localeName string, flags LocaleNameFlags) (Locale, err
 		syscall.StringToUTF16Ptr(localeName),
 		uint32(flags))
 	if err != nil {
-		return 0, err
+		return 0, NewWindowsError("LocaleNameToLCID", err)
 	}
 	return Locale(lcid), nil
 }

@@ -177,11 +177,11 @@ func GetFileVersion(filename string) (*FileVersion, error) {
 	var handle uint32
 	size, err := wrappers.GetFileVersionInfoSize(syscall.StringToUTF16Ptr(filename), &handle)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("GetFileVersionInfoSize", err)
 	}
 	data := make([]byte, size)
 	if err := wrappers.GetFileVersionInfo(syscall.StringToUTF16Ptr(filename), handle, size, &data[0]); err != nil {
-		return nil, err
+		return nil, NewWindowsError("GetFileVersionInfo", err)
 	}
 	return &FileVersion{data: data}, nil
 }
@@ -195,7 +195,7 @@ func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
 		(**byte)(unsafe.Pointer(&ffi)),
 		&len)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("VerQueryValue", err)
 	}
 	return &FixedFileInfo{
 		FileVersion: FileVersionNumber{

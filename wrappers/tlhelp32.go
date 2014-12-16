@@ -71,7 +71,7 @@ func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, e
 	r1, _, e1 := procCreateToolhelp32Snapshot.Call(uintptr(flags), uintptr(processID))
 	handle := syscall.Handle(r1)
 	if handle == INVALID_HANDLE_VALUE {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return handle, e1
 		} else {
 			return handle, syscall.EINVAL
@@ -83,7 +83,7 @@ func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, e
 func Module32First(snapshot syscall.Handle, me *MODULEENTRY32) error {
 	r1, _, e1 := procModule32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -95,7 +95,7 @@ func Module32First(snapshot syscall.Handle, me *MODULEENTRY32) error {
 func Module32Next(snapshot syscall.Handle, me *MODULEENTRY32) error {
 	r1, _, e1 := procModule32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -107,7 +107,7 @@ func Module32Next(snapshot syscall.Handle, me *MODULEENTRY32) error {
 func Process32First(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
 	r1, _, e1 := procProcess32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(pe)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -119,7 +119,7 @@ func Process32First(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
 func Process32Next(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
 	r1, _, e1 := procProcess32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(pe)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL

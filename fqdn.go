@@ -26,12 +26,12 @@ func GetFQDN() (string, error) {
 	fqdnLength := uint32(0)
 	err := wrappers.GetComputerNameEx(wrappers.ComputerNameDnsFullyQualified, nil, &fqdnLength)
 	if err != wrappers.ERROR_MORE_DATA {
-		return "", err
+		return "", NewWindowsError("GetComputerNameEx", err)
 	}
 	fqdnBuffer := make([]uint16, fqdnLength)
 	err = wrappers.GetComputerNameEx(wrappers.ComputerNameDnsFullyQualified, &fqdnBuffer[0], &fqdnLength)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("GetComputerNameEx", err)
 	}
 	return syscall.UTF16ToString(fqdnBuffer), nil
 }
