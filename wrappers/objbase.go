@@ -46,8 +46,8 @@ func CoCreateInstance(clsid *GUID, outer *IUnknown, clsContext uint32, iid *GUID
 	return uint32(r1)
 }
 
-func CoInitializeEx(flags uint32) uint32 {
-	r1, _, _ := procCoInitializeEx.Call(0, uintptr(flags))
+func CoInitializeEx(reserved *byte, flags uint32) uint32 {
+	r1, _, _ := procCoInitializeEx.Call(uintptr(unsafe.Pointer(reserved)), uintptr(flags))
 	return uint32(r1)
 }
 

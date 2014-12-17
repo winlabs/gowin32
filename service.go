@@ -165,7 +165,7 @@ type Service struct {
 func (self *Service) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.CloseServiceHandle(self.handle); err != nil {
-			return err
+			return NewWindowsError("CloseServiceHandle", err)
 		}
 		self.handle = 0
 	}
@@ -175,7 +175,7 @@ func (self *Service) Close() error {
 func (self *Service) Control(control ServiceControl) (*ServiceStatusInfo, error) {
 	var status wrappers.SERVICE_STATUS
 	if err := wrappers.ControlService(self.handle, uint32(control), &status); err != nil {
-		return nil, err
+		return nil, NewWindowsError("ControlService", err)
 	}
 	return &ServiceStatusInfo{
 		ServiceType:             ServiceType(status.ServiceType),
@@ -189,18 +189,21 @@ func (self *Service) Control(control ServiceControl) (*ServiceStatusInfo, error)
 }
 
 func (self *Service) Delete() error {
-	return wrappers.DeleteService(self.handle)
+	if err := wrappers.DeleteService(self.handle); err != nil {
+		return NewWindowsError("DeleteService", err)
+	}
+	return nil
 }
 
 func (self *Service) GetConfig() (*ServiceConfig, error) {
 	var bytesNeeded uint32
 	if err := wrappers.QueryServiceConfig(self.handle, nil, 0, &bytesNeeded); err != wrappers.ERROR_INSUFFICIENT_BUFFER {
-		return nil, err
+		return nil, NewWindowsError("QueryServiceConfig", err)
 	}
 	buf := make([]byte, bytesNeeded)
 	config := (*wrappers.QUERY_SERVICE_CONFIG)(unsafe.Pointer(&buf[0]))
 	if err := wrappers.QueryServiceConfig(self.handle, config, bytesNeeded, &bytesNeeded); err != nil {
-		return nil, err
+		return nil, NewWindowsError("QueryServiceConfig", err)
 	}
 	return &ServiceConfig{
 		ServiceType:      ServiceType(config.ServiceType),
@@ -219,7 +222,7 @@ func (self *Service) GetDescription() (string, error) {
 	var bytesNeeded uint32
 	err := wrappers.QueryServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, nil, 0, &bytesNeeded)
 	if err != wrappers.ERROR_INSUFFICIENT_BUFFER {
-		return "", err
+		return "", NewWindowsError("QueryServiceConfig2", err)
 	}
 	buf := make([]byte, bytesNeeded)
 	err = wrappers.QueryServiceConfig2(
@@ -229,7 +232,7 @@ func (self *Service) GetDescription() (string, error) {
 		bytesNeeded,
 		&bytesNeeded)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("QueryServiceConfig2", err)
 	}
 	desc := (*wrappers.SERVICE_DESCRIPTION)(unsafe.Pointer(&buf[0]))
 	return LpstrToString(desc.Description), nil
@@ -245,7 +248,7 @@ func (self *Service) GetProcessID() (uint32, error) {
 		size,
 		&size)
 	if err != nil {
-		return 0, err
+		return 0, NewWindowsError("QueryServiceStatusEx", err)
 	}
 	return status.ProcessId, nil
 }
@@ -253,7 +256,7 @@ func (self *Service) GetProcessID() (uint32, error) {
 func (self *Service) GetStatus() (*ServiceStatusInfo, error) {
 	var status wrappers.SERVICE_STATUS
 	if err := wrappers.QueryServiceStatus(self.handle, &status); err != nil {
-		return nil, err
+		return nil, NewWindowsError("QueryServiceStatus", err)
 	}
 	return &ServiceStatusInfo{
 		ServiceType:             ServiceType(status.ServiceType),
@@ -313,7 +316,7 @@ func (self *Service) SetConfig(config *ServiceConfig, mask ServiceConfigMask) er
 	if (mask & ServiceConfigDisplayName) != 0 {
 		displayName = syscall.StringToUTF16Ptr(config.DisplayName)
 	}
-	return wrappers.ChangeServiceConfig(
+	err := wrappers.ChangeServiceConfig(
 		self.handle,
 		serviceType,
 		startType,
@@ -325,11 +328,19 @@ func (self *Service) SetConfig(config *ServiceConfig, mask ServiceConfigMask) er
 		serviceStartName,
 		password,
 		displayName)
+	if err != nil {
+		return NewWindowsError("ChangeServiceConfig", err)
+	}
+	return nil
 }
 
 func (self *Service) SetDescription(description string) error {
 	info := &wrappers.SERVICE_DESCRIPTION{Description: syscall.StringToUTF16Ptr(description)}
-	return wrappers.ChangeServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, (*byte)(unsafe.Pointer(info)))
+	err := wrappers.ChangeServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, (*byte)(unsafe.Pointer(info)))
+	if err != nil {
+		return NewWindowsError("ChangeServiceConfig2", err)
+	}
+	return nil
 }
 
 func (self *Service) Start(args []string) error {
@@ -341,7 +352,10 @@ func (self *Service) Start(args []string) error {
 		}
 		argVectors = &argSlice[0]
 	}
-	return wrappers.StartService(self.handle, uint32(len(args)), argVectors)
+	if err := wrappers.StartService(self.handle, uint32(len(args)), argVectors); err != nil {
+		return NewWindowsError("StartService", err)
+	}
+	return nil
 }
 
 type SCManager struct {
@@ -354,7 +368,7 @@ func OpenLocalSCManager() (*SCManager, error) {
 		syscall.StringToUTF16Ptr(wrappers.SERVICES_ACTIVE_DATABASE),
 		wrappers.SC_MANAGER_ALL_ACCESS)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("OpenSCManager", err)
 	}
 	return &SCManager{handle: handle}, nil
 }
@@ -362,7 +376,7 @@ func OpenLocalSCManager() (*SCManager, error) {
 func (self *SCManager) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.CloseServiceHandle(self.handle); err != nil {
-			return err
+			return NewWindowsError("CloseServiceHandle", err)
 		}
 		self.handle = 0
 	}
@@ -413,7 +427,7 @@ func (self *SCManager) CreateService(serviceName string, config *ServiceConfig, 
 		serviceStartName,
 		password)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("CreateService", err)
 	}
 	return &Service{handle: handle}, nil
 }
@@ -435,7 +449,7 @@ func (self *SCManager) GetServices(serviceType ServiceType, serviceState Service
 			&servicesReturned,
 			&resumeHandle)
 		if err != wrappers.ERROR_INSUFFICIENT_BUFFER && err != wrappers.ERROR_MORE_DATA {
-			return nil, err
+			return nil, NewWindowsError("EnumServicesStatus", err)
 		}
 		buf := make([]byte, bytesNeeded)
 		err = wrappers.EnumServicesStatus(
@@ -450,7 +464,7 @@ func (self *SCManager) GetServices(serviceType ServiceType, serviceState Service
 		if err == nil {
 			hasMore = false
 		} else if err != wrappers.ERROR_MORE_DATA {
-			return nil, err
+			return nil, NewWindowsError("EnumServicesStatus", err)
 		}
 		dataSize := int(unsafe.Sizeof(wrappers.ENUM_SERVICE_STATUS{}))
 		for i := 0; i < int(servicesReturned); i++ {
@@ -479,7 +493,7 @@ func (self *SCManager) OpenService(serviceName string) (*Service, error) {
 		syscall.StringToUTF16Ptr(serviceName),
 		wrappers.SERVICE_ALL_ACCESS)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("OpenService", err)
 	}
 	return &Service{handle: handle}, nil
 }

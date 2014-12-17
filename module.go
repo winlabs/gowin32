@@ -28,10 +28,10 @@ func GetCurrentExePath() (string, error) {
 		if err == wrappers.ERROR_INSUFFICIENT_BUFFER {
 			buf = make([]uint16, syscall.MAX_LONG_PATH)
 			if _, err := wrappers.GetModuleFileName(0, &buf[0], syscall.MAX_LONG_PATH); err != nil {
-				return "", err
+				return "", NewWindowsError("GetModuleFileName", err)
 			}
 		}  else {
-			return "", err
+			return "", NewWindowsError("GetModuleFileName", err)
 		}
 	}
 	return syscall.UTF16ToString(buf), nil

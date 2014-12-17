@@ -38,7 +38,7 @@ func LocaleNameToLCID(name *uint16, flags uint32) (uint32, error) {
 		uintptr(unsafe.Pointer(name)),
 		uintptr(flags))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL

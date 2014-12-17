@@ -83,7 +83,7 @@ func GetVolumeInfo(rootPathName string) (*VolumeInfo, error) {
 		&fileSystemNameBuffer[0],
 		syscall.MAX_PATH+1)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("GetVolumeInformation", err)
 	}
 	return &VolumeInfo{
 		VolumeName:             syscall.UTF16ToString(volumeNameBuffer),

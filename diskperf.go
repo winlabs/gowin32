@@ -48,7 +48,7 @@ func GetDiskPerformanceInfo(rootPathName string) (*DiskPerformanceInfo, error) {
 		0,
 		0)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("CreateFile", err)
 	}
 	defer wrappers.CloseHandle(hFile)
 	var diskPerformance wrappers.DISK_PERFORMANCE
@@ -63,7 +63,7 @@ func GetDiskPerformanceInfo(rootPathName string) (*DiskPerformanceInfo, error) {
 		&diskPerformanceSize,
 		nil)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("DeviceIoControl", err)
 	}
 	return &DiskPerformanceInfo{
 		BytesRead:           diskPerformance.BytesRead,

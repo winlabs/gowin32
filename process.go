@@ -50,13 +50,13 @@ const (
 func GetProcesses() ([]ProcessInfo, error) {
 	hSnapshot, err := wrappers.CreateToolhelp32Snapshot(wrappers.TH32CS_SNAPPROCESS, 0)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("CreateToolhelp32Snapshot", err)
 	}
 	defer wrappers.CloseHandle(hSnapshot)
 	pe := wrappers.PROCESSENTRY32{}
 	pe.Size = uint32(unsafe.Sizeof(pe))
 	if err := wrappers.Process32First(hSnapshot, &pe); err != nil {
-		return nil, err
+		return nil, NewWindowsError("Process32First", err)
 	}
 	pi := []ProcessInfo{}
 	for {
@@ -71,7 +71,7 @@ func GetProcesses() ([]ProcessInfo, error) {
 		if err == wrappers.ERROR_NO_MORE_FILES {
 			return pi, nil
 		} else if err != nil {
-			return nil, err
+			return nil, NewWindowsError("Process32Next", err)
 		}
 	}
 }
@@ -79,13 +79,13 @@ func GetProcesses() ([]ProcessInfo, error) {
 func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 	hSnapshot, err := wrappers.CreateToolhelp32Snapshot(wrappers.TH32CS_SNAPMODULE, pid)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("CreateToolhelp32Snapshot", err)
 	}
 	defer wrappers.CloseHandle(hSnapshot)
 	me := wrappers.MODULEENTRY32{}
 	me.Size = uint32(unsafe.Sizeof(me))
 	if err := wrappers.Module32First(hSnapshot, &me); err != nil {
-		return nil, err
+		return nil, NewWindowsError("Module32First", err)
 	}
 	mi := []ModuleInfo{}
 	for {
@@ -101,7 +101,7 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 		if err == wrappers.ERROR_NO_MORE_FILES {
 			return mi, nil
 		} else if err != nil {
-			return nil, err
+			return nil, NewWindowsError("Module32Next", err)
 		}
 	}
 }
@@ -113,14 +113,14 @@ func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 	}
 	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, pid)
 	if err != nil {
-		return err
+		return NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
 	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, pid); err != nil {
-		return err
+		return NewWindowsError("GenerateConsoleCtrlEvent", err)
 	}
 	if _, err := wrappers.WaitForSingleObject(hProcess, milliseconds); err != nil {
-		return err
+		return NewWindowsError("WaitForSingleObject", err)
 	}
 	return nil
 }
@@ -128,10 +128,13 @@ func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 func KillProcess(pid uint32, exitCode uint32) error {
 	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_TERMINATE, false, pid)
 	if err != nil {
-		return err
+		return NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
-	return wrappers.TerminateProcess(hProcess, exitCode)
+	if err := wrappers.TerminateProcess(hProcess, exitCode); err != nil {
+		return NewWindowsError("TerminateProcess", err)
+	}
+	return nil
 }
 
 func IsProcessRunning(pid uint32) (bool, error) {
@@ -140,14 +143,14 @@ func IsProcessRunning(pid uint32) (bool, error) {
 		// the process no longer exists
 		return false, nil
 	} else if err != nil {
-		return false, err
+		return false, NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
 
 	// wait with a timeout of 0 to check the process's status and make sure it's not a zombie
 	event, err := wrappers.WaitForSingleObject(hProcess, 0)
 	if err != nil {
-		return false, err
+		return false, NewWindowsError("WaitForSingleObject", err)
 	}
 	return event != wrappers.WAIT_OBJECT_0, nil
 }
@@ -155,7 +158,7 @@ func IsProcessRunning(pid uint32) (bool, error) {
 func GetProcessFullPathName(pid uint32, flags ProcessNameFlags) (string, error) {
 	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
 
@@ -166,10 +169,10 @@ func GetProcessFullPathName(pid uint32, flags ProcessNameFlags) (string, error) 
 			buf = make([]uint16, syscall.MAX_LONG_PATH)
 			size = syscall.MAX_LONG_PATH
 			if err := wrappers.QueryFullProcessImageName(hProcess, uint32(flags), &buf[0], &size); err != nil {
-				return "", err
+				return "", NewWindowsError("QueryFullProcessImageName", err)
 			}
 		} else {
-			return "", err
+			return "", NewWindowsError("QueryFullProcessImageName", err)
 		}
 	}
 	return syscall.UTF16ToString(buf[0:size]), nil

@@ -37,7 +37,7 @@ func (self SecurityID) Copy() (SecurityID, error) {
 	sid := (*wrappers.SID)(unsafe.Pointer(&buf[0]))
 	err := wrappers.CopySid(length, sid, self.sid)
 	if err != nil {
-		return SecurityID{}, err
+		return SecurityID{}, NewWindowsError("CopySid", err)
 	}
 	return SecurityID{sid}, nil
 }
@@ -62,11 +62,11 @@ func GetFileOwner(path string) (SecurityID, error) {
 		needed,
 		&needed)
 	if err != nil {
-		return SecurityID{}, err
+		return SecurityID{}, NewWindowsError("GetFileSecurity", err)
 	}
 	var ownerSid *wrappers.SID
 	if err := wrappers.GetSecurityDescriptorOwner(&buf[0], &ownerSid, nil); err != nil {
-		return SecurityID{}, err
+		return SecurityID{}, NewWindowsError("GetSecurityDescriptorOwner", err)
 	}
 	return SecurityID{ownerSid}, nil
 }
@@ -79,7 +79,7 @@ func OpenCurrentProcessToken() (*Token, error) {
 	hProcess := wrappers.GetCurrentProcess()
 	var hToken syscall.Handle
 	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_QUERY, &hToken); err != nil {
-		return nil, err
+		return nil, NewWindowsError("OpenProcessToken", err)
 	}
 	return &Token{handle: hToken}, nil
 }
@@ -87,7 +87,7 @@ func OpenCurrentProcessToken() (*Token, error) {
 func (self *Token) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.CloseHandle(self.handle); err != nil {
-			return err
+			return NewWindowsError("CloseHandle", err)
 		}
 		self.handle = 0
 	}
@@ -110,7 +110,7 @@ func (self *Token) GetOwner() (SecurityID, error) {
 		needed,
 		&needed)
 	if err != nil {
-		return SecurityID{}, err
+		return SecurityID{}, NewWindowsError("GetTokenInformation", err)
 	}
 	ownerData := (*wrappers.TOKEN_OWNER)(unsafe.Pointer(&buf[0]))
 	sid, err := SecurityID{ownerData.Owner}.Copy()
@@ -135,12 +135,12 @@ func IsAdmin() (bool, error) {
 		0,
 		&sid)
 	if err != nil {
-		return false, err
+		return false, NewWindowsError("AllocateAndInitializeSid", err)
 	}
 	defer wrappers.FreeSid(sid)
 	var isAdmin bool
 	if err := wrappers.CheckTokenMembership(0, sid, &isAdmin); err != nil {
-		return false, err
+		return false, NewWindowsError("CheckTokenMembership", err)
 	}
 	return isAdmin, nil
 }

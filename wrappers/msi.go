@@ -159,8 +159,8 @@ var (
 
 func MsiCloseHandle(handle uint32) error {
 	r1, _, _ := procMsiCloseHandle.Call(uintptr(handle))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -170,8 +170,8 @@ func MsiConfigureProduct(product *uint16, installLevel int32, installState int32
 		uintptr(unsafe.Pointer(product)),
 		uintptr(installLevel),
 		uintptr(installState))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -182,8 +182,8 @@ func MsiConfigureProductEx(product *uint16, installLevel int32, installState int
 		uintptr(installLevel),
 		uintptr(installState),
 		uintptr(unsafe.Pointer(commandLine)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -193,8 +193,8 @@ func MsiEnableLog(logMode uint32, logFile *uint16, logAttributes uint32) error {
 		uintptr(logMode),
 		uintptr(unsafe.Pointer(logFile)),
 		uintptr(logAttributes))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -205,8 +205,8 @@ func MsiEnumRelatedProducts(upgradeCode *uint16, reserved uint32, productIndex u
 		uintptr(reserved),
 		uintptr(productIndex),
 		uintptr(unsafe.Pointer(productBuf)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -226,8 +226,8 @@ func MsiGetProductInfo(product *uint16, property *uint16, valueBuf *uint16, cchV
 		uintptr(unsafe.Pointer(property)),
 		uintptr(unsafe.Pointer(valueBuf)),
 		uintptr(unsafe.Pointer(cchValueBuf)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -238,8 +238,8 @@ func MsiGetProductProperty(product uint32, property *uint16, valueBuf *uint16, c
 		uintptr(unsafe.Pointer(property)),
 		uintptr(unsafe.Pointer(valueBuf)),
 		uintptr(unsafe.Pointer(cchValueBuf)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -250,8 +250,8 @@ func MsiGetProperty(install uint32, name *uint16, valueBuf *uint16, cchValueBuf 
 		uintptr(unsafe.Pointer(name)),
 		uintptr(unsafe.Pointer(valueBuf)),
 		uintptr(unsafe.Pointer(cchValueBuf)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -260,8 +260,8 @@ func MsiInstallProduct(packagePath *uint16, commandLine *uint16) error {
 	r1, _, _ := procMsiInstallProductW.Call(
 		uintptr(unsafe.Pointer(packagePath)),
 		uintptr(unsafe.Pointer(commandLine)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -270,8 +270,8 @@ func MsiOpenPackage(packagePath *uint16, product *uint32) error {
 	r1, _, _ := procMsiOpenPackageW.Call(
 		uintptr(unsafe.Pointer(packagePath)),
 		uintptr(unsafe.Pointer(product)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -280,8 +280,8 @@ func MsiOpenProduct(productCode *uint16, product *uint32) error {
 	r1, _, _ := procMsiOpenProductW.Call(
 		uintptr(unsafe.Pointer(productCode)),
 		uintptr(unsafe.Pointer(product)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }
@@ -300,8 +300,8 @@ func MsiSetInternalUI(uiLevel int32, window *syscall.Handle) int32 {
 
 func MsiVerifyPackage(packagePath *uint16) error {
 	r1, _, _ := procMsiVerifyPackageW.Call(uintptr(unsafe.Pointer(packagePath)))
-	if r1 != 0 {
-		return syscall.Errno(r1)
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
 	}
 	return nil
 }

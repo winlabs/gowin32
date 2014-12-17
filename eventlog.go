@@ -80,7 +80,7 @@ type EventSource struct {
 func NewEventSource(sourceName string) (*EventSource, error) {
 	hEventLog, err := wrappers.RegisterEventSource(nil, syscall.StringToUTF16Ptr(sourceName))
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("RegisterEventSource", err)
 	}
 	return &EventSource{handle: hEventLog}, nil
 }
@@ -88,7 +88,7 @@ func NewEventSource(sourceName string) (*EventSource, error) {
 func (self *EventSource) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.DeregisterEventSource(self.handle); err != nil {
-			return err
+			return NewWindowsError("DeregisterEventSource", err)
 		}
 		self.handle = 0
 	}
@@ -112,7 +112,7 @@ func (self *EventSource) Report(event *EventLogEvent) error {
 		data = &event.Data[0]
 		dataSize = uint32(len(event.Data))
 	}
-	return wrappers.ReportEvent(
+	err := wrappers.ReportEvent(
 		self.handle,
 		uint16(event.Type),
 		event.Category,
@@ -122,6 +122,10 @@ func (self *EventSource) Report(event *EventLogEvent) error {
 		dataSize,
 		stringPtrsPtr,
 		data)
+	if err != nil {
+		return NewWindowsError("ReportEvent", err)
+	}
+	return nil
 }
 
 func (self *EventSource) Error(eventID uint32, strings ...string) error {

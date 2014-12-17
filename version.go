@@ -136,7 +136,7 @@ func (self *VersionCheck) Verify() (bool, error) {
 		if err == wrappers.ERROR_OLD_WIN_VERSION {
 			return false, nil
 		}
-		return false, err
+		return false, NewWindowsError("VerifyVersionInfo", err)
 	}
 	return true, nil
 }

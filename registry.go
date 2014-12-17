@@ -44,10 +44,13 @@ func DeleteRegValue(root RegRoot, subKey string, valueName string) error {
 		wrappers.KEY_WRITE,
 		&hKey)
 	if err != nil {
-		return err
+		return NewWindowsError("RegOpenKeyEx", err)
 	}
 	defer wrappers.RegCloseKey(hKey)
-	return wrappers.RegDeleteValue(hKey, syscall.StringToUTF16Ptr(valueName))
+	if err := wrappers.RegDeleteValue(hKey, syscall.StringToUTF16Ptr(valueName)); err != nil {
+		return NewWindowsError("RegDeleteValue", err)
+	}
+	return nil
 }
 
 func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, error) {
@@ -59,7 +62,7 @@ func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, er
 		wrappers.KEY_READ,
 		&hKey)
 	if err != nil {
-		return 0, err
+		return 0, NewWindowsError("RegOpenKeyEx", err)
 	}
 	defer syscall.RegCloseKey(hKey)
 	var valueType uint32
@@ -72,7 +75,7 @@ func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, er
 		nil,
 		&size)
 	if err != nil {
-		return 0, err
+		return 0, NewWindowsError("RegQueryValueEx", err)
 	}
 	if valueType != wrappers.REG_DWORD {
 		// use the same error code as RegGetValue, although that function is not used here in order to maintain
@@ -88,7 +91,7 @@ func GetRegValueDWORD(root RegRoot, subKey string, valueName string) (uint32, er
 		(*byte)(unsafe.Pointer(&value)),
 		&size)
 	if err != nil {
-		return 0, err
+		return 0, NewWindowsError("RegQueryValueEx", err)
 	}
 	return value, nil
 }
@@ -102,7 +105,7 @@ func GetRegValueString(root RegRoot, subKey string, valueName string) (string, e
 		wrappers.KEY_READ,
 		&hKey)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("RegOpenKeyEx", err)
 	}
 	defer wrappers.RegCloseKey(hKey)
 	var valueType uint32
@@ -115,7 +118,7 @@ func GetRegValueString(root RegRoot, subKey string, valueName string) (string, e
 		nil,
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("RegQueryValueEx", err)
 	}
 	if valueType != wrappers.REG_SZ {
 		// use the same error code as RegGetValue, although that function is not used here in order to maintain
@@ -131,7 +134,7 @@ func GetRegValueString(root RegRoot, subKey string, valueName string) (string, e
 		(*byte)(unsafe.Pointer(&buf[0])),
 		&size)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("RegQueryValueEx", err)
 	}
 	return syscall.UTF16ToString(buf), nil
 }
@@ -149,16 +152,20 @@ func SetRegValueDWORD(root RegRoot, subKey string, valueName string, data uint32
 		&hKey,
 		nil)
 	if err != nil {
-		return err
+		return NewWindowsError("RegCreateKeyEx", err)
 	}
 	defer wrappers.RegCloseKey(hKey)
-	return wrappers.RegSetValueEx(
+	err = wrappers.RegSetValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		0,
 		wrappers.REG_DWORD,
 		(*byte)(unsafe.Pointer(&data)),
 		uint32(unsafe.Sizeof(data)))
+	if err != nil {
+		return NewWindowsError("RegSetValueEx", err)
+	}
+	return nil
 }
 
 func SetRegValueString(root RegRoot, subKey string, valueName string, data string) error {
@@ -174,14 +181,18 @@ func SetRegValueString(root RegRoot, subKey string, valueName string, data strin
 		&hKey,
 		nil)
 	if err != nil {
-		return err
+		return NewWindowsError("RegCreateKeyEx", err)
 	}
 	defer wrappers.RegCloseKey(hKey)
-	return wrappers.RegSetValueEx(
+	err = wrappers.RegSetValueEx(
 		hKey,
 		syscall.StringToUTF16Ptr(valueName),
 		0,
 		wrappers.REG_SZ,
 		(*byte)(unsafe.Pointer(syscall.StringToUTF16Ptr(data))),
 		uint32(2*(len(data)+1)))
+	if err != nil {
+		return NewWindowsError("RegSetValueEx", err)
+	}
+	return nil
 }

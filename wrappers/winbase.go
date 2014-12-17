@@ -265,7 +265,7 @@ func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscal
 		uintptr(unsafe.Pointer(fileName)),
 		uintptr(deleteExistingResourcesRaw))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -277,7 +277,7 @@ func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscal
 func CloseHandle(object syscall.Handle) error {
 	r1, _, e1 := procCloseHandle.Call(uintptr(object))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -297,7 +297,7 @@ func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securi
 		uintptr(templateFile))
 	handle := syscall.Handle(r1)
 	if handle == INVALID_HANDLE_VALUE {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return handle, e1
 		} else {
 			return handle, syscall.EINVAL
@@ -325,7 +325,7 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		uintptr(unsafe.Pointer(startupInfo)),
 		uintptr(unsafe.Pointer(processInformation)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -345,7 +345,7 @@ func DeviceIoControl(device syscall.Handle, ioControlCode uint32, inBuffer *byte
 		uintptr(unsafe.Pointer(bytesReturned)),
 		uintptr(unsafe.Pointer(overlapped)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -365,7 +365,7 @@ func EndUpdateResource(update syscall.Handle, discard bool) error {
 		uintptr(update),
 		uintptr(discardRaw))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -380,7 +380,7 @@ func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, er
 		uintptr(unsafe.Pointer(dst)),
 		uintptr(size))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -414,7 +414,7 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(unsafe.Pointer(size)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -435,7 +435,7 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 		uintptr(unsafe.Pointer(totalNumberOfBytes)),
 		uintptr(unsafe.Pointer(totalNumberOfFreeBytes)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -455,7 +455,7 @@ func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (ui
 		uintptr(unsafe.Pointer(filename)),
 		uintptr(size))
 	if r1 == 0 || r1 == uintptr(size) {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
 		} else if r1 == uintptr(size) {
 			return uint32(r1), ERROR_INSUFFICIENT_BUFFER
@@ -470,7 +470,7 @@ func GetStdHandle(stdHandle uint32) (syscall.Handle, error) {
 	r1, _, e1 := procGetStdHandle.Call(uintptr(stdHandle))
 	handle := (syscall.Handle)(r1)
 	if handle == INVALID_HANDLE_VALUE {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return handle, e1
 		} else {
 			return handle, syscall.EINVAL
@@ -484,7 +484,7 @@ func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(size))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
 		} else {
 			return uint32(r1), syscall.EINVAL
@@ -507,7 +507,7 @@ func GetSystemTimes(idleTime *int64, kernelTime *int64, userTime *int64) error {
 		uintptr(unsafe.Pointer(kernelTime)),
 		uintptr(unsafe.Pointer(userTime)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -527,7 +527,7 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 		uintptr(unsafe.Pointer(fileSystemNameBuffer)),
 		uintptr(fileSystemNameSize))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -561,7 +561,7 @@ func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (sy
 		uintptr(inheritHandleRaw),
 		uintptr(processId))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -577,7 +577,7 @@ func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *ui
 		uintptr(unsafe.Pointer(exeName)),
 		uintptr(unsafe.Pointer(size)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -593,7 +593,7 @@ func SetFileTime(file syscall.Handle, creationTime *FILETIME, lastAccessTime *FI
 		uintptr(unsafe.Pointer(lastAccessTime)),
 		uintptr(unsafe.Pointer(lastWriteTime)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -605,7 +605,7 @@ func SetFileTime(file syscall.Handle, creationTime *FILETIME, lastAccessTime *FI
 func SetStdHandle(stdHandle uint32, handle syscall.Handle) error {
 	r1, _, e1 := procSetStdHandle.Call(uintptr(stdHandle), uintptr(handle))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -617,7 +617,7 @@ func SetStdHandle(stdHandle uint32, handle syscall.Handle) error {
 func TerminateProcess(process syscall.Handle, exitCode uint32) error {
 	r1, _, e1 := procTerminateProcess.Call(uintptr(process), uintptr(exitCode))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -635,7 +635,7 @@ func UpdateResource(update syscall.Handle, resourceType *uint16, name *uint16, l
 		uintptr(unsafe.Pointer(data)),
 		uintptr(cbData))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -650,7 +650,7 @@ func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionM
 		uintptr(typeMask),
 		uintptr(conditionMask))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -662,7 +662,7 @@ func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionM
 func WaitForSingleObject(handle syscall.Handle, milliseconds uint32) (uint32, error) {
 	r1, _, e1 := procWaitForSingleObject.Call(uintptr(handle), uintptr(milliseconds))
 	if r1 == WAIT_FAILED {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
 		} else {
 			return uint32(r1), syscall.EINVAL
@@ -690,7 +690,7 @@ func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, sub
 		uintptr(subAuthority7),
 		uintptr(unsafe.Pointer(sid)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -706,7 +706,7 @@ func CheckTokenMembership(tokenHandle syscall.Handle, sidToCheck *SID, isMember 
 		uintptr(unsafe.Pointer(sidToCheck)),
 		uintptr(unsafe.Pointer(&isMemberRaw)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -724,7 +724,7 @@ func CopySid(destinationSidLength uint32, destinationSid *SID, sourceSid *SID) e
 		uintptr(unsafe.Pointer(destinationSid)),
 		uintptr(unsafe.Pointer(sourceSid)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -736,7 +736,7 @@ func CopySid(destinationSidLength uint32, destinationSid *SID, sourceSid *SID) e
 func DeregisterEventSource(eventLog syscall.Handle) error {
 	r1, _, e1 := procDeregisterEventSource.Call(uintptr(eventLog))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -764,7 +764,7 @@ func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDesc
 		uintptr(length),
 		uintptr(unsafe.Pointer(lengthNeeded)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -785,7 +785,7 @@ func GetSecurityDescriptorOwner(securityDescriptor *uint8, owner **SID, ownerDef
 		uintptr(unsafe.Pointer(owner)),
 		uintptr(unsafe.Pointer(&ownerDefaultedRaw)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -805,7 +805,7 @@ func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32
 		uintptr(tokenInformationLength),
 		uintptr(unsafe.Pointer(returnLength)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -820,7 +820,7 @@ func OpenProcessToken(processHandle syscall.Handle, desiredAccess uint32, tokenH
 		uintptr(desiredAccess),
 		uintptr(unsafe.Pointer(tokenHandle)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL
@@ -834,7 +834,7 @@ func RegisterEventSource(uncServerName *uint16, sourceName *uint16) (syscall.Han
 		uintptr(unsafe.Pointer(uncServerName)),
 		uintptr(unsafe.Pointer(sourceName)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -855,7 +855,7 @@ func ReportEvent(eventLog syscall.Handle, eventType uint16, category uint16, eve
 		uintptr(unsafe.Pointer(strings)),
 		uintptr(unsafe.Pointer(rawData)))
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != ERROR_SUCCESS {
 			return e1
 		} else {
 			return syscall.EINVAL

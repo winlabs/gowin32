@@ -25,7 +25,7 @@ import (
 func GetAvailableDiskSpace(root string) (uint64, error) {
 	availableSpace := uint64(0)
 	if err := wrappers.GetDiskFreeSpaceEx(syscall.StringToUTF16Ptr(root), &availableSpace, nil, nil); err != nil {
-		return 0, err
+		return 0, NewWindowsError("GetDiskFreeSpaceEx", err)
 	}
 	return availableSpace, nil
 }
@@ -33,7 +33,7 @@ func GetAvailableDiskSpace(root string) (uint64, error) {
 func GetTotalDiskSpace(root string) (uint64, error) {
 	totalSpace := uint64(0)
 	if err := wrappers.GetDiskFreeSpaceEx(syscall.StringToUTF16Ptr(root), nil, &totalSpace, nil); err != nil {
-		return 0, err
+		return 0, NewWindowsError("GetDiskFreeSpaceEx", err)
 	}
 	return totalSpace, nil
 }
@@ -41,7 +41,7 @@ func GetTotalDiskSpace(root string) (uint64, error) {
 func GetFreeDiskSpace(root string) (uint64, error) {
 	freeSpace := uint64(0)
 	if err := wrappers.GetDiskFreeSpaceEx(syscall.StringToUTF16Ptr(root), nil, nil, &freeSpace); err != nil {
-		return 0, err
+		return 0, NewWindowsError("GetDiskFreeSpaceEx", err)
 	}
 	return freeSpace, nil
 }

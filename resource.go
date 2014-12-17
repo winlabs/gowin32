@@ -69,7 +69,7 @@ type ResourceUpdate struct {
 func NewResourceUpdate(fileName string, deleteExistingResources bool) (*ResourceUpdate, error) {
 	hUpdate, err := wrappers.BeginUpdateResource(syscall.StringToUTF16Ptr(fileName), deleteExistingResources)
 	if err != nil {
-		return nil, err
+		return nil, NewWindowsError("BeginUpdateResource", err)
 	}
 	return &ResourceUpdate{handle: hUpdate}, nil
 }
@@ -77,7 +77,7 @@ func NewResourceUpdate(fileName string, deleteExistingResources bool) (*Resource
 func (self *ResourceUpdate) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.EndUpdateResource(self.handle, true); err != nil {
-			return err
+			return NewWindowsError("EndUpdateResource", err)
 		}
 		self.handle = 0
 	}
@@ -86,28 +86,36 @@ func (self *ResourceUpdate) Close() error {
 
 func (self *ResourceUpdate) Save() error {
 	if err := wrappers.EndUpdateResource(self.handle, false); err != nil {
-		return err
+		return NewWindowsError("EndUpdateResource", err)
 	}
 	self.handle = 0
 	return nil
 }
 
 func (self *ResourceUpdate) Update(resourceType ResourceType, resourceId ResourceId, language Language, data []byte) error {
-	return wrappers.UpdateResource(
+	err := wrappers.UpdateResource(
 		self.handle,
 		(*uint16)(resourceType),
 		(*uint16)(resourceId),
 		uint16(language),
 		&data[0],
 		uint32(len(data)))
+	if err != nil {
+		return NewWindowsError("UpdateResource", err)
+	}
+	return nil
 }
 
 func (self *ResourceUpdate) Delete(resourceType ResourceType, resourceId ResourceId, language Language) error {
-	return wrappers.UpdateResource(
+	err := wrappers.UpdateResource(
 		self.handle,
 		(*uint16)(resourceType),
 		(*uint16)(resourceId),
 		uint16(language),
 		nil,
 		0)
+	if err != nil {
+		return NewWindowsError("UpdateResource", err)
+	}
+	return nil
 }
