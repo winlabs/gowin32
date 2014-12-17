@@ -43,26 +43,32 @@ type EventSourceRegistration struct {
 }
 
 func (self *EventSourceRegistration) Install() error {
-	subKey := "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\" + self.SourceName
+	key, err := CreateRegKey(
+		RegRootHKLM,
+		"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\" + self.SourceName)
+	if err != nil {
+		return err
+	}
+	defer key.Close()
 	if self.CategoryMessageFile != "" {
-		if err := SetRegValueDWORD(RegRootHKLM, subKey, "CategoryCount", self.CategoryCount); err != nil {
+		if err := key.SetValueDWORD("CategoryCount", self.CategoryCount); err != nil {
 			return err
 		}
-		if err := SetRegValueString(RegRootHKLM, subKey, "CategoryMessageFile", self.CategoryMessageFile); err != nil {
+		if err := key.SetValueString("CategoryMessageFile", self.CategoryMessageFile); err != nil {
 			return err
 		}
 	}
 	if self.EventMessageFile != "" {
-		if err := SetRegValueString(RegRootHKLM, subKey, "EventMessageFile", self.EventMessageFile); err != nil {
+		if err := key.SetValueString("EventMessageFile", self.EventMessageFile); err != nil {
 			return err
 		}
 	}
 	if self.ParameterMessageFile != "" {
-		if err := SetRegValueString(RegRootHKLM, subKey, "ParameterMessageFile", self.ParameterMessageFile); err != nil {
+		if err := key.SetValueString("ParameterMessageFile", self.ParameterMessageFile); err != nil {
 			return err
 		}
 	}
-	return SetRegValueDWORD(RegRootHKLM, subKey, "TypesSupported", uint32(self.TypesSupported))
+	return key.SetValueDWORD("TypesSupported", uint32(self.TypesSupported))
 }
 
 type EventLogEvent struct {
