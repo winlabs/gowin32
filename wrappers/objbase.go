@@ -33,6 +33,7 @@ var (
 
 	procCoCreateInstance = modole32.NewProc("CoCreateInstance")
 	procCoInitializeEx   = modole32.NewProc("CoInitializeEx")
+	procCoTaskMemFree    = modole32.NewProc("CoTaskMemFree")
 	procCoUninitialize   = modole32.NewProc("CoUninitialize")
 )
 
@@ -49,6 +50,10 @@ func CoCreateInstance(clsid *GUID, outer *IUnknown, clsContext uint32, iid *GUID
 func CoInitializeEx(reserved *byte, flags uint32) uint32 {
 	r1, _, _ := procCoInitializeEx.Call(uintptr(unsafe.Pointer(reserved)), uintptr(flags))
 	return uint32(r1)
+}
+
+func CoTaskMemFree(mem *byte) {
+	procCoTaskMemFree.Call(uintptr(unsafe.Pointer(mem)))
 }
 
 func CoUninitialize() {
