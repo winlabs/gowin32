@@ -37,8 +37,12 @@ const (
 var (
 	procRegCloseKey      = modadvapi32.NewProc("RegCloseKey")
 	procRegCreateKeyExW  = modadvapi32.NewProc("RegCreateKeyExW")
+	procRegDeleteKeyW    = modadvapi32.NewProc("RegDeleteKeyW")
 	procRegDeleteValueW  = modadvapi32.NewProc("RegDeleteValueW")
+	procRegEnumKeyExW    = modadvapi32.NewProc("RegEnumKeyExW")
+	procRegEnumValueW    = modadvapi32.NewProc("RegEnumValueW")
 	procRegOpenKeyExW    = modadvapi32.NewProc("RegOpenKeyExW")
+	procRegQueryInfoKeyW = modadvapi32.NewProc("RegQueryInfoKeyW")
 	procRegQueryValueExW = modadvapi32.NewProc("RegQueryValueExW")
 	procRegSetValueExW   = modadvapi32.NewProc("RegSetValueExW")
 )
@@ -68,10 +72,52 @@ func RegCreateKeyEx(key syscall.Handle, subKey *uint16, reserved uint32, class *
 	return nil
 }
 
+func RegDeleteKey(key syscall.Handle, subKey *uint16) error {
+	r1, _, _ := procRegDeleteKeyW.Call(
+		uintptr(key),
+		uintptr(unsafe.Pointer(subKey)))
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
 func RegDeleteValue(key syscall.Handle, valueName *uint16) error {
 	r1, _, _ := procRegDeleteValueW.Call(
 		uintptr(key),
 		uintptr(unsafe.Pointer(valueName)))
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
+func RegEnumKeyEx(key syscall.Handle, index uint32, name *uint16, cName *uint32, reserved *uint32, class *uint16, cClass *uint32, lastWriteTime *FILETIME) error {
+	r1, _,_ := procRegEnumKeyExW.Call(
+		uintptr(key),
+		uintptr(index),
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(cName)),
+		uintptr(unsafe.Pointer(reserved)),
+		uintptr(unsafe.Pointer(class)),
+		uintptr(unsafe.Pointer(cClass)),
+		uintptr(unsafe.Pointer(lastWriteTime)))
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
+func RegEnumValue(key syscall.Handle, index uint32, valueName *uint16, cchValueName *uint32, reserved *uint32, valueType *uint32, data *byte, cbData *uint32) error {
+	r1, _, _ := procRegEnumValueW.Call(
+		uintptr(key),
+		uintptr(index),
+		uintptr(unsafe.Pointer(valueName)),
+		uintptr(unsafe.Pointer(cchValueName)),
+		uintptr(unsafe.Pointer(reserved)),
+		uintptr(unsafe.Pointer(valueType)),
+		uintptr(unsafe.Pointer(data)),
+		uintptr(unsafe.Pointer(cbData)))
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -85,6 +131,26 @@ func RegOpenKeyEx(key syscall.Handle, subKey *uint16, options uint32, samDesired
 		uintptr(options),
 		uintptr(samDesired),
 		uintptr(unsafe.Pointer(result)))
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
+func RegQueryInfoKey(key syscall.Handle, class *uint16, cClass *uint32, reserved *uint32, subKeys *uint32, maxSubKeyLen *uint32, maxClassLen *uint32, values *uint32, maxValueNameLen *uint32, maxValueLen *uint32, cbSecurityDescriptor *uint32, lastWriteTime *FILETIME) error {
+	r1, _, _ := procRegQueryInfoKeyW.Call(
+		uintptr(key),
+		uintptr(unsafe.Pointer(class)),
+		uintptr(unsafe.Pointer(cClass)),
+		uintptr(unsafe.Pointer(reserved)),
+		uintptr(unsafe.Pointer(subKeys)),
+		uintptr(unsafe.Pointer(maxSubKeyLen)),
+		uintptr(unsafe.Pointer(maxClassLen)),
+		uintptr(unsafe.Pointer(values)),
+		uintptr(unsafe.Pointer(maxValueNameLen)),
+		uintptr(unsafe.Pointer(maxValueLen)),
+		uintptr(unsafe.Pointer(cbSecurityDescriptor)),
+		uintptr(unsafe.Pointer(lastWriteTime)))
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
