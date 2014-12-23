@@ -87,10 +87,28 @@ const (
 	CSIDL_FLAG_PER_USER_INIT = 0x0800
 )
 
+const (
+	SHGFP_TYPE_CURRENT = 0
+	SHGFP_TYPE_DEFAULT = 1
+)
+
+const (
+	KF_FLAG_CREATE              = 0x00008000
+	KF_FLAG_DONT_VERIFY         = 0x00004000
+	KF_FLAG_DONT_UNEXPAND       = 0x00002000
+	KF_FLAG_NO_ALIAS            = 0x00001000
+	KF_FLAG_INIT                = 0x00000800
+	KF_FLAG_DEFAULT_PATH        = 0x00000400
+	KF_FLAG_NOT_PARENT_RELATIVE = 0x00000200
+	KF_FLAG_SIMPLE_IDLIST       = 0x00000100
+	KF_FLAG_ALIAS_ONLY          = 0x80000000
+)
+
 var (
 	modshell32 = syscall.NewLazyDLL("shell32.dll")
 
-	procSHGetFolderPathW = modshell32.NewProc("SHGetFolderPathW")
+	procSHGetFolderPathW     = modshell32.NewProc("SHGetFolderPathW")
+	procSHGetKnownFolderPath = modshell32.NewProc("SHGetKnownFolderPath")
 )
 
 func SHGetFolderPath(owner syscall.Handle, folder uint32, token syscall.Handle, flags uint32, path *uint16) uint32 {
@@ -99,6 +117,15 @@ func SHGetFolderPath(owner syscall.Handle, folder uint32, token syscall.Handle, 
 		uintptr(folder),
 		uintptr(token),
 		uintptr(flags),
+		uintptr(unsafe.Pointer(path)))
+	return uint32(r1)
+}
+
+func SHGetKnownFolderPath(fid *GUID, flags uint32, token syscall.Handle, path **uint16) uint32 {
+	r1, _, _ := procSHGetKnownFolderPath.Call(
+		uintptr(unsafe.Pointer(fid)),
+		uintptr(flags),
+		uintptr(token),
 		uintptr(unsafe.Pointer(path)))
 	return uint32(r1)
 }
