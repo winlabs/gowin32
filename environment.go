@@ -19,7 +19,9 @@ package gowin32
 import (
 	"github.com/winlabs/gowin32/wrappers"
 
+	"strings"
 	"syscall"
+	"unsafe"
 )
 
 func ExpandEnvironment(text string) (string, error) {
@@ -32,4 +34,51 @@ func ExpandEnvironment(text string) (string, error) {
 		return "", NewWindowsError("ExpandEnvironmentStrings", err)
 	}
 	return syscall.UTF16ToString(buf), nil
+}
+
+func GetAllEnvironment() (map[string]string, error) {
+	block, err := wrappers.GetEnvironmentStrings()
+	if err != nil {
+		return nil, NewWindowsError("GetEnvironmentStrings", err)
+	}
+	defer wrappers.FreeEnvironmentStrings(block)
+	blockMap := make(map[string]string)
+	item := block
+	for {
+		entry := LpstrToString(item)
+		if len(entry) == 0 {
+			return blockMap, nil
+		}
+		if entry[0] != '=' {
+			index := strings.Index(entry, "=")
+			name := entry[0:index]
+			value := entry[index+1:]
+			blockMap[name] = value
+		}
+		offset := uintptr(2*len(entry) + 2)
+		item = (*uint16)(unsafe.Pointer(uintptr(unsafe.Pointer(item)) + offset))
+	}
+}
+
+func GetEnvironment(name string) (string, error) {
+	len, err := wrappers.GetEnvironmentVariable(syscall.StringToUTF16Ptr(name), nil, 0)
+	if err != nil {
+		return "", NewWindowsError("GetEnvironmentVariable", err)
+	}
+	buf := make([]uint16, len)
+	_, err = wrappers.GetEnvironmentVariable(syscall.StringToUTF16Ptr(name), &buf[0], len)
+	if err != nil {
+		return "", NewWindowsError("GetEnvironmentVariable", err)
+	}
+	return syscall.UTF16ToString(buf), nil
+}
+
+func SetEnvironment(name string, value string) error {
+	err := wrappers.SetEnvironmentVariable(
+		syscall.StringToUTF16Ptr(name),
+		syscall.StringToUTF16Ptr(value))
+	if err != nil {
+		return NewWindowsError("SetEnvironmentVariable", err)
+	}
+	return nil
 }

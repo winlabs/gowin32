@@ -217,10 +217,13 @@ var (
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
 	procFormatMessageW             = modkernel32.NewProc("FormatMessageW")
+	procFreeEnvironmentStringsW    = modkernel32.NewProc("FreeEnvironmentStringsW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
 	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetEnvironmentStringsW     = modkernel32.NewProc("GetEnvironmentStringsW")
+	procGetEnvironmentVariableW    = modkernel32.NewProc("GetEnvironmentVariableW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetStdHandle               = modkernel32.NewProc("GetStdHandle")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
@@ -231,6 +234,7 @@ var (
 	procLocalFree                  = modkernel32.NewProc("LocalFree")
 	procOpenProcess                = modkernel32.NewProc("OpenProcess")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procSetEnvironmentVariableW    = modkernel32.NewProc("SetEnvironmentVariableW")
 	procSetFileTime                = modkernel32.NewProc("SetFileTime")
 	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
 	procTerminateProcess           = modkernel32.NewProc("TerminateProcess")
@@ -408,6 +412,18 @@ func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId ui
 	return uint32(r1), nil
 }
 
+func FreeEnvironmentStrings(environmentBlock *uint16) error {
+	r1, _, e1 := procFreeEnvironmentStringsW.Call(uintptr(unsafe.Pointer(environmentBlock)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 	r1, _, e1 := procGetComputerNameExW.Call(
 		uintptr(nameType),
@@ -447,6 +463,33 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 func GetDriveType(rootPathName *uint16) uint32 {
 	r1, _, _ := procGetDriveTypeW.Call(uintptr(unsafe.Pointer(rootPathName)))
 	return uint32(r1)
+}
+
+func GetEnvironmentStrings() (*uint16, error) {
+	r1, _, e1 := procGetEnvironmentStringsW.Call()
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return nil, e1
+		} else {
+			return nil, syscall.EINVAL
+		}
+	}
+	return (*uint16)(unsafe.Pointer(r1)), nil
+}
+
+func GetEnvironmentVariable(name *uint16, buffer *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetEnvironmentVariableW.Call(
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }
 
 func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
@@ -576,6 +619,20 @@ func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *ui
 		uintptr(flags),
 		uintptr(unsafe.Pointer(exeName)),
 		uintptr(unsafe.Pointer(size)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetEnvironmentVariable(name *uint16, value *uint16) error {
+	r1, _, e1 := procSetEnvironmentVariableW.Call(
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(value)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
