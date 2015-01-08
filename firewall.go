@@ -449,7 +449,7 @@ func (self *FirewallRuleCollection) Close() error {
 	return nil
 }
 
-func (self *FirewallRuleCollection) GetCount() (int32, error) {
+func (self *FirewallRuleCollection) GetCount() (int, error) {
 	if self.object == nil {
 		return 0, NewWindowsError("INetFwRules::get_Count", COMErrorPointer)
 	}
@@ -457,7 +457,7 @@ func (self *FirewallRuleCollection) GetCount() (int32, error) {
 	if hr := self.object.Get_Count(&count); wrappers.FAILED(hr) {
 		return 0, NewWindowsError("INetFwRules::get_Count", COMError(hr))
 	}
-	return count, nil
+	return int(count), nil
 }
 
 func (self *FirewallRuleCollection) Add(rule *FirewallRule) error {
@@ -558,7 +558,7 @@ func (self *FirewallManager) Close() error {
 	return nil
 }
 
-func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion FirewallIPVersion, portNumber int32, localAddress string, ipProtocol FirewallProtocol) (allowed bool, restricted bool, err error) {
+func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion FirewallIPVersion, portNumber int, localAddress string, ipProtocol FirewallProtocol) (allowed bool, restricted bool, err error) {
 	if self.object == nil {
 		err = COMErrorPointer
 		return
@@ -582,7 +582,7 @@ func (self *FirewallManager) IsPortAllowed(imageFileName string, ipVersion Firew
 	hr := self.object.IsPortAllowed(
 		imageFileNameRaw,
 		int32(ipVersion),
-		portNumber,
+		int32(portNumber),
 		localAddressRaw,
 		int32(ipProtocol),
 		&allowedRaw,

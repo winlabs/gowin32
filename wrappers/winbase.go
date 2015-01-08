@@ -756,7 +756,7 @@ func FreeSid(sid *SID) {
 	procFreeSid.Call(uintptr(unsafe.Pointer(sid)))
 }
 
-func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDescriptor *uint8, length uint32, lengthNeeded *uint32) error {
+func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDescriptor *byte, length uint32, lengthNeeded *uint32) error {
 	r1, _, e1 := procGetFileSecurityW.Call(
 		uintptr(unsafe.Pointer(fileName)),
 		uintptr(requestedInformation),
@@ -778,7 +778,7 @@ func GetLengthSid(sid *SID) uint32 {
 	return uint32(r1)
 }
 
-func GetSecurityDescriptorOwner(securityDescriptor *uint8, owner **SID, ownerDefaulted *bool) error {
+func GetSecurityDescriptorOwner(securityDescriptor *byte, owner **SID, ownerDefaulted *bool) error {
 	var ownerDefaultedRaw int32
 	r1, _, e1 := procGetSecurityDescriptorOwner.Call(
 		uintptr(unsafe.Pointer(securityDescriptor)),

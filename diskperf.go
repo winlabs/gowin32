@@ -29,12 +29,12 @@ type DiskPerformanceInfo struct {
 	ReadTime            int64
 	WriteTime           int64
 	IdleTime            int64
-	ReadCount           uint32
-	WriteCount          uint32
-	QueueDepth          uint32
-	SplitCount          uint32
+	ReadCount           uint
+	WriteCount          uint
+	QueueDepth          uint
+	SplitCount          uint
 	QueryTime           int64
-	StorageDeviceNumber uint32
+	StorageDeviceNumber uint
 	StorageManagerName  string
 }
 
@@ -71,12 +71,12 @@ func GetDiskPerformanceInfo(rootPathName string) (*DiskPerformanceInfo, error) {
 		ReadTime:            diskPerformance.ReadTime,
 		WriteTime:           diskPerformance.WriteTime,
 		IdleTime:            diskPerformance.IdleTime,
-		ReadCount:           diskPerformance.ReadCount,
-		WriteCount:          diskPerformance.WriteCount,
-		QueueDepth:          diskPerformance.QueueDepth,
-		SplitCount:          diskPerformance.SplitCount,
+		ReadCount:           uint(diskPerformance.ReadCount),
+		WriteCount:          uint(diskPerformance.WriteCount),
+		QueueDepth:          uint(diskPerformance.QueueDepth),
+		SplitCount:          uint(diskPerformance.SplitCount),
 		QueryTime:           diskPerformance.QueryTime,
-		StorageDeviceNumber: diskPerformance.StorageDeviceNumber,
+		StorageDeviceNumber: uint(diskPerformance.StorageDeviceNumber),
 		StorageManagerName:  syscall.UTF16ToString(diskPerformance.StorageManagerName[:]),
 	}, nil
 }

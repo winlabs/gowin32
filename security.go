@@ -27,15 +27,15 @@ type SecurityID struct {
 	sid *wrappers.SID
 }
 
-func (self SecurityID) GetLength() uint32 {
-	return wrappers.GetLengthSid(self.sid)
+func (self SecurityID) GetLength() uint {
+	return uint(wrappers.GetLengthSid(self.sid))
 }
 
 func (self SecurityID) Copy() (SecurityID, error) {
 	length := self.GetLength()
 	buf := make([]byte, length)
 	sid := (*wrappers.SID)(unsafe.Pointer(&buf[0]))
-	err := wrappers.CopySid(length, sid, self.sid)
+	err := wrappers.CopySid(uint32(length), sid, self.sid)
 	if err != nil {
 		return SecurityID{}, NewWindowsError("CopySid", err)
 	}
@@ -54,7 +54,7 @@ func GetFileOwner(path string) (SecurityID, error) {
 		nil,
 		0,
 		&needed)
-	buf := make([]uint8, needed)
+	buf := make([]byte, needed)
 	err := wrappers.GetFileSecurity(
 		syscall.StringToUTF16Ptr(path),
 		wrappers.OWNER_SECURITY_INFORMATION,

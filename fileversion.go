@@ -89,10 +89,10 @@ const (
 )
 
 type FileVersionNumber struct {
-	Major    uint16
-	Minor    uint16
-	Build    uint16
-	Revision uint16
+	Major    uint
+	Minor    uint
+	Build    uint
+	Revision uint
 }
 
 func (self *FileVersionNumber) String() string {
@@ -112,28 +112,28 @@ func StringToFileVersionNumber(s string) (FileVersionNumber, error) {
 		if err != nil {
 			return FileVersionNumber{}, err
 		}
-		version.Major = uint16(n)
+		version.Major = uint(n)
 	}
 	if len(parts) >= 2 {
 		n, err := strconv.ParseUint(parts[1], 10, 16)
 		if err != nil {
 			return FileVersionNumber{}, err
 		}
-		version.Minor = uint16(n)
+		version.Minor = uint(n)
 	}
 	if len(parts) >= 3 {
 		n, err := strconv.ParseUint(parts[2], 10, 16)
 		if err != nil {
 			return FileVersionNumber{}, err
 		}
-		version.Build = uint16(n)
+		version.Build = uint(n)
 	}
 	if len(parts) >= 4 {
 		n, err := strconv.ParseUint(parts[3], 10, 16)
 		if err != nil {
 			return FileVersionNumber{}, err
 		}
-		version.Revision = uint16(n)
+		version.Revision = uint(n)
 	}
 	return version, nil
 }
@@ -199,17 +199,17 @@ func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
 	}
 	return &FixedFileInfo{
 		FileVersion: FileVersionNumber{
-			Major:    wrappers.HIWORD(ffi.FileVersionMS),
-			Minor:    wrappers.LOWORD(ffi.FileVersionMS),
-			Build:    wrappers.HIWORD(ffi.FileVersionLS),
-			Revision: wrappers.LOWORD(ffi.FileVersionLS),
+			Major:    uint(wrappers.HIWORD(ffi.FileVersionMS)),
+			Minor:    uint(wrappers.LOWORD(ffi.FileVersionMS)),
+			Build:    uint(wrappers.HIWORD(ffi.FileVersionLS)),
+			Revision: uint(wrappers.LOWORD(ffi.FileVersionLS)),
 		},
 
 		ProductVersion: FileVersionNumber{
-			Major:    wrappers.HIWORD(ffi.ProductVersionMS),
-			Minor:    wrappers.LOWORD(ffi.ProductVersionMS),
-			Build:    wrappers.HIWORD(ffi.ProductVersionLS),
-			Revision: wrappers.LOWORD(ffi.ProductVersionLS),
+			Major:    uint(wrappers.HIWORD(ffi.ProductVersionMS)),
+			Minor:    uint(wrappers.LOWORD(ffi.ProductVersionMS)),
+			Build:    uint(wrappers.HIWORD(ffi.ProductVersionLS)),
+			Revision: uint(wrappers.LOWORD(ffi.ProductVersionLS)),
 		},
 
 		FileFlags:   VerFileFlags(ffi.FileFlags),

@@ -35,7 +35,7 @@ const (
 
 type EventSourceRegistration struct {
 	SourceName           string
-	CategoryCount        uint32
+	CategoryCount        uint
 	CategoryMessageFile  string
 	EventMessageFile     string
 	ParameterMessageFile string
@@ -51,7 +51,7 @@ func (self *EventSourceRegistration) Install() error {
 	}
 	defer key.Close()
 	if self.CategoryMessageFile != "" {
-		if err := key.SetValueDWORD("CategoryCount", self.CategoryCount); err != nil {
+		if err := key.SetValueDWORD("CategoryCount", uint32(self.CategoryCount)); err != nil {
 			return err
 		}
 		if err := key.SetValueString("CategoryMessageFile", self.CategoryMessageFile); err != nil {
@@ -73,8 +73,8 @@ func (self *EventSourceRegistration) Install() error {
 
 type EventLogEvent struct {
 	Type     EventType
-	Category uint16
-	EventID  uint32
+	Category uint
+	EventID  uint
 	Strings  []string
 	Data     []byte
 }
@@ -121,8 +121,8 @@ func (self *EventSource) Report(event *EventLogEvent) error {
 	err := wrappers.ReportEvent(
 		self.handle,
 		uint16(event.Type),
-		event.Category,
-		event.EventID,
+		uint16(event.Category),
+		uint32(event.EventID),
 		nil,
 		stringCount,
 		dataSize,
@@ -134,7 +134,7 @@ func (self *EventSource) Report(event *EventLogEvent) error {
 	return nil
 }
 
-func (self *EventSource) Error(eventID uint32, strings ...string) error {
+func (self *EventSource) Error(eventID uint, strings ...string) error {
 	return self.Report(&EventLogEvent{
 		Type:    EventTypeError,
 		EventID: eventID,
@@ -142,7 +142,7 @@ func (self *EventSource) Error(eventID uint32, strings ...string) error {
 	})
 }
 
-func (self *EventSource) Warning(eventID uint32, strings ...string) error {
+func (self *EventSource) Warning(eventID uint, strings ...string) error {
 	return self.Report(&EventLogEvent{
 		Type:    EventTypeWarning,
 		EventID: eventID,
@@ -150,7 +150,7 @@ func (self *EventSource) Warning(eventID uint32, strings ...string) error {
 	})
 }
 
-func (self *EventSource) Info(eventID uint32, strings ...string) error {
+func (self *EventSource) Info(eventID uint, strings ...string) error {
 	return self.Report(&EventLogEvent{
 		Type:    EventTypeInformation,
 		EventID: eventID,
