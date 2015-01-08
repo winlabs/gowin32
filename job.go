@@ -225,6 +225,19 @@ func (self *Job) SetBasicUIRestrictions(flags JobUILimitFlags) error {
 	return nil
 }
 
+func (self *Job) ProcessInJob(pid uint) (bool, error) {
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return false, NewWindowsError("OpenProcess", err)
+	}
+	defer wrappers.CloseHandle(hProcess)
+	var result bool
+	if err := wrappers.IsProcessInJob(hProcess, self.handle, &result); err != nil {
+		return false, NewWindowsError("IsProcessInJob", err)
+	}
+	return result, nil
+}
+
 func (self *Job) Terminate(exitCode uint) error {
 	if err := wrappers.TerminateJobObject(self.handle, uint32(exitCode)); err != nil {
 		return NewWindowsError("TerminateJobObject", err)
