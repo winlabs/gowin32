@@ -897,6 +897,142 @@ const (
 )
 
 const (
+	JOB_OBJECT_ASSIGN_PROCESS          = 0x0001
+	JOB_OBJECT_SET_ATTRIBUTES          = 0x0002
+	JOB_OBJECT_QUERY                   = 0x0004
+	JOB_OBJECT_TERMINATE               = 0x0008
+	JOB_OBJECT_SET_SECURITY_ATTRIBUTES = 0x0010
+	JOB_OBJECT_ALL_ACCESS              = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x001F
+)
+
+type IO_COUNTERS struct {
+	ReadOperationCount  uint64
+	WriteOperationCount uint64
+	OtherOperationCount uint64
+	ReadTransferCount   uint64
+	WriteTransferCount  uint64
+	OtherTransferCount  uint64
+}
+
+type JOBOBJECT_BASIC_ACCOUNTING_INFORMATION struct {
+	TotalUserTime             int64
+	TotalKernelTime           int64
+	ThisPeriodTotalUserTime   int64
+	ThisPeriodTotalKernelTime int64
+	TotalPageFaultCount       uint32
+	TotalProcesses            uint32
+	ActiveProcesses           uint32
+	TotalTerminatedProcesses  uint32
+}
+
+type JOBOBJECT_BASIC_LIMIT_INFORMATION struct {
+	PerProcessUserTimeLimit int64
+	PerJobUserTimeLimit     int64
+	LimitFlags              uint32
+	MinimumWorkingSetSize   uintptr
+	MaximumWorkingSetSize   uintptr
+	ActiveProcessLimit      uint32
+	Affinity                uintptr
+	PriorityClass           uint32
+	SchedulingClass         uint32
+}
+
+type JOBOBJECT_EXTENDED_LIMIT_INFORMATION struct {
+	BasicLimitInformation JOBOBJECT_BASIC_LIMIT_INFORMATION
+	IoInfo                IO_COUNTERS
+	ProcessMemoryLimit    uintptr
+	JobMemoryLimit        uintptr
+	PeakProcessMemoryUsed uintptr
+	PeakJobMemoryUsed     uintptr
+}
+
+type JOBOBJECT_BASIC_PROCESS_ID_LIST struct {
+	NumberOfAssignedProcesses uint32
+	NumberOfProcessIdsInList  uint32
+	ProcessIdList             [1]uintptr
+}
+
+type JOBOBJECT_BASIC_UI_RESTRICTIONS struct {
+	UIRestrictionsClass uint32
+}
+
+type JOBOBJECT_SECURITY_LIMIT_INFORMATION struct {
+	SecurityLimitFlags uint32
+	JobToken           syscall.Handle
+	SidsToDisable      *TOKEN_GROUPS
+	PrivilegesToDelete *TOKEN_PRIVILEGES
+	RestrictedSids     *TOKEN_GROUPS
+}
+
+type JOBOBJECT_END_OF_JOB_TIME_INFORMATION struct {
+	EndOfJobTimeAction uint32
+}
+
+type JOBOBJECT_ASSOCIATE_COMPLETION_PORT struct {
+	CompletionKey  *byte
+	CompletionPort syscall.Handle
+}
+
+type JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION struct {
+	BasicInfo JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
+	IoInfo    IO_COUNTERS
+}
+
+const (
+	JOB_OBJECT_TERMINATE_AT_END_OF_JOB = 0
+	JOB_OBJECT_POST_AT_END_OF_JOB      = 1
+)
+
+const (
+	JOB_OBJECT_LIMIT_WORKINGSET                 = 0x00000001
+	JOB_OBJECT_LIMIT_PROCESS_TIME               = 0x00000002
+	JOB_OBJECT_LIMIT_JOB_TIME                   = 0x00000004
+	JOB_OBJECT_LIMIT_ACTIVE_PROCESS             = 0x00000008
+	JOB_OBJECT_LIMIT_AFFINITY                   = 0x00000010
+	JOB_OBJECT_LIMIT_PRIORITY_CLASS             = 0x00000020
+	JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME          = 0x00000040
+	JOB_OBJECT_LIMIT_SCHEDULING_CLASS           = 0x00000080
+	JOB_OBJECT_LIMIT_PROCESS_MEMORY             = 0x00000100
+	JOB_OBJECT_LIMIT_JOB_MEMORY                 = 0x00000200
+	JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION = 0x00000400
+	JOB_OBJECT_LIMIT_BREAKAWAY_OK               = 0x00000800
+	JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK        = 0x00001000
+	JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE          = 0x00002000
+	JOB_OBJECT_LIMIT_SUBSET_AFFINITY            = 0x00004000
+)
+
+const (
+	JOB_OBJECT_UILIMIT_HANDLES          = 0x00000001
+	JOB_OBJECT_UILIMIT_READCLIPBOARD    = 0x00000002
+	JOB_OBJECT_UILIMIT_WRITECLIPBOARD   = 0x00000004
+	JOB_OBJECT_UILIMIT_SYSTEMPARAMETERS = 0x00000008
+	JOB_OBJECT_UILIMIT_DISPLAYSETTINGS  = 0x00000010
+	JOB_OBJECT_UILIMIT_GLOBALATOMS      = 0x00000020
+	JOB_OBJECT_UILIMIT_DESKTOP          = 0x00000040
+	JOB_OBJECT_UILIMIT_EXITWINDOWS      = 0x00000080
+)
+
+const (
+	JOB_OBJECT_SECURITY_NO_ADMIN         = 0x00000001
+	JOB_OBJECT_SECURITY_RESTRICTED_TOKEN = 0x00000002
+	JOB_OBJECT_SECURITY_ONLY_TOKEN       = 0x00000004
+	JOB_OBJECT_SECURITY_FILTER_TOKENS    = 0x00000008
+)
+
+const (
+	JobObjectBasicAccountingInformation         = 1
+	JobObjectBasicLimitInformation              = 2
+	JobObjectBasicProcessIdList                 = 3
+	JobObjectBasicUIRestrictions                = 4
+	JobObjectSecurityLimitInformation           = 5
+	JobObjectEndOfJobTimeInformation            = 6
+	JobObjectAssociateCompletionPortInformation = 7
+	JobObjectBasicAndIoAccountingInformation    = 8
+	JobObjectExtendedLimitInformation           = 9
+	JobObjectGroupInformation                   = 11
+)
+
+const (
 	PROCESSOR_INTEL_386     = 386
 	PROCESSOR_INTEL_486     = 486
 	PROCESSOR_INTEL_PENTIUM = 586
