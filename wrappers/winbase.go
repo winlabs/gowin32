@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	INVALID_HANDLE_VALUE = ^syscall.Handle(0)
+	INVALID_HANDLE_VALUE    = ^syscall.Handle(0)
+	INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
 )
 
 const (
@@ -153,6 +154,22 @@ const (
 	FORMAT_MESSAGE_MAX_WIDTH_MASK  = 0x000000FF
 )
 
+const (
+	STARTF_USESHOWWINDOW    = 0x00000001
+	STARTF_USESIZE          = 0x00000002
+	STARTF_USEPOSITION      = 0x00000004
+	STARTF_USECOUNTCHARS    = 0x00000008
+	STARTF_USEFILLATTRIBUTE = 0x00000010
+	STARTF_RUNFULLSCREEN    = 0x00000020
+	STARTF_FORCEONFEEDBACK  = 0x00000040
+	STARTF_FORCEOFFFEEDBACK = 0x00000080
+	STARTF_USESTDHANDLES    = 0x00000100
+	STARTF_USEHOTKEY        = 0x00000200
+	STARTF_TITLEISLINKNAME  = 0x00000800
+	STARTF_TITLEISAPPID     = 0x00001000
+	STARTF_PREVENTPINNING   = 0x00002000
+)
+
 type STARTUPINFO struct {
 	Cb            uint32
 	Reserved      *uint16
@@ -175,23 +192,16 @@ type STARTUPINFO struct {
 }
 
 const (
-	STARTF_USESHOWWINDOW    = 0x00000001
-	STARTF_USESIZE          = 0x00000002
-	STARTF_USEPOSITION      = 0x00000004
-	STARTF_USECOUNTCHARS    = 0x00000008
-	STARTF_USEFILLATTRIBUTE = 0x00000010
-	STARTF_RUNFULLSCREEN    = 0x00000020
-	STARTF_FORCEONFEEDBACK  = 0x00000040
-	STARTF_FORCEOFFFEEDBACK = 0x00000080
-	STARTF_USESTDHANDLES    = 0x00000100
-	STARTF_USEHOTKEY        = 0x00000200
-	STARTF_TITLEISLINKNAME  = 0x00000800
-	STARTF_TITLEISAPPID     = 0x00001000
-	STARTF_PREVENTPINNING   = 0x00002000
+	PROCESS_NAME_NATIVE = 0x00000001
 )
 
 const (
-	PROCESS_NAME_NATIVE = 0x00000001
+	MOVEFILE_REPLACE_EXISTING      = 0x00000001
+	MOVEFILE_COPY_ALLOWED          = 0x00000002
+	MOVEFILE_DELAY_UNTIL_REBOOT    = 0x00000004
+	MOVEFILE_WRITE_THROUGH         = 0x00000008
+	MOVEFILE_CREATE_HARDLINK       = 0x00000010
+	MOVEFILE_FAIL_IF_NOT_TRACKABLE = 0x00000020
 )
 
 const (
@@ -211,8 +221,10 @@ var (
 
 	procBeginUpdateResourceW       = modkernel32.NewProc("BeginUpdateResourceW")
 	procCloseHandle                = modkernel32.NewProc("CloseHandle")
+	procCopyFileW                  = modkernel32.NewProc("CopyFileW")
 	procCreateFileW                = modkernel32.NewProc("CreateFileW")
 	procCreateProcessW             = modkernel32.NewProc("CreateProcessW")
+	procDeleteFileW                = modkernel32.NewProc("DeleteFileW")
 	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
@@ -221,6 +233,7 @@ var (
 	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
 	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetFileAttributesW         = modkernel32.NewProc("GetFileAttributesW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetStdHandle               = modkernel32.NewProc("GetStdHandle")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
@@ -229,8 +242,11 @@ var (
 	procGetSystemTimes             = modkernel32.NewProc("GetSystemTimes")
 	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
 	procLocalFree                  = modkernel32.NewProc("LocalFree")
+	procMoveFileExW                = modkernel32.NewProc("MoveFileExW")
+	procMoveFileW                  = modkernel32.NewProc("MoveFileW")
 	procOpenProcess                = modkernel32.NewProc("OpenProcess")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procSetFileAttributesW         = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                = modkernel32.NewProc("SetFileTime")
 	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
 	procTerminateProcess           = modkernel32.NewProc("TerminateProcess")
@@ -286,6 +302,27 @@ func CloseHandle(object syscall.Handle) error {
 	return nil
 }
 
+func CopyFile(existingFileName *uint16, newFileName *uint16, failIfExists bool) error {
+	var failIfExistsRaw int32
+	if failIfExists {
+		failIfExistsRaw = 1
+	} else {
+		failIfExistsRaw = 0
+	}
+	r1, _, e1 := procCopyFileW.Call(
+		uintptr(unsafe.Pointer(existingFileName)),
+		uintptr(unsafe.Pointer(newFileName)),
+		uintptr(failIfExistsRaw))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securityAttributes *SECURITY_ATTRIBUTES, creationDisposition uint32, flagsAndAttributes uint32, templateFile syscall.Handle) (syscall.Handle, error) {
 	r1, _, e1 := procCreateFileW.Call(
 		uintptr(unsafe.Pointer(fileName)),
@@ -324,6 +361,18 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		uintptr(unsafe.Pointer(currentDirectory)),
 		uintptr(unsafe.Pointer(startupInfo)),
 		uintptr(unsafe.Pointer(processInformation)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func DeleteFile(fileName *uint16) error {
+	r1, _, e1 := procDeleteFileW.Call(uintptr(unsafe.Pointer(fileName)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -449,6 +498,18 @@ func GetDriveType(rootPathName *uint16) uint32 {
 	return uint32(r1)
 }
 
+func GetFileAttributes(fileName *uint16) (uint32, error) {
+	r1, _, e1 := procGetFileAttributesW.Call(uintptr(unsafe.Pointer(fileName)))
+	if r1 == INVALID_FILE_ATTRIBUTES {
+		if e1 != ERROR_SUCCESS {
+			return uint32(r1), e1
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
 func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
 	r1, _, e1 := procGetModuleFileNameW.Call(
 		uintptr(module),
@@ -549,6 +610,35 @@ func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 	return 0, nil
 }
 
+func MoveFile(existingFileName *uint16, newFileName *uint16) error {
+	r1, _, e1 := procMoveFileW.Call(
+		uintptr(unsafe.Pointer(existingFileName)),
+		uintptr(unsafe.Pointer(newFileName)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func MoveFileEx(existingFileName *uint16, newFileName *uint16, flags uint32) error {
+	r1, _, e1 := procMoveFileExW.Call(
+		uintptr(unsafe.Pointer(existingFileName)),
+		uintptr(unsafe.Pointer(newFileName)),
+		uintptr(flags))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (syscall.Handle, error) {
 	var inheritHandleRaw int32
 	if inheritHandle {
@@ -576,6 +666,20 @@ func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *ui
 		uintptr(flags),
 		uintptr(unsafe.Pointer(exeName)),
 		uintptr(unsafe.Pointer(size)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetFileAttributes(fileName *uint16, fileAttributes uint32) error {
+	r1, _, e1 := procSetFileAttributesW.Call(
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(fileAttributes))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
