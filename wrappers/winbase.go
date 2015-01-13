@@ -209,18 +209,23 @@ var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
 
+	procAssignProcessToJobObject   = modkernel32.NewProc("AssignProcessToJobObject")
 	procBeginUpdateResourceW       = modkernel32.NewProc("BeginUpdateResourceW")
 	procCloseHandle                = modkernel32.NewProc("CloseHandle")
 	procCreateFileW                = modkernel32.NewProc("CreateFileW")
+	procCreateJobObjectW           = modkernel32.NewProc("CreateJobObjectW")
 	procCreateProcessW             = modkernel32.NewProc("CreateProcessW")
 	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
 	procFormatMessageW             = modkernel32.NewProc("FormatMessageW")
+	procFreeEnvironmentStringsW    = modkernel32.NewProc("FreeEnvironmentStringsW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
 	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetEnvironmentStringsW     = modkernel32.NewProc("GetEnvironmentStringsW")
+	procGetEnvironmentVariableW    = modkernel32.NewProc("GetEnvironmentVariableW")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetStdHandle               = modkernel32.NewProc("GetStdHandle")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
@@ -233,11 +238,17 @@ var (
 	procGetTempPathW               = modkernel32.NewProc("GetTempPathW")
 	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
 	procGetWindowsDirectoryW       = modkernel32.NewProc("GetWindowsDirectoryW")
+	procIsProcessInJob             = modkernel32.NewProc("IsProcessInJob")
 	procLocalFree                  = modkernel32.NewProc("LocalFree")
+	procOpenJobObjectW             = modkernel32.NewProc("OpenJobObjectW")
 	procOpenProcess                = modkernel32.NewProc("OpenProcess")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procQueryInformationJobObject  = modkernel32.NewProc("QueryInformationJobObject")
+	procSetEnvironmentVariableW    = modkernel32.NewProc("SetEnvironmentVariableW")
 	procSetFileTime                = modkernel32.NewProc("SetFileTime")
+	procSetInformationJobObject    = modkernel32.NewProc("SetInformationJobObject")
 	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
+	procTerminateJobObject         = modkernel32.NewProc("TerminateJobObject")
 	procTerminateProcess           = modkernel32.NewProc("TerminateProcess")
 	procUpdateResourceW            = modkernel32.NewProc("UpdateResourceW")
 	procVerifyVersionInfoW         = modkernel32.NewProc("VerifyVersionInfoW")
@@ -258,6 +269,18 @@ var (
 	procRegisterEventSourceW       = modadvapi32.NewProc("RegisterEventSourceW")
 	procReportEventW               = modadvapi32.NewProc("ReportEventW")
 )
+
+func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
+	r1, _, e1 := procAssignProcessToJobObject.Call(uintptr(job), uintptr(process))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
 
 func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscall.Handle, error) {
 	var deleteExistingResourcesRaw int32
@@ -309,6 +332,20 @@ func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securi
 		}
 	}
 	return handle, nil
+}
+
+func CreateJobObject(jobAttributes* SECURITY_ATTRIBUTES, name *uint16) (syscall.Handle, error) {
+	r1, _, e1 := procCreateJobObjectW.Call(
+		uintptr(unsafe.Pointer(jobAttributes)),
+		uintptr(unsafe.Pointer(name)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
 }
 
 func CreateProcess(applicationName *uint16, commandLine *uint16, processAttributes *SECURITY_ATTRIBUTES, threadAttributes *SECURITY_ATTRIBUTES, inheritHandles bool, creationFlags uint32, environment *byte, currentDirectory *uint16, startupInfo *STARTUPINFO, processInformation *PROCESS_INFORMATION) error {
@@ -413,6 +450,18 @@ func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId ui
 	return uint32(r1), nil
 }
 
+func FreeEnvironmentStrings(environmentBlock *uint16) error {
+	r1, _, e1 := procFreeEnvironmentStringsW.Call(uintptr(unsafe.Pointer(environmentBlock)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 	r1, _, e1 := procGetComputerNameExW.Call(
 		uintptr(nameType),
@@ -452,6 +501,33 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 func GetDriveType(rootPathName *uint16) uint32 {
 	r1, _, _ := procGetDriveTypeW.Call(uintptr(unsafe.Pointer(rootPathName)))
 	return uint32(r1)
+}
+
+func GetEnvironmentStrings() (*uint16, error) {
+	r1, _, e1 := procGetEnvironmentStringsW.Call()
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return nil, e1
+		} else {
+			return nil, syscall.EINVAL
+		}
+	}
+	return (*uint16)(unsafe.Pointer(r1)), nil
+}
+
+func GetEnvironmentVariable(name *uint16, buffer *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetEnvironmentVariableW.Call(
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }
 
 func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
@@ -613,6 +689,25 @@ func GetWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
 	return uint32(r1), nil
 }
 
+func IsProcessInJob(processHandle syscall.Handle, jobHandle syscall.Handle, result *bool) error {
+	var resultRaw int32
+	r1, _, e1 := procIsProcessInJob.Call(
+		uintptr(processHandle),
+		uintptr(jobHandle),
+		uintptr(unsafe.Pointer(&resultRaw)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	if result != nil {
+		*result = (resultRaw != 0)
+	}
+	return nil
+}
+
 func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 	// LocalFree returns NULL to indicate success!
 	r1, _, e1 := procLocalFree.Call(uintptr(mem))
@@ -624,6 +719,27 @@ func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 		}
 	}
 	return 0, nil
+}
+
+func OpenJobObject(desiredAccess uint32, inheritHandle bool, name *uint16) (syscall.Handle, error) {
+	var inheritHandleRaw int32
+	if inheritHandle {
+		inheritHandleRaw = 1
+	} else {
+		inheritHandleRaw = 0
+	}
+	r1, _, e1 :=  procOpenJobObjectW.Call(
+		uintptr(desiredAccess),
+		uintptr(inheritHandleRaw),
+		uintptr(unsafe.Pointer(name)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
 }
 
 func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (syscall.Handle, error) {
@@ -663,6 +779,37 @@ func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *ui
 	return nil
 }
 
+func QueryInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, jobObjectInfo *byte, jobObjectInfoLength uint32, returnLength *uint32) error {
+	r1, _, e1 := procQueryInformationJobObject.Call(
+		uintptr(job),
+		uintptr(jobObjectInfoClass),
+		uintptr(unsafe.Pointer(jobObjectInfo)),
+		uintptr(jobObjectInfoLength),
+		uintptr(unsafe.Pointer(returnLength)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetEnvironmentVariable(name *uint16, value *uint16) error {
+	r1, _, e1 := procSetEnvironmentVariableW.Call(
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(value)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func SetFileTime(file syscall.Handle, creationTime *FILETIME, lastAccessTime *FILETIME, lastWriteTime *FILETIME) error {
 	r1, _, e1 := procSetFileTime.Call(
 		uintptr(file),
@@ -679,8 +826,36 @@ func SetFileTime(file syscall.Handle, creationTime *FILETIME, lastAccessTime *FI
 	return nil
 }
 
+func SetInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, jobObjectInfo *byte, jobObjectInfoLength uint32) error {
+	r1, _, e1 := procSetInformationJobObject.Call(
+		uintptr(job),
+		uintptr(jobObjectInfoClass),
+		uintptr(unsafe.Pointer(jobObjectInfo)),
+		uintptr(jobObjectInfoLength))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func SetStdHandle(stdHandle uint32, handle syscall.Handle) error {
 	r1, _, e1 := procSetStdHandle.Call(uintptr(stdHandle), uintptr(handle))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func TerminateJobObject(job syscall.Handle, exitCode uint32) error {
+	r1, _, e1 := procTerminateJobObject.Call(uintptr(job), uintptr(exitCode))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
