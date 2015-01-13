@@ -232,7 +232,12 @@ var (
 	procGetSystemInfo              = modkernel32.NewProc("GetSystemInfo")
 	procGetSystemTimeAsFileTime    = modkernel32.NewProc("GetSystemTimeAsFileTime")
 	procGetSystemTimes             = modkernel32.NewProc("GetSystemTimes")
+	procGetSystemWindowsDirectoryW = modkernel32.NewProc("GetSystemWindowsDirectoryW")
+	procGetSystemWow64DirectoryW   = modkernel32.NewProc("GetSystemWow64DirectoryW")
+	procGetTempFileNameW           = modkernel32.NewProc("GetTempFileNameW")
+	procGetTempPathW               = modkernel32.NewProc("GetTempPathW")
 	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
+	procGetWindowsDirectoryW       = modkernel32.NewProc("GetWindowsDirectoryW")
 	procIsProcessInJob             = modkernel32.NewProc("IsProcessInJob")
 	procLocalFree                  = modkernel32.NewProc("LocalFree")
 	procOpenJobObjectW             = modkernel32.NewProc("OpenJobObjectW")
@@ -561,9 +566,9 @@ func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
 		uintptr(size))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
-			return uint32(r1), e1
+			return 0, e1
 		} else {
-			return uint32(r1), syscall.EINVAL
+			return 0, syscall.EINVAL
 		}
 	}
 	return uint32(r1), nil
@@ -592,6 +597,64 @@ func GetSystemTimes(idleTime *int64, kernelTime *int64, userTime *int64) error {
 	return nil
 }
 
+func GetSystemWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetSystemWindowsDirectoryW.Call(
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
+func GetSystemWow64Directory(buffer *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetSystemWow64DirectoryW.Call(
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
+func GetTempFileName(pathName *uint16, prefixString *uint16, unique uint32, tempFileName *uint16) (uint32, error) {
+	r1, _, e1 := procGetTempFileNameW.Call(
+		uintptr(unsafe.Pointer(pathName)),
+		uintptr(unsafe.Pointer(prefixString)),
+		uintptr(unique),
+		uintptr(unsafe.Pointer(tempFileName)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
+func GetTempPath(bufferLength uint32, buffer *uint16) (uint32, error) {
+	r1, _, e1 := procGetTempPathW.Call(
+		uintptr(bufferLength),
+		uintptr(unsafe.Pointer(buffer)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
 func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volumeNameSize uint32, volumeSerialNumber *uint32, maximumComponentLength *uint32, fileSystemFlags *uint32, fileSystemNameBuffer *uint16, fileSystemNameSize uint32) error {
 	r1, _, e1 := procGetVolumeInformationW.Call(
 		uintptr(unsafe.Pointer(rootPathName)),
@@ -610,6 +673,20 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 		}
 	}
 	return nil
+}
+
+func GetWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
+	r1, _, e1 := procGetWindowsDirectoryW.Call(
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }
 
 func IsProcessInJob(processHandle syscall.Handle, jobHandle syscall.Handle, result *bool) error {

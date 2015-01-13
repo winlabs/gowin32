@@ -22,6 +22,30 @@ import (
 	"syscall"
 )
 
+func GetSharedWindowsPath() (string, error) {
+	len, err := wrappers.GetSystemWindowsDirectory(nil, 0)
+	if err != nil {
+		return "", NewWindowsError("GetSystemWindowsDirectory", err)
+	}
+	buf := make([]uint16, len)
+	if _, err := wrappers.GetSystemWindowsDirectory(&buf[0], len); err != nil {
+		return "", NewWindowsError("GetSystemWindowsDirectory", err)
+	}
+	return syscall.UTF16ToString(buf), nil
+}
+
+func GetWindowsPath() (string, error) {
+	len, err := wrappers.GetWindowsDirectory(nil, 0)
+	if err != nil {
+		return "", NewWindowsError("GetWindowsDirectory", err)
+	}
+	buf := make([]uint16, len)
+	if _, err := wrappers.GetWindowsDirectory(&buf[0], len); err != nil {
+		return "", NewWindowsError("GetWindowsDirectory", err)
+	}
+	return syscall.UTF16ToString(buf), nil
+}
+
 func GetWindowsSystemPath() (string, error) {
 	len, err := wrappers.GetSystemDirectory(nil, 0)
 	if err != nil {
@@ -30,6 +54,18 @@ func GetWindowsSystemPath() (string, error) {
 	buf := make([]uint16, len)
 	if _, err := wrappers.GetSystemDirectory(&buf[0], len); err != nil {
 		return "", NewWindowsError("GetSystemDirectory", err)
+	}
+	return syscall.UTF16ToString(buf), nil
+}
+
+func GetWindowsSystemWOW64Path() (string, error) {
+	len, err := wrappers.GetSystemWow64Directory(nil, 0)
+	if err != nil {
+		return "", NewWindowsError("GetSystemWow64Directory", err)
+	}
+	buf := make([]uint16, len)
+	if _, err := wrappers.GetSystemWow64Directory(&buf[0], len); err != nil {
+		return "", NewWindowsError("GetSystemWow64Directory", err)
 	}
 	return syscall.UTF16ToString(buf), nil
 }
