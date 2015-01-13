@@ -34,9 +34,9 @@ const (
 
 type ProcessorInfo struct {
 	ProcessorArchitecture ProcessorArchitecture
-	NumberOfProcessors    uint32
-	ProcessorLevel        uint16
-	ProcessorRevision     uint16
+	NumberOfProcessors    uint
+	ProcessorLevel        uint
+	ProcessorRevision     uint
 }
 
 func GetProcessorInfo() *ProcessorInfo {
@@ -44,8 +44,8 @@ func GetProcessorInfo() *ProcessorInfo {
 	wrappers.GetSystemInfo(&si)
 	return &ProcessorInfo{
 		ProcessorArchitecture: ProcessorArchitecture(si.ProcessorArchitecture),
-		NumberOfProcessors:    si.NumberOfProcessors,
-		ProcessorLevel:        si.ProcessorLevel,
-		ProcessorRevision:     si.ProcessorRevision,
+		NumberOfProcessors:    uint(si.NumberOfProcessors),
+		ProcessorLevel:        uint(si.ProcessorLevel),
+		ProcessorRevision:     uint(si.ProcessorRevision),
 	}
 }

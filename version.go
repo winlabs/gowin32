@@ -82,20 +82,20 @@ type VersionCheck struct {
 	conditionMask uint64
 }
 
-func (self *VersionCheck) MajorVersion(op VerRelOp, value uint32) {
-	self.osvi.MajorVersion = value
+func (self *VersionCheck) MajorVersion(op VerRelOp, value uint) {
+	self.osvi.MajorVersion = uint32(value)
 	self.typeMask |= wrappers.VER_MAJORVERSION
 	self.conditionMask = wrappers.VerSetConditionMask(self.conditionMask, wrappers.VER_MAJORVERSION, uint8(op))
 }
 
-func (self *VersionCheck) MinorVersion(op VerRelOp, value uint32) {
-	self.osvi.MinorVersion = value
+func (self *VersionCheck) MinorVersion(op VerRelOp, value uint) {
+	self.osvi.MinorVersion = uint32(value)
 	self.typeMask |= wrappers.VER_MINORVERSION
 	self.conditionMask = wrappers.VerSetConditionMask(self.conditionMask, wrappers.VER_MINORVERSION, uint8(op))
 }
 
-func (self *VersionCheck) BuildNumber(op VerRelOp, value uint32) {
-	self.osvi.BuildNumber = value
+func (self *VersionCheck) BuildNumber(op VerRelOp, value uint) {
+	self.osvi.BuildNumber = uint32(value)
 	self.typeMask |= wrappers.VER_BUILDNUMBER
 	self.conditionMask = wrappers.VerSetConditionMask(self.conditionMask, wrappers.VER_BUILDNUMBER, uint8(op))
 }
@@ -106,14 +106,14 @@ func (self *VersionCheck) Platform(op VerRelOp, value VerPlatform) {
 	self.conditionMask = wrappers.VerSetConditionMask(self.conditionMask, wrappers.VER_PLATFORMID, uint8(op))
 }
 
-func (self *VersionCheck) ServicePackMajor(op VerRelOp, value uint16) {
-	self.osvi.ServicePackMajor = value
+func (self *VersionCheck) ServicePackMajor(op VerRelOp, value uint) {
+	self.osvi.ServicePackMajor = uint16(value)
 	self.typeMask |= wrappers.VER_SERVICEPACKMAJOR
 	self.conditionMask = wrappers.VerSetConditionMask(self.conditionMask, wrappers.VER_SERVICEPACKMAJOR, uint8(op))
 }
 
-func (self *VersionCheck) ServicePackMinor(op VerRelOp, value uint16) {
-	self.osvi.ServicePackMinor = value
+func (self *VersionCheck) ServicePackMinor(op VerRelOp, value uint) {
+	self.osvi.ServicePackMinor = uint16(value)
 	self.typeMask |= wrappers.VER_SERVICEPACKMINOR
 	self.conditionMask = wrappers.VerSetConditionMask(self.conditionMask, wrappers.VER_SERVICEPACKMINOR, uint8(op))
 }

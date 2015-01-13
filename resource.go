@@ -54,8 +54,8 @@ var (
 
 type ResourceId *uint16
 
-func IntResourceId(resourceId uint16) ResourceId {
-	return ResourceId(wrappers.MAKEINTRESOURCE(resourceId))
+func IntResourceId(resourceId uint) ResourceId {
+	return ResourceId(wrappers.MAKEINTRESOURCE(uint16(resourceId)))
 }
 
 func StringResourceId(resourceId string) ResourceId {

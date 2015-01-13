@@ -49,8 +49,8 @@ const (
 
 type VolumeInfo struct {
 	VolumeName             string
-	VolumeSerialNumber     uint32
-	MaximumComponentLength uint32
+	VolumeSerialNumber     uint
+	MaximumComponentLength uint
 	FileSystemFlags        FileSystemFlags
 	FileSystemName         string
 }
@@ -87,8 +87,8 @@ func GetVolumeInfo(rootPathName string) (*VolumeInfo, error) {
 	}
 	return &VolumeInfo{
 		VolumeName:             syscall.UTF16ToString(volumeNameBuffer),
-		VolumeSerialNumber:     volumeSerialNumber,
-		MaximumComponentLength: maximumComponentLength,
+		VolumeSerialNumber:     uint(volumeSerialNumber),
+		MaximumComponentLength: uint(maximumComponentLength),
 		FileSystemFlags:        FileSystemFlags(fileSystemFlags),
 		FileSystemName:         syscall.UTF16ToString(fileSystemNameBuffer),
 	}, nil

@@ -25,17 +25,17 @@ import (
 )
 
 type ProcessInfo struct {
-	ProcessID       uint32
-	Threads         uint32
-	ParentProcessID uint32
-	BasePriority    int32
+	ProcessID       uint
+	Threads         uint
+	ParentProcessID uint
+	BasePriority    int
 	ExeFile         string
 }
 
 type ModuleInfo struct {
-	ProcessID         uint32
-	ModuleBaseAddress *uint8
-	ModuleBaseSize    uint32
+	ProcessID         uint
+	ModuleBaseAddress *byte
+	ModuleBaseSize    uint
 	ModuleHandle      syscall.Handle
 	ModuleName        string
 	ExePath           string
@@ -61,10 +61,10 @@ func GetProcesses() ([]ProcessInfo, error) {
 	pi := []ProcessInfo{}
 	for {
 		pi = append(pi, ProcessInfo{
-			ProcessID:       pe.ProcessID,
-			Threads:         pe.Threads,
-			ParentProcessID: pe.ParentProcessID,
-			BasePriority:    pe.PriClassBase,
+			ProcessID:       uint(pe.ProcessID),
+			Threads:         uint(pe.Threads),
+			ParentProcessID: uint(pe.ParentProcessID),
+			BasePriority:    int(pe.PriClassBase),
 			ExeFile:         syscall.UTF16ToString((&pe.ExeFile)[:]),
 		})
 		err := wrappers.Process32Next(hSnapshot, &pe)
@@ -90,9 +90,9 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 	mi := []ModuleInfo{}
 	for {
 		mi = append(mi, ModuleInfo{
-			ProcessID:         me.ProcessID,
+			ProcessID:         uint(me.ProcessID),
 			ModuleBaseAddress: me.ModBaseAddr,
-			ModuleBaseSize:    me.ModBaseSize,
+			ModuleBaseSize:    uint(me.ModBaseSize),
 			ModuleHandle:      me.Module,
 			ModuleName:        syscall.UTF16ToString((&me.ModuleName)[:]),
 			ExePath:           syscall.UTF16ToString((&me.ExePath)[:]),
@@ -106,17 +106,17 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 	}
 }
 
-func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
+func SignalProcessAndWait(pid uint, timeout time.Duration) error {
 	milliseconds := uint32(timeout / time.Millisecond)
 	if timeout < 0 {
 		milliseconds = wrappers.INFINITE
 	}
-	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, pid)
+	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, uint32(pid))
 	if err != nil {
 		return NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
-	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, pid); err != nil {
+	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, uint32(pid)); err != nil {
 		return NewWindowsError("GenerateConsoleCtrlEvent", err)
 	}
 	if _, err := wrappers.WaitForSingleObject(hProcess, milliseconds); err != nil {
@@ -125,20 +125,20 @@ func SignalProcessAndWait(pid uint32, timeout time.Duration) error {
 	return nil
 }
 
-func KillProcess(pid uint32, exitCode uint32) error {
-	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_TERMINATE, false, pid)
+func KillProcess(pid uint, exitCode uint) error {
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_TERMINATE, false, uint32(pid))
 	if err != nil {
 		return NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
-	if err := wrappers.TerminateProcess(hProcess, exitCode); err != nil {
+	if err := wrappers.TerminateProcess(hProcess, uint32(exitCode)); err != nil {
 		return NewWindowsError("TerminateProcess", err)
 	}
 	return nil
 }
 
-func IsProcessRunning(pid uint32) (bool, error) {
-	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, pid)
+func IsProcessRunning(pid uint) (bool, error) {
+	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, uint32(pid))
 	if err == wrappers.ERROR_INVALID_PARAMETER {
 		// the process no longer exists
 		return false, nil
@@ -155,8 +155,8 @@ func IsProcessRunning(pid uint32) (bool, error) {
 	return event != wrappers.WAIT_OBJECT_0, nil
 }
 
-func GetProcessFullPathName(pid uint32, flags ProcessNameFlags) (string, error) {
-	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+func GetProcessFullPathName(pid uint, flags ProcessNameFlags) (string, error) {
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err != nil {
 		return "", NewWindowsError("OpenProcess", err)
 	}

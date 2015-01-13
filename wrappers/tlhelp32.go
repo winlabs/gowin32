@@ -52,7 +52,7 @@ type MODULEENTRY32 struct {
 	ProcessID    uint32
 	GlblcntUsage uint32
 	ProccntUsage uint32
-	ModBaseAddr  *uint8
+	ModBaseAddr  *byte
 	ModBaseSize  uint32
 	Module       syscall.Handle
 	ModuleName   [MAX_MODULE_NAME32 + 1]uint16
