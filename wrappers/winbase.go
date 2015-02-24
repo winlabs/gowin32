@@ -23,6 +23,7 @@ import (
 
 const (
 	INVALID_HANDLE_VALUE    = ^syscall.Handle(0)
+	INVALID_FILE_SIZE       = 0xFFFFFFFF
 	INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF
 )
 
@@ -64,6 +65,14 @@ const (
 	SECURITY_CONTEXT_TRACKING = 0x00040000
 	SECURITY_EFFECTIVE_ONLY   = 0x00080000
 )
+
+type OVERLAPPED struct {
+	Internal     uintptr
+	InternalHigh uintptr
+	Offset       uint32
+	OffsetHigh   uint32
+	Event        syscall.Handle
+}
 
 type SECURITY_ATTRIBUTES struct {
 	Length             uint32
@@ -239,6 +248,7 @@ var (
 	procGetEnvironmentStringsW     = modkernel32.NewProc("GetEnvironmentStringsW")
 	procGetEnvironmentVariableW    = modkernel32.NewProc("GetEnvironmentVariableW")
 	procGetFileAttributesW         = modkernel32.NewProc("GetFileAttributesW")
+	procGetFileSize                = modkernel32.NewProc("GetFileSize")
 	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
 	procGetStdHandle               = modkernel32.NewProc("GetStdHandle")
 	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
@@ -259,6 +269,7 @@ var (
 	procOpenProcess                = modkernel32.NewProc("OpenProcess")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procQueryInformationJobObject  = modkernel32.NewProc("QueryInformationJobObject")
+	procReadFile                   = modkernel32.NewProc("ReadFile")
 	procSetEnvironmentVariableW    = modkernel32.NewProc("SetEnvironmentVariableW")
 	procSetFileAttributesW         = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                = modkernel32.NewProc("SetFileTime")
@@ -591,6 +602,20 @@ func GetFileAttributes(fileName *uint16) (uint32, error) {
 	return uint32(r1), nil
 }
 
+func GetFileSize(file syscall.Handle, fileSizeHigh *uint32) (uint32, error) {
+	r1, _, e1 := procGetFileSize.Call(
+		uintptr(file),
+		uintptr(unsafe.Pointer(fileSizeHigh)))
+	if r1 == INVALID_FILE_SIZE {
+		if e1 != ERROR_SUCCESS {
+			return uint32(r1), e1
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
 func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
 	r1, _, e1 := procGetModuleFileNameW.Call(
 		uintptr(module),
@@ -876,6 +901,23 @@ func QueryInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, job
 		uintptr(unsafe.Pointer(jobObjectInfo)),
 		uintptr(jobObjectInfoLength),
 		uintptr(unsafe.Pointer(returnLength)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func ReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, numberOfBytesRead *uint32, overlapped *OVERLAPPED) error {
+	r1, _, e1 := procReadFile.Call(
+		uintptr(file),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(numberOfBytesToRead),
+		uintptr(unsafe.Pointer(numberOfBytesRead)),
+		uintptr(unsafe.Pointer(overlapped)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

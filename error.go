@@ -26,6 +26,7 @@ const (
 	ErrorFileNotFound        = wrappers.ERROR_FILE_NOT_FOUND
 	ErrorAccessDenied        = wrappers.ERROR_ACCESS_DENIED
 	ErrorGeneralFailure      = wrappers.ERROR_GEN_FAILURE
+	ErrorSharingViolation    = wrappers.ERROR_SHARING_VIOLATION
 	ErrorInvalidParameter    = wrappers.ERROR_INVALID_PARAMETER
 	ErrorBrokenPipe          = wrappers.ERROR_BROKEN_PIPE
 	ErrorServiceDoesNotExist = wrappers.ERROR_SERVICE_DOES_NOT_EXIST
