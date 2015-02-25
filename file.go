@@ -97,6 +97,31 @@ func OpenWindowsFile(fileName string, readWrite bool, shareMode FileShareMode, c
 	return os.NewFile(uintptr(file), fileName), nil
 }
 
+func ReadFileContents(fileName string) (string, error) {
+	file, err := wrappers.CreateFile(
+		syscall.StringToUTF16Ptr(fileName),
+		wrappers.GENERIC_READ,
+		wrappers.FILE_SHARE_READ|wrappers.FILE_SHARE_WRITE|wrappers.FILE_SHARE_DELETE,
+		nil,
+		wrappers.OPEN_EXISTING,
+		0,
+		0)
+	if err != nil {
+		return "", NewWindowsError("CreateFile", err)
+	}
+	defer wrappers.CloseHandle(file)
+	size, err := wrappers.GetFileSize(file, nil)
+	if err != nil {
+		return "", NewWindowsError("GetFileSize", err)
+	}
+	buf := make([]byte, size)
+	var bytesRead uint32
+	if err := wrappers.ReadFile(file, &buf[0], size, &bytesRead, nil); err != nil {
+		return "", NewWindowsError("ReadFile", err)
+	}
+	return string(buf[0:bytesRead]), nil
+}
+
 func TouchFile(f *os.File) error {
 	var now wrappers.FILETIME
 	wrappers.GetSystemTimeAsFileTime(&now)
