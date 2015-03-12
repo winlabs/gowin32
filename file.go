@@ -114,6 +114,9 @@ func ReadFileContents(fileName string) (string, error) {
 	if err != nil {
 		return "", NewWindowsError("GetFileSize", err)
 	}
+	if size == 0 {
+		return "", nil
+	}
 	buf := make([]byte, size)
 	var bytesRead uint32
 	if err := wrappers.ReadFile(file, &buf[0], size, &bytesRead, nil); err != nil {
