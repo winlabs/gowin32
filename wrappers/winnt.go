@@ -1266,6 +1266,7 @@ const (
 
 var (
 	procRtlMoveMemory       = modkernel32.NewProc("RtlMoveMemory")
+	procRtlZeroMemory       = modkernel32.NewProc("RtlZeroMemory")
 	procVerSetConditionMask = modkernel32.NewProc("VerSetConditionMask")
 )
 
@@ -1274,6 +1275,10 @@ func RtlMoveMemory(destination *byte, source *byte, length uintptr) {
 		uintptr(unsafe.Pointer(destination)),
 		uintptr(unsafe.Pointer(source)),
 		length)
+}
+
+func RtlZeroMemory(destination *byte, length uintptr) {
+	procRtlZeroMemory.Call(uintptr(unsafe.Pointer(destination)), length)
 }
 
 func VerSetConditionMask(conditionMask uint64, typeBitMask uint32, condition uint8) uint64 {
