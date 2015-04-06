@@ -136,8 +136,8 @@ func getDirectorySizeOnDisk(dirName string, clusterSize uint64) (uint64, error) 
 				return 0, err
 			}
 			totalSize += compressedSize
-		} else if info.FileSize%clusterSize != 0 {
-			totalSize += info.FileSize - info.FileSize%clusterSize + clusterSize
+		} else if (info.FileSize % clusterSize) != 0 {
+			totalSize += info.FileSize - (info.FileSize % clusterSize) + clusterSize
 		} else {
 			totalSize += info.FileSize
 		}
