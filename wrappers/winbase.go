@@ -200,6 +200,19 @@ type STARTUPINFO struct {
 	StdError      syscall.Handle
 }
 
+type WIN32_FIND_DATA struct {
+	FileAttributes    uint32
+	CreationTime      FILETIME
+	LastAccessTime    FILETIME
+	LastWriteTime     FILETIME
+	FileSizeHigh      uint32
+	FileSizeLow       uint32
+	Reserved0         uint32
+	Reserved1         uint32
+	FileName          [MAX_PATH]uint16
+	AlternateFileName [14]uint16
+}
+
 const (
 	PROCESS_NAME_NATIVE = 0x00000001
 )
@@ -239,12 +252,17 @@ var (
 	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
 	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
+	procFindClose                  = modkernel32.NewProc("FindClose")
+	procFindFirstFileW             = modkernel32.NewProc("FindFirstFileW")
+	procFindNextFileW              = modkernel32.NewProc("FindNextFileW")
 	procFormatMessageW             = modkernel32.NewProc("FormatMessageW")
 	procFreeEnvironmentStringsW    = modkernel32.NewProc("FreeEnvironmentStringsW")
+	procGetCompressedFileSizeW     = modkernel32.NewProc("GetCompressedFileSizeW")
 	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
 	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetDiskFreeSpaceW          = modkernel32.NewProc("GetDiskFreeSpaceW")
 	procGetEnvironmentStringsW     = modkernel32.NewProc("GetEnvironmentStringsW")
 	procGetEnvironmentVariableW    = modkernel32.NewProc("GetEnvironmentVariableW")
 	procGetFileAttributesW         = modkernel32.NewProc("GetFileAttributesW")
@@ -260,6 +278,7 @@ var (
 	procGetTempFileNameW           = modkernel32.NewProc("GetTempFileNameW")
 	procGetTempPathW               = modkernel32.NewProc("GetTempPathW")
 	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
+	procGetVolumePathNameW         = modkernel32.NewProc("GetVolumePathNameW")
 	procGetWindowsDirectoryW       = modkernel32.NewProc("GetWindowsDirectoryW")
 	procIsProcessInJob             = modkernel32.NewProc("IsProcessInJob")
 	procLocalFree                  = modkernel32.NewProc("LocalFree")
@@ -491,6 +510,45 @@ func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, er
 	return uint32(r1), nil
 }
 
+func FindClose(findFile syscall.Handle) error {
+	r1, _, e1 := procFindClose.Call(uintptr(findFile))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func FindFirstFile(fileName *uint16, findFileData *WIN32_FIND_DATA) (syscall.Handle, error) {
+	r1, _, e1 := procFindFirstFileW.Call(
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(unsafe.Pointer(findFileData)))
+	handle := syscall.Handle(r1)
+	if handle == INVALID_HANDLE_VALUE {
+		if e1 != ERROR_SUCCESS {
+			return handle, e1
+		} else {
+			return handle, syscall.EINVAL
+		}
+	}
+	return handle, nil
+}
+
+func FindNextFile(findFile syscall.Handle, findFileData *WIN32_FIND_DATA) error {
+	r1, _, e1 := procFindNextFileW.Call(uintptr(findFile), uintptr(unsafe.Pointer(findFileData)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId uint32, buffer *uint16, size uint32, arguments *byte) (uint32, error) {
 	r1, _, e1 := procFormatMessageW.Call(
 		uintptr(flags),
@@ -522,6 +580,20 @@ func FreeEnvironmentStrings(environmentBlock *uint16) error {
 	return nil
 }
 
+func GetCompressedFileSize(fileName *uint16, fileSizeHigh *uint32) (uint32, error) {
+	r1, _, e1 := procGetCompressedFileSizeW.Call(
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(unsafe.Pointer(fileSizeHigh)))
+	if r1 == INVALID_FILE_SIZE {
+		if e1 != ERROR_SUCCESS {
+			return uint32(r1), e1
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 	r1, _, e1 := procGetComputerNameExW.Call(
 		uintptr(nameType),
@@ -540,6 +612,23 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 func GetCurrentProcess() syscall.Handle {
 	r1, _, _ := procGetCurrentProcess.Call()
 	return syscall.Handle(r1)
+}
+
+func GetDiskFreeSpace(rootPathName *uint16, sectorsPerCluster *uint32, bytesPerSector *uint32, numberOfFreeClusters *uint32, totalNumberOfClusters *uint32) error {
+	r1, _, e1 := procGetDiskFreeSpaceW.Call(
+		uintptr(unsafe.Pointer(rootPathName)),
+		uintptr(unsafe.Pointer(sectorsPerCluster)),
+		uintptr(unsafe.Pointer(bytesPerSector)),
+		uintptr(unsafe.Pointer(numberOfFreeClusters)),
+		uintptr(unsafe.Pointer(totalNumberOfClusters)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, totalNumberOfBytes *uint64, totalNumberOfFreeBytes *uint64) error {
@@ -751,6 +840,21 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 		uintptr(unsafe.Pointer(fileSystemFlags)),
 		uintptr(unsafe.Pointer(fileSystemNameBuffer)),
 		uintptr(fileSystemNameSize))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func GetVolumePathName(fileName *uint16, volumePathName *uint16, bufferLength uint32) error {
+	r1, _, e1 := procGetVolumePathNameW.Call(
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(unsafe.Pointer(volumePathName)),
+		uintptr(bufferLength))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

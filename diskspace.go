@@ -45,3 +45,20 @@ func GetFreeDiskSpace(root string) (uint64, error) {
 	}
 	return freeSpace, nil
 }
+
+func GetSectorsAndClusters(root string) (uint32, uint32, uint32, uint32, error) {
+	var sectorsPerCluster uint32
+	var bytesPerSector uint32
+	var numberOfFreeClusters uint32
+	var totalNumberOfClusters uint32
+	err := wrappers.GetDiskFreeSpace(
+		syscall.StringToUTF16Ptr(root),
+		&sectorsPerCluster,
+		&bytesPerSector,
+		&numberOfFreeClusters,
+		&totalNumberOfClusters)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
+	return sectorsPerCluster, bytesPerSector, numberOfFreeClusters, totalNumberOfClusters, nil
+}

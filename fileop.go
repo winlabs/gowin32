@@ -48,6 +48,23 @@ func GetAttributes(fileName string) (FileAttributes, error) {
 	return FileAttributes(attributes), err
 }
 
+func GetCompressedSize(fileName string) (uint64, error) {
+	var fileSizeHigh uint32
+	fileSizeLow, err := wrappers.GetCompressedFileSize(syscall.StringToUTF16Ptr(fileName), &fileSizeHigh)
+	if err != nil {
+		return 0, NewWindowsError("GetCompressedFileSize", err)
+	}
+	return (uint64(fileSizeHigh) << 32) | uint64(fileSizeLow), nil
+}
+
+func GetVolumePath(fileName string) (string, error) {
+	buf := make([]uint16, wrappers.MAX_PATH)
+	if err := wrappers.GetVolumePathName(syscall.StringToUTF16Ptr(fileName), &buf[0], wrappers.MAX_PATH); err != nil {
+		return "", NewWindowsError("GetVolumePathName", err)
+	}
+	return syscall.UTF16ToString(buf), nil
+}
+
 func Move(oldFileName string, newFileName string, overwrite bool) error {
 	if overwrite {
 		err := wrappers.MoveFileEx(
