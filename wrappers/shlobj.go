@@ -105,8 +105,6 @@ const (
 )
 
 var (
-	modshell32 = syscall.NewLazyDLL("shell32.dll")
-
 	procSHGetFolderPathW     = modshell32.NewProc("SHGetFolderPathW")
 	procSHGetKnownFolderPath = modshell32.NewProc("SHGetKnownFolderPath")
 )

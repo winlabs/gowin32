@@ -40,6 +40,18 @@ func Delete(fileName string) error {
 	return nil
 }
 
+func FileExists(fileName string) (bool, error) {
+	var wfd wrappers.WIN32_FIND_DATA
+	handle, err := wrappers.FindFirstFile(syscall.StringToUTF16Ptr(fileName), &wfd)
+	if err == wrappers.ERROR_FILE_NOT_FOUND {
+		return false, nil
+	} else if err != nil {
+		return false, NewWindowsError("FindFirstFile", err)
+	}
+	wrappers.FindClose(handle)
+	return true, nil
+}
+
 func GetAttributes(fileName string) (FileAttributes, error) {
 	attributes, err := wrappers.GetFileAttributes(syscall.StringToUTF16Ptr(fileName))
 	if err != nil {

@@ -208,3 +208,20 @@ func GetKnownFolderPath(folder KnownFolder) (string, error) {
 	defer wrappers.CoTaskMemFree((*byte)(unsafe.Pointer(path)))
 	return LpstrToString(path), nil
 }
+
+func ShellDelete(fileSpec string) error {
+	return wrappers.SHFileOperation(&wrappers.SHFILEOPSTRUCT{
+		Func:  wrappers.FO_DELETE,
+		From:  MakeDoubleNullTerminatedLpstr(fileSpec),
+		Flags: wrappers.FOF_NO_UI,
+	})
+}
+
+func ShellCopy(source string, destination string) error {
+	return wrappers.SHFileOperation(&wrappers.SHFILEOPSTRUCT{
+		Func:  wrappers.FO_COPY,
+		From:  MakeDoubleNullTerminatedLpstr(source),
+		To:    MakeDoubleNullTerminatedLpstr(destination),
+		Flags: wrappers.FOF_NO_UI,
+	})
+}

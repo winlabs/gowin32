@@ -51,3 +51,12 @@ func LpstrToString(lpstr *uint16) string {
 		uintptr(2*len))
 	return syscall.UTF16ToString(buf)
 }
+
+func MakeDoubleNullTerminatedLpstr(items ...string) *uint16 {
+	chars := []uint16{}
+	for _, s := range items {
+		chars = append(chars, syscall.StringToUTF16(s)...)
+	}
+	chars = append(chars, 0)
+	return &chars[0]
+}
