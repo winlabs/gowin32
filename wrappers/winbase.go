@@ -237,6 +237,10 @@ const (
 	ComputerNamePhysicalDnsFullyQualified = 7
 )
 
+const (
+	SYMBOLIC_LINK_FLAG_DIRECTORY = 0x00000001
+)
+
 var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
@@ -248,6 +252,7 @@ var (
 	procCreateFileW                = modkernel32.NewProc("CreateFileW")
 	procCreateJobObjectW           = modkernel32.NewProc("CreateJobObjectW")
 	procCreateProcessW             = modkernel32.NewProc("CreateProcessW")
+	procCreateSymbolicLinkW        = modkernel32.NewProc("CreateSymbolicLinkW")
 	procDeleteFileW                = modkernel32.NewProc("DeleteFileW")
 	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
@@ -433,6 +438,21 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		uintptr(unsafe.Pointer(currentDirectory)),
 		uintptr(unsafe.Pointer(startupInfo)),
 		uintptr(unsafe.Pointer(processInformation)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func CreateSymbolicLink(symlinkFileName *uint16, targetFileName *uint16, flags uint32) error {
+	r1, _, e1 := procCreateSymbolicLinkW.Call(
+		uintptr(unsafe.Pointer(symlinkFileName)),
+		uintptr(unsafe.Pointer(targetFileName)),
+		uintptr(flags))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
