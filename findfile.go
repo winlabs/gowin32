@@ -24,9 +24,23 @@ import (
 	"unsafe"
 )
 
+type ReparseTag uint32
+
+const (
+	ReparseTagMountPoint   ReparseTag = wrappers.IO_REPARSE_TAG_MOUNT_POINT
+	ReparseTagHSM          ReparseTag = wrappers.IO_REPARSE_TAG_HSM
+	ReparseTagHSM2         ReparseTag = wrappers.IO_REPARSE_TAG_HSM2
+	ReparseTagSIS          ReparseTag = wrappers.IO_REPARSE_TAG_SIS
+	ReparseTagCSV          ReparseTag = wrappers.IO_REPARSE_TAG_CSV
+	ReparseTagDFS          ReparseTag = wrappers.IO_REPARSE_TAG_DFS
+	ReparseTagSymbolicLink ReparseTag = wrappers.IO_REPARSE_TAG_SYMLINK
+	ReparseTagDFSR         ReparseTag = wrappers.IO_REPARSE_TAG_DFSR
+)
+
 type FindFileItem struct {
 	FileAttributes    FileAttributes
 	FileSize          uint64
+	ReparseTag        ReparseTag
 	FileName          string
 	AlternateFileName string
 }
@@ -56,6 +70,7 @@ func (self *FindFile) Current() FindFileItem {
 	return FindFileItem{
 		FileAttributes:    FileAttributes(self.current.FileAttributes),
 		FileSize:          (uint64(self.current.FileSizeHigh) << 32) | uint64(self.current.FileSizeLow),
+		ReparseTag:        ReparseTag(self.current.Reserved0),
 		FileName:          syscall.UTF16ToString(self.current.FileName[:]),
 		AlternateFileName: syscall.UTF16ToString(self.current.AlternateFileName[:]),
 	}
