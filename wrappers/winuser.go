@@ -16,12 +16,8 @@
 
 package wrappers
 
-import (
-	"unsafe"
-)
-
-func MAKEINTRESOURCE(integer uint16) *uint16 {
-	return (*uint16)(unsafe.Pointer(uintptr(integer)))
+func MAKEINTRESOURCE(integer uint16) uintptr {
+	return uintptr(integer)
 }
 
 var (

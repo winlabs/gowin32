@@ -406,7 +406,7 @@ func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securi
 	return handle, nil
 }
 
-func CreateJobObject(jobAttributes* SECURITY_ATTRIBUTES, name *uint16) (syscall.Handle, error) {
+func CreateJobObject(jobAttributes *SECURITY_ATTRIBUTES, name *uint16) (syscall.Handle, error) {
 	r1, _, e1 := procCreateJobObjectW.Call(
 		uintptr(unsafe.Pointer(jobAttributes)),
 		uintptr(unsafe.Pointer(name)))
@@ -967,7 +967,7 @@ func OpenJobObject(desiredAccess uint32, inheritHandle bool, name *uint16) (sysc
 	} else {
 		inheritHandleRaw = 0
 	}
-	r1, _, e1 :=  procOpenJobObjectW.Call(
+	r1, _, e1 := procOpenJobObjectW.Call(
 		uintptr(desiredAccess),
 		uintptr(inheritHandleRaw),
 		uintptr(unsafe.Pointer(name)))
@@ -1148,11 +1148,11 @@ func TerminateProcess(process syscall.Handle, exitCode uint32) error {
 	return nil
 }
 
-func UpdateResource(update syscall.Handle, resourceType *uint16, name *uint16, language uint16, data *byte, cbData uint32) error {
+func UpdateResource(update syscall.Handle, resourceType uintptr, name uintptr, language uint16, data *byte, cbData uint32) error {
 	r1, _, e1 := procUpdateResourceW.Call(
 		uintptr(update),
-		uintptr(unsafe.Pointer(resourceType)),
-		uintptr(unsafe.Pointer(name)),
+		resourceType,
+		name,
 		uintptr(language),
 		uintptr(unsafe.Pointer(data)),
 		uintptr(cbData))
