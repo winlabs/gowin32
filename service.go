@@ -497,3 +497,29 @@ func (self *SCManager) OpenService(serviceName string) (*Service, error) {
 	}
 	return &Service{handle: handle}, nil
 }
+
+func IsServiceRunning(serviceName string) (bool, error) {
+	scmhandle, err := wrappers.OpenSCManager(
+		nil,
+		syscall.StringToUTF16Ptr(wrappers.SERVICES_ACTIVE_DATABASE),
+		wrappers.SC_MANAGER_CONNECT)
+	if err != nil {
+		return false, NewWindowsError("OpenSCManager", err)
+	}
+	defer wrappers.CloseServiceHandle(scmhandle)
+	handle, err := wrappers.OpenService(
+		scmhandle,
+		syscall.StringToUTF16Ptr(serviceName),
+		wrappers.SERVICE_QUERY_STATUS)
+	if err == wrappers.ERROR_SERVICE_DOES_NOT_EXIST {
+		return false, nil
+	} else if err != nil {
+		return false, NewWindowsError("OpenService", err)
+	}
+	defer wrappers.CloseServiceHandle(handle)
+	var status wrappers.SERVICE_STATUS
+	if err := wrappers.QueryServiceStatus(handle, &status); err != nil {
+		return false, NewWindowsError("QueryServiceStatus", err)
+	}
+	return status.CurrentState == wrappers.SERVICE_RUNNING, nil
+}
