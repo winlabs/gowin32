@@ -499,6 +499,8 @@ func (self *SCManager) OpenService(serviceName string) (*Service, error) {
 }
 
 func IsServiceRunning(serviceName string) (bool, error) {
+	// This function requires fewer access rights than using the above classes and can be used to check if a service
+	// is running without administrator access.
 	scmhandle, err := wrappers.OpenSCManager(
 		nil,
 		syscall.StringToUTF16Ptr(wrappers.SERVICES_ACTIVE_DATABASE),
