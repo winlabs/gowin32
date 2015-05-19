@@ -112,11 +112,17 @@ func SignalProcessAndWait(pid uint, timeout time.Duration) error {
 		milliseconds = wrappers.INFINITE
 	}
 	hProcess, err := wrappers.OpenProcess(wrappers.SYNCHRONIZE, false, uint32(pid))
-	if err != nil {
+	if err == wrappers.ERROR_INVALID_PARAMETER {
+		// the process terminated on its own
+		return nil
+	} else if err != nil {
 		return NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
-	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, uint32(pid)); err != nil {
+	if err := wrappers.GenerateConsoleCtrlEvent(wrappers.CTRL_BREAK_EVENT, uint32(pid)); err == wrappers.ERROR_INVALID_PARAMETER {
+		// the process terminated on its own
+		return nil
+	} else if err != nil {
 		return NewWindowsError("GenerateConsoleCtrlEvent", err)
 	}
 	if _, err := wrappers.WaitForSingleObject(hProcess, milliseconds); err != nil {
@@ -127,7 +133,10 @@ func SignalProcessAndWait(pid uint, timeout time.Duration) error {
 
 func KillProcess(pid uint, exitCode uint) error {
 	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_TERMINATE, false, uint32(pid))
-	if err != nil {
+	if err == wrappers.ERROR_INVALID_PARAMETER {
+		// the process terminated on its own
+		return nil
+	} else if err != nil {
 		return NewWindowsError("OpenProcess", err)
 	}
 	defer wrappers.CloseHandle(hProcess)
