@@ -228,10 +228,12 @@ func (self *InternetConnection) OpenHTTPRequest(verb string, objectName string, 
 	}
 	var acceptTypesRaw **uint16
 	if acceptTypes != nil {
-		acceptTypesPtrs := make([]*uint16, len(acceptTypes))
+		acceptTypesPtrs := make([]*uint16, len(acceptTypes), len(acceptTypes) + 1)
 		for i := range acceptTypes {
 			acceptTypesPtrs[i] = syscall.StringToUTF16Ptr(acceptTypes[i])
 		}
+		acceptTypesPtrs = append(acceptTypesPtrs, nil)
+		acceptTypesRaw := &acceptTypesPtrs[0]
 	}
 	handle, err := wrappers.HttpOpenRequest(
 		self.handle,
