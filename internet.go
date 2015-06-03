@@ -233,7 +233,7 @@ func (self *InternetConnection) OpenHTTPRequest(verb string, objectName string, 
 			acceptTypesPtrs[i] = syscall.StringToUTF16Ptr(acceptTypes[i])
 		}
 		acceptTypesPtrs = append(acceptTypesPtrs, nil)
-		acceptTypesRaw := &acceptTypesPtrs[0]
+		acceptTypesRaw = &acceptTypesPtrs[0]
 	}
 	handle, err := wrappers.HttpOpenRequest(
 		self.handle,
