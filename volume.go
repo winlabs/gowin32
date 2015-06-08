@@ -97,3 +97,21 @@ func GetVolumeInfo(rootPathName string) (*VolumeInfo, error) {
 func GetVolumeDriveType(rootPathName string) DriveType {
 	return DriveType(wrappers.GetDriveType(syscall.StringToUTF16Ptr(rootPathName)))
 }
+
+const (
+	MaximumVolumeGUIDPath = 50
+)
+
+func GetVolumeNameFromMountPoint(volumeMountPoint string) (string, error) {
+	volumeName := make([]uint16, MaximumVolumeGUIDPath)
+
+	err := wrappers.GetVolumeNameForVolumeMountPoint(
+		syscall.StringToUTF16Ptr(volumeMountPoint),
+		&volumeName[0],
+		MaximumVolumeGUIDPath)
+
+	if err != nil {
+		return "", NewWindowsError("GetVolumeNameForVolumeMountPoint", err)
+	}
+	return syscall.UTF16ToString(volumeName), nil
+}

@@ -245,66 +245,69 @@ var (
 	modkernel32 = syscall.NewLazyDLL("kernel32.dll")
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
 
-	procAssignProcessToJobObject   = modkernel32.NewProc("AssignProcessToJobObject")
-	procBeginUpdateResourceW       = modkernel32.NewProc("BeginUpdateResourceW")
-	procCloseHandle                = modkernel32.NewProc("CloseHandle")
-	procCopyFileW                  = modkernel32.NewProc("CopyFileW")
-	procCreateFileW                = modkernel32.NewProc("CreateFileW")
-	procCreateJobObjectW           = modkernel32.NewProc("CreateJobObjectW")
-	procCreateProcessW             = modkernel32.NewProc("CreateProcessW")
-	procCreateSymbolicLinkW        = modkernel32.NewProc("CreateSymbolicLinkW")
-	procDeleteFileW                = modkernel32.NewProc("DeleteFileW")
-	procDeviceIoControl            = modkernel32.NewProc("DeviceIoControl")
-	procEndUpdateResourceW         = modkernel32.NewProc("EndUpdateResourceW")
-	procExpandEnvironmentStringsW  = modkernel32.NewProc("ExpandEnvironmentStringsW")
-	procFindClose                  = modkernel32.NewProc("FindClose")
-	procFindFirstFileW             = modkernel32.NewProc("FindFirstFileW")
-	procFindNextFileW              = modkernel32.NewProc("FindNextFileW")
-	procFormatMessageW             = modkernel32.NewProc("FormatMessageW")
-	procFreeEnvironmentStringsW    = modkernel32.NewProc("FreeEnvironmentStringsW")
-	procGetCompressedFileSizeW     = modkernel32.NewProc("GetCompressedFileSizeW")
-	procGetComputerNameExW         = modkernel32.NewProc("GetComputerNameExW")
-	procGetCurrentProcess          = modkernel32.NewProc("GetCurrentProcess")
-	procGetDriveTypeW              = modkernel32.NewProc("GetDriveTypeW")
-	procGetDiskFreeSpaceExW        = modkernel32.NewProc("GetDiskFreeSpaceExW")
-	procGetDiskFreeSpaceW          = modkernel32.NewProc("GetDiskFreeSpaceW")
-	procGetEnvironmentStringsW     = modkernel32.NewProc("GetEnvironmentStringsW")
-	procGetEnvironmentVariableW    = modkernel32.NewProc("GetEnvironmentVariableW")
-	procGetFileAttributesW         = modkernel32.NewProc("GetFileAttributesW")
-	procGetFileSize                = modkernel32.NewProc("GetFileSize")
-	procGetModuleFileNameW         = modkernel32.NewProc("GetModuleFileNameW")
-	procGetStdHandle               = modkernel32.NewProc("GetStdHandle")
-	procGetSystemDirectoryW        = modkernel32.NewProc("GetSystemDirectoryW")
-	procGetSystemInfo              = modkernel32.NewProc("GetSystemInfo")
-	procGetSystemTimeAsFileTime    = modkernel32.NewProc("GetSystemTimeAsFileTime")
-	procGetSystemTimes             = modkernel32.NewProc("GetSystemTimes")
-	procGetSystemWindowsDirectoryW = modkernel32.NewProc("GetSystemWindowsDirectoryW")
-	procGetSystemWow64DirectoryW   = modkernel32.NewProc("GetSystemWow64DirectoryW")
-	procGetTempFileNameW           = modkernel32.NewProc("GetTempFileNameW")
-	procGetTempPathW               = modkernel32.NewProc("GetTempPathW")
-	procGetVolumeInformationW      = modkernel32.NewProc("GetVolumeInformationW")
-	procGetVolumePathNameW         = modkernel32.NewProc("GetVolumePathNameW")
-	procGetWindowsDirectoryW       = modkernel32.NewProc("GetWindowsDirectoryW")
-	procIsProcessInJob             = modkernel32.NewProc("IsProcessInJob")
-	procLocalFree                  = modkernel32.NewProc("LocalFree")
-	procMoveFileExW                = modkernel32.NewProc("MoveFileExW")
-	procMoveFileW                  = modkernel32.NewProc("MoveFileW")
-	procOpenJobObjectW             = modkernel32.NewProc("OpenJobObjectW")
-	procOpenProcess                = modkernel32.NewProc("OpenProcess")
-	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
-	procQueryInformationJobObject  = modkernel32.NewProc("QueryInformationJobObject")
-	procReadFile                   = modkernel32.NewProc("ReadFile")
-	procSetEnvironmentVariableW    = modkernel32.NewProc("SetEnvironmentVariableW")
-	procSetFileAttributesW         = modkernel32.NewProc("SetFileAttributesW")
-	procSetFileTime                = modkernel32.NewProc("SetFileTime")
-	procSetInformationJobObject    = modkernel32.NewProc("SetInformationJobObject")
-	procSetStdHandle               = modkernel32.NewProc("SetStdHandle")
-	procTerminateJobObject         = modkernel32.NewProc("TerminateJobObject")
-	procTerminateProcess           = modkernel32.NewProc("TerminateProcess")
-	procUpdateResourceW            = modkernel32.NewProc("UpdateResourceW")
-	procVerifyVersionInfoW         = modkernel32.NewProc("VerifyVersionInfoW")
-	procWaitForSingleObject        = modkernel32.NewProc("WaitForSingleObject")
-	proclstrlenW                   = modkernel32.NewProc("lstrlenW")
+	procAssignProcessToJobObject          = modkernel32.NewProc("AssignProcessToJobObject")
+	procBeginUpdateResourceW              = modkernel32.NewProc("BeginUpdateResourceW")
+	procCloseHandle                       = modkernel32.NewProc("CloseHandle")
+	procCopyFileW                         = modkernel32.NewProc("CopyFileW")
+	procCreateFileW                       = modkernel32.NewProc("CreateFileW")
+	procCreateJobObjectW                  = modkernel32.NewProc("CreateJobObjectW")
+	procCreateProcessW                    = modkernel32.NewProc("CreateProcessW")
+	procCreateSymbolicLinkW               = modkernel32.NewProc("CreateSymbolicLinkW")
+	procDeleteFileW                       = modkernel32.NewProc("DeleteFileW")
+	procDeviceIoControl                   = modkernel32.NewProc("DeviceIoControl")
+	procEndUpdateResourceW                = modkernel32.NewProc("EndUpdateResourceW")
+	procExpandEnvironmentStringsW         = modkernel32.NewProc("ExpandEnvironmentStringsW")
+	procFindClose                         = modkernel32.NewProc("FindClose")
+	procFindFirstFileW                    = modkernel32.NewProc("FindFirstFileW")
+	procFindNextFileW                     = modkernel32.NewProc("FindNextFileW")
+	procFormatMessageW                    = modkernel32.NewProc("FormatMessageW")
+	procFreeEnvironmentStringsW           = modkernel32.NewProc("FreeEnvironmentStringsW")
+	procGetCompressedFileSizeW            = modkernel32.NewProc("GetCompressedFileSizeW")
+	procGetComputerNameExW                = modkernel32.NewProc("GetComputerNameExW")
+	procGetCurrentProcess                 = modkernel32.NewProc("GetCurrentProcess")
+	procGetDriveTypeW                     = modkernel32.NewProc("GetDriveTypeW")
+	procGetDiskFreeSpaceExW               = modkernel32.NewProc("GetDiskFreeSpaceExW")
+	procGetDiskFreeSpaceW                 = modkernel32.NewProc("GetDiskFreeSpaceW")
+	procGetEnvironmentStringsW            = modkernel32.NewProc("GetEnvironmentStringsW")
+	procGetEnvironmentVariableW           = modkernel32.NewProc("GetEnvironmentVariableW")
+	procGetFileAttributesW                = modkernel32.NewProc("GetFileAttributesW")
+	procGetFileSize                       = modkernel32.NewProc("GetFileSize")
+	procGetModuleFileNameW                = modkernel32.NewProc("GetModuleFileNameW")
+	procGetProcessTimes                   = modkernel32.NewProc("GetProcessTimes")
+	procGetStdHandle                      = modkernel32.NewProc("GetStdHandle")
+	procGetSystemDirectoryW               = modkernel32.NewProc("GetSystemDirectoryW")
+	procGetSystemInfo                     = modkernel32.NewProc("GetSystemInfo")
+	procGetSystemTimeAsFileTime           = modkernel32.NewProc("GetSystemTimeAsFileTime")
+	procGetSystemTimes                    = modkernel32.NewProc("GetSystemTimes")
+	procGetSystemWindowsDirectoryW        = modkernel32.NewProc("GetSystemWindowsDirectoryW")
+	procGetSystemWow64DirectoryW          = modkernel32.NewProc("GetSystemWow64DirectoryW")
+	procGetTempFileNameW                  = modkernel32.NewProc("GetTempFileNameW")
+	procGetTempPathW                      = modkernel32.NewProc("GetTempPathW")
+	procGetVersionExW                     = modkernel32.NewProc("GetVersionExW")
+	procGetVolumeInformationW             = modkernel32.NewProc("GetVolumeInformationW")
+	procGetVolumeNameForVolumeMountPointW = modkernel32.NewProc("GetVolumeNameForVolumeMountPointW")
+	procGetVolumePathNameW                = modkernel32.NewProc("GetVolumePathNameW")
+	procGetWindowsDirectoryW              = modkernel32.NewProc("GetWindowsDirectoryW")
+	procIsProcessInJob                    = modkernel32.NewProc("IsProcessInJob")
+	procLocalFree                         = modkernel32.NewProc("LocalFree")
+	procMoveFileExW                       = modkernel32.NewProc("MoveFileExW")
+	procMoveFileW                         = modkernel32.NewProc("MoveFileW")
+	procOpenJobObjectW                    = modkernel32.NewProc("OpenJobObjectW")
+	procOpenProcess                       = modkernel32.NewProc("OpenProcess")
+	procQueryFullProcessImageNameW        = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procQueryInformationJobObject         = modkernel32.NewProc("QueryInformationJobObject")
+	procReadFile                          = modkernel32.NewProc("ReadFile")
+	procSetEnvironmentVariableW           = modkernel32.NewProc("SetEnvironmentVariableW")
+	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
+	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
+	procSetInformationJobObject           = modkernel32.NewProc("SetInformationJobObject")
+	procSetStdHandle                      = modkernel32.NewProc("SetStdHandle")
+	procTerminateJobObject                = modkernel32.NewProc("TerminateJobObject")
+	procTerminateProcess                  = modkernel32.NewProc("TerminateProcess")
+	procUpdateResourceW                   = modkernel32.NewProc("UpdateResourceW")
+	procVerifyVersionInfoW                = modkernel32.NewProc("VerifyVersionInfoW")
+	procWaitForSingleObject               = modkernel32.NewProc("WaitForSingleObject")
+	proclstrlenW                          = modkernel32.NewProc("lstrlenW")
 
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
@@ -742,6 +745,23 @@ func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (ui
 	return uint32(r1), nil
 }
 
+func GetProcessTimes(hProcess syscall.Handle, creationTime, exitTime, kernelTime, userTime *FILETIME) error {
+	r1, _, e1 := procGetProcessTimes.Call(
+		uintptr(hProcess),
+		uintptr(unsafe.Pointer(creationTime)),
+		uintptr(unsafe.Pointer(exitTime)),
+		uintptr(unsafe.Pointer(kernelTime)),
+		uintptr(unsafe.Pointer(userTime)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func GetStdHandle(stdHandle uint32) (syscall.Handle, error) {
 	r1, _, e1 := procGetStdHandle.Call(uintptr(stdHandle))
 	handle := (syscall.Handle)(r1)
@@ -777,7 +797,7 @@ func GetSystemTimeAsFileTime(systemTimeAsFileTime *FILETIME) {
 	procGetSystemTimeAsFileTime.Call(uintptr(unsafe.Pointer(systemTimeAsFileTime)))
 }
 
-func GetSystemTimes(idleTime *int64, kernelTime *int64, userTime *int64) error {
+func GetSystemTimes(idleTime, kernelTime, userTime *FILETIME) error {
 	r1, _, e1 := procGetSystemTimes.Call(
 		uintptr(unsafe.Pointer(idleTime)),
 		uintptr(unsafe.Pointer(kernelTime)),
@@ -850,6 +870,18 @@ func GetTempPath(bufferLength uint32, buffer *uint16) (uint32, error) {
 	return uint32(r1), nil
 }
 
+func GetVersionEx(osvi *OSVERSIONINFOEX) error {
+	r1, _, e1 := procGetVersionExW.Call(uintptr(unsafe.Pointer(osvi)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volumeNameSize uint32, volumeSerialNumber *uint32, maximumComponentLength *uint32, fileSystemFlags *uint32, fileSystemNameBuffer *uint16, fileSystemNameSize uint32) error {
 	r1, _, e1 := procGetVolumeInformationW.Call(
 		uintptr(unsafe.Pointer(rootPathName)),
@@ -860,6 +892,21 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 		uintptr(unsafe.Pointer(fileSystemFlags)),
 		uintptr(unsafe.Pointer(fileSystemNameBuffer)),
 		uintptr(fileSystemNameSize))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func GetVolumeNameForVolumeMountPoint(volumeMountPoint *uint16, volumeName *uint16, bufferLength uint32) error {
+	r1, _, e1 := procGetVolumeNameForVolumeMountPointW.Call(
+		uintptr(unsafe.Pointer(volumeMountPoint)),
+		uintptr(unsafe.Pointer(volumeName)),
+		uintptr(bufferLength))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

@@ -41,6 +41,13 @@ type ModuleInfo struct {
 	ExePath           string
 }
 
+type ProcessTimeCounters struct {
+	Creation uint64
+	Exit     uint64
+	Kernel   uint64
+	User     uint64
+}
+
 type ProcessNameFlags uint32
 
 const (
@@ -185,4 +192,24 @@ func GetProcessFullPathName(pid uint, flags ProcessNameFlags) (string, error) {
 		}
 	}
 	return syscall.UTF16ToString(buf[0:size]), nil
+}
+
+func GetProcessTimeCounters(pid uint) (*ProcessTimeCounters, error) {
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return nil, NewWindowsError("OpenProcess", err)
+	}
+	defer wrappers.CloseHandle(hProcess)
+
+	var creationTime, exitTime, kernelTime, userTime wrappers.FILETIME
+	err = wrappers.GetProcessTimes(hProcess, &creationTime, &exitTime, &kernelTime, &userTime)
+	if err != nil {
+		return nil, NewWindowsError("GetProcessTimes", err)
+	}
+	return &ProcessTimeCounters{
+		Creation: fileTimeToUint64(creationTime),
+		Exit:     fileTimeToUint64(exitTime),
+		Kernel:   fileTimeToUint64(kernelTime),
+		User:     fileTimeToUint64(userTime),
+	}, nil
 }

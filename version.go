@@ -19,6 +19,7 @@ package gowin32
 import (
 	"github.com/winlabs/gowin32/wrappers"
 
+	"syscall"
 	"unsafe"
 )
 
@@ -139,4 +140,35 @@ func (self *VersionCheck) Verify() (bool, error) {
 		return false, NewWindowsError("VerifyVersionInfo", err)
 	}
 	return true, nil
+}
+
+type OSVersionInfo struct {
+	MajorVersion     uint
+	MinorVersion     uint
+	BuildNumber      uint
+	PlatformId       VerPlatform
+	ServicePackName  string
+	ServicePackMajor uint
+	ServicePackMinor uint
+	SuiteMask        VerSuite
+	ProductType      VerProductType
+}
+
+func GetWindowsVersion() (*OSVersionInfo, error) {
+	var osvi wrappers.OSVERSIONINFOEX
+	osvi.OSVersionInfoSize = uint32(unsafe.Sizeof(osvi))
+	if err := wrappers.GetVersionEx(&osvi); err != nil {
+		return nil, NewWindowsError("GetVersionEx", err)
+	}
+	return &OSVersionInfo{
+		MajorVersion:     uint(osvi.MajorVersion),
+		MinorVersion:     uint(osvi.MinorVersion),
+		BuildNumber:      uint(osvi.BuildNumber),
+		PlatformId:       VerPlatform(osvi.PlatformId),
+		ServicePackName:  syscall.UTF16ToString(osvi.CSDVersion[:]),
+		ServicePackMajor: uint(osvi.ServicePackMajor),
+		ServicePackMinor: uint(osvi.ServicePackMinor),
+		SuiteMask:        VerSuite(osvi.SuiteMask),
+		ProductType:      VerProductType(osvi.ProductType),
+	}, nil
 }
