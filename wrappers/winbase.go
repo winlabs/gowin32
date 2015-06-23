@@ -92,6 +92,8 @@ type FILETIME struct {
 	HighDateTime uint32
 }
 
+type CRITICAL_SECTION RTL_CRITICAL_SECTION
+
 type SYSTEM_INFO struct {
 	ProcessorArchitecture     uint16
 	Reserved                  uint16
@@ -253,9 +255,11 @@ var (
 	procCreateJobObjectW                  = modkernel32.NewProc("CreateJobObjectW")
 	procCreateProcessW                    = modkernel32.NewProc("CreateProcessW")
 	procCreateSymbolicLinkW               = modkernel32.NewProc("CreateSymbolicLinkW")
+	procDeleteCriticalSection             = modkernel32.NewProc("DeleteCriticalSection")
 	procDeleteFileW                       = modkernel32.NewProc("DeleteFileW")
 	procDeviceIoControl                   = modkernel32.NewProc("DeviceIoControl")
 	procEndUpdateResourceW                = modkernel32.NewProc("EndUpdateResourceW")
+	procEnterCriticalSection              = modkernel32.NewProc("EnterCriticalSection")
 	procExpandEnvironmentStringsW         = modkernel32.NewProc("ExpandEnvironmentStringsW")
 	procFindClose                         = modkernel32.NewProc("FindClose")
 	procFindFirstFileW                    = modkernel32.NewProc("FindFirstFileW")
@@ -288,7 +292,9 @@ var (
 	procGetVolumeNameForVolumeMountPointW = modkernel32.NewProc("GetVolumeNameForVolumeMountPointW")
 	procGetVolumePathNameW                = modkernel32.NewProc("GetVolumePathNameW")
 	procGetWindowsDirectoryW              = modkernel32.NewProc("GetWindowsDirectoryW")
+	procInitializeCriticalSection         = modkernel32.NewProc("InitializeCriticalSection")
 	procIsProcessInJob                    = modkernel32.NewProc("IsProcessInJob")
+	procLeaveCriticalSection              = modkernel32.NewProc("LeaveCriticalSection")
 	procLocalFree                         = modkernel32.NewProc("LocalFree")
 	procMoveFileExW                       = modkernel32.NewProc("MoveFileExW")
 	procMoveFileW                         = modkernel32.NewProc("MoveFileW")
@@ -304,6 +310,7 @@ var (
 	procSetStdHandle                      = modkernel32.NewProc("SetStdHandle")
 	procTerminateJobObject                = modkernel32.NewProc("TerminateJobObject")
 	procTerminateProcess                  = modkernel32.NewProc("TerminateProcess")
+	procTryEnterCriticalSection           = modkernel32.NewProc("TryEnterCriticalSection")
 	procUpdateResourceW                   = modkernel32.NewProc("UpdateResourceW")
 	procVerifyVersionInfoW                = modkernel32.NewProc("VerifyVersionInfoW")
 	procWaitForSingleObject               = modkernel32.NewProc("WaitForSingleObject")
@@ -466,6 +473,10 @@ func CreateSymbolicLink(symlinkFileName *uint16, targetFileName *uint16, flags u
 	return nil
 }
 
+func DeleteCriticalSection(criticalSection *CRITICAL_SECTION) {
+	procDeleteCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+}
+
 func DeleteFile(fileName *uint16) error {
 	r1, _, e1 := procDeleteFileW.Call(uintptr(unsafe.Pointer(fileName)))
 	if r1 == 0 {
@@ -516,6 +527,10 @@ func EndUpdateResource(update syscall.Handle, discard bool) error {
 		}
 	}
 	return nil
+}
+
+func EnterCriticalSection(criticalSection *CRITICAL_SECTION) {
+	procEnterCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
 }
 
 func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, error) {
@@ -946,6 +961,10 @@ func GetWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
 	return uint32(r1), nil
 }
 
+func InitializeCriticalSection(criticalSection *CRITICAL_SECTION) {
+	procInitializeCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+}
+
 func IsProcessInJob(processHandle syscall.Handle, jobHandle syscall.Handle, result *bool) error {
 	var resultRaw int32
 	r1, _, e1 := procIsProcessInJob.Call(
@@ -963,6 +982,10 @@ func IsProcessInJob(processHandle syscall.Handle, jobHandle syscall.Handle, resu
 		*result = (resultRaw != 0)
 	}
 	return nil
+}
+
+func LeaveCriticalSection(criticalSection *CRITICAL_SECTION) {
+	procLeaveCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
 }
 
 func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
@@ -1193,6 +1216,11 @@ func TerminateProcess(process syscall.Handle, exitCode uint32) error {
 		}
 	}
 	return nil
+}
+
+func TryEnterCriticalSection(criticalSection *CRITICAL_SECTION) bool {
+	r1, _, _ := procTryEnterCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+	return r1 != 0
 }
 
 func UpdateResource(update syscall.Handle, resourceType uintptr, name uintptr, language uint16, data *byte, cbData uint32) error {

@@ -30,6 +30,11 @@ type LUID struct {
 	HighPart int32
 }
 
+type LIST_ENTRY struct {
+	Flink *LIST_ENTRY
+	Blink *LIST_ENTRY
+}
+
 const (
 	VER_SUITE_SMALLBUSINESS            = 0x00000001
 	VER_SUITE_ENTERPRISE               = 0x00000002
@@ -1208,6 +1213,27 @@ const (
 	VER_PLATFORM_WIN32_WINDOWS = 1
 	VER_PLATFORM_WIN32_NT      = 2
 )
+
+type RTL_CRITICAL_SECTION_DEBUG struct {
+	Type                      uint16
+	CreatorBackTraceIndex     uint16
+	CriticalSection           *RTL_CRITICAL_SECTION
+	ProcessLocksList          LIST_ENTRY
+	EntryCount                uint32
+	ContentionCount           uint32
+	Flags                     uint32
+	CreatorBackTraceIndexHigh uint16
+	SpareWORD                 uint16
+}
+
+type RTL_CRITICAL_SECTION struct {
+	DebugInfo      *RTL_CRITICAL_SECTION_DEBUG
+	LockCount      int32
+	RecursionCount int32
+	OwningThread   syscall.Handle
+	LockSemaphore  syscall.Handle
+	SpinCount      uintptr
+}
 
 const (
 	EVENTLOG_SUCCESS          = 0x0000
