@@ -62,8 +62,23 @@ type SHFILEOPSTRUCT struct {
 var (
 	modshell32 = syscall.NewLazyDLL("shell32.dll")
 
-	procSHFileOperationW = modshell32.NewProc("SHFileOperationW")
+	procCommandLineToArgvW = modshell32.NewProc("CommandLineToArgvW")
+	procSHFileOperationW   = modshell32.NewProc("SHFileOperationW")
 )
+
+func CommandLineToArgvW(cmdLine *uint16, numArgs *int32) (**uint16, error) {
+	r1, _, e1 := procCommandLineToArgvW.Call(
+		uintptr(unsafe.Pointer(cmdLine)),
+		uintptr(unsafe.Pointer(numArgs)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return nil, e1
+		} else {
+			return nil, syscall.EINVAL
+		}
+	}
+	return (**uint16)(unsafe.Pointer(r1)), nil
+}
 
 func SHFileOperation(fileOp *SHFILEOPSTRUCT) error {
 	r1, _, _ := procSHFileOperationW.Call(uintptr(unsafe.Pointer(fileOp)))
