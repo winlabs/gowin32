@@ -213,3 +213,66 @@ func GetProcessTimeCounters(pid uint) (*ProcessTimeCounters, error) {
 		User:     fileTimeToUint64(userTime),
 	}, nil
 }
+
+func GetProcessCurrentDirectory(pid uint) (string, error) {
+	hProcess, err := wrappers.OpenProcess(
+		wrappers.PROCESS_QUERY_INFORMATION|wrappers.PROCESS_VM_READ,
+		false,
+		uint32(pid))
+	if err != nil {
+		return "", NewWindowsError("OpenProcess", err)
+	}
+	defer wrappers.CloseHandle(hProcess)
+
+	var basicInfo wrappers.PROCESS_BASIC_INFORMATION
+	status := wrappers.NtQueryInformationProcess(
+		hProcess,
+		wrappers.ProcessBasicInformation,
+		(*byte)(unsafe.Pointer(&basicInfo)),
+		uint32(unsafe.Sizeof(basicInfo)),
+		nil)
+	if status < 0 {
+		return "", NewWindowsError("NtQueryInformationProcess", nil)
+	}
+
+	// See https://msdn.microsoft.com/en-us/library/windows/desktop/aa813706(v=vs.85).aspx.
+	paramsAddressOffset := 4*unsafe.Sizeof(uintptr(0))
+	var paramsAddress uintptr
+	err = wrappers.ReadProcessMemory(
+		hProcess,
+		basicInfo.PebBaseAddress + paramsAddressOffset,
+		(*byte)(unsafe.Pointer(&paramsAddress)),
+		unsafe.Sizeof(paramsAddress),
+		nil)
+	if err != nil {
+		return "", NewWindowsError("ReadProcessMemory", err)
+	}
+
+	// See http://forum.sysinternals.com/how-to-obtain-a-process-current-directory_topic22329.html.
+	currentDirectoryOffset := 4*unsafe.Sizeof(uint32(0)) + 5*unsafe.Sizeof(uintptr(0))
+	var currentDirectory wrappers.UNICODE_STRING
+	err = wrappers.ReadProcessMemory(
+		hProcess,
+		paramsAddress + currentDirectoryOffset,
+		(*byte)(unsafe.Pointer(&currentDirectory)),
+		unsafe.Sizeof(currentDirectory),
+		nil)
+	if err != nil {
+		return "", NewWindowsError("ReadProcessMemory", err)
+	}
+
+	if currentDirectory.Length == 0 {
+		return "", nil
+	}
+	currentDirectoryChars := make([]uint16, currentDirectory.Length)
+	err = wrappers.ReadProcessMemory(
+		hProcess,
+		currentDirectory.Buffer,
+		(*byte)(unsafe.Pointer(&currentDirectoryChars[0])),
+		uintptr(currentDirectory.Length),
+		nil)
+	if err != nil {
+		return "", NewWindowsError("ReadProcessMemory", err)
+	}
+	return syscall.UTF16ToString(currentDirectoryChars), nil
+}

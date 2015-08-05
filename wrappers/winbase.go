@@ -303,6 +303,7 @@ var (
 	procQueryFullProcessImageNameW        = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procQueryInformationJobObject         = modkernel32.NewProc("QueryInformationJobObject")
 	procReadFile                          = modkernel32.NewProc("ReadFile")
+	procReadProcessMemory                 = modkernel32.NewProc("ReadProcessMemory")
 	procSetEnvironmentVariableW           = modkernel32.NewProc("SetEnvironmentVariableW")
 	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
@@ -316,6 +317,7 @@ var (
 	procWaitForSingleObject               = modkernel32.NewProc("WaitForSingleObject")
 	proclstrlenW                          = modkernel32.NewProc("lstrlenW")
 
+	procAdjustTokenPrivileges      = modadvapi32.NewProc("AdjustTokenPrivileges")
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
 	procCopySid                    = modadvapi32.NewProc("CopySid")
@@ -326,6 +328,7 @@ var (
 	procGetLengthSid               = modadvapi32.NewProc("GetLengthSid")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
 	procGetTokenInformation        = modadvapi32.NewProc("GetTokenInformation")
+	procLookupPrivilegeValueW      = modadvapi32.NewProc("LookupPrivilegeValueW")
 	procOpenProcessToken           = modadvapi32.NewProc("OpenProcessToken")
 	procRegisterEventSourceW       = modadvapi32.NewProc("RegisterEventSourceW")
 	procReportEventW               = modadvapi32.NewProc("ReportEventW")
@@ -1122,6 +1125,23 @@ func ReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, num
 	return nil
 }
 
+func ReadProcessMemory(process syscall.Handle, baseAddress uintptr, buffer *byte, size uintptr, numberOfBytesRead *uintptr) error {
+	r1, _, e1 := procReadProcessMemory.Call(
+		uintptr(process),
+		baseAddress,
+		uintptr(unsafe.Pointer(buffer)),
+		size,
+		uintptr(unsafe.Pointer(numberOfBytesRead)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func SetEnvironmentVariable(name *uint16, value *uint16) error {
 	r1, _, e1 := procSetEnvironmentVariableW.Call(
 		uintptr(unsafe.Pointer(name)),
@@ -1273,6 +1293,30 @@ func Lstrlen(string *uint16) int32 {
 	return int32(r1)
 }
 
+func AdjustTokenPrivileges(tokenHandle syscall.Handle, disableAllPrivileges bool, newState *TOKEN_PRIVILEGES, bufferLength uint32, previousState *TOKEN_PRIVILEGES, returnLength *uint32) error {
+	var disableAllPrivilegesRaw int32
+	if disableAllPrivileges {
+		disableAllPrivilegesRaw = 1
+	} else {
+		disableAllPrivilegesRaw = 0
+	}
+	r1, _, e1 := procAdjustTokenPrivileges.Call(
+		uintptr(tokenHandle),
+		uintptr(disableAllPrivilegesRaw),
+		uintptr(unsafe.Pointer(newState)),
+		uintptr(bufferLength),
+		uintptr(unsafe.Pointer(previousState)),
+		uintptr(unsafe.Pointer(returnLength)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **SID) error {
 	r1, _, e1 := procAllocateAndInitializeSid.Call(
 		uintptr(unsafe.Pointer(identifierAuthority)),
@@ -1401,6 +1445,21 @@ func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32
 		uintptr(unsafe.Pointer(tokenInformation)),
 		uintptr(tokenInformationLength),
 		uintptr(unsafe.Pointer(returnLength)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func LookupPrivilegeValue(systemName *uint16, name *uint16, luid *LUID) error {
+	r1, _, e1 := procLookupPrivilegeValueW.Call(
+		uintptr(unsafe.Pointer(systemName)),
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(luid)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

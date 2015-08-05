@@ -71,6 +71,78 @@ func GetFileOwner(path string) (SecurityID, error) {
 	return SecurityID{ownerSid}, nil
 }
 
+const (
+	PrivilegeCreateToken                    = wrappers.SE_CREATE_TOKEN_NAME
+	PrivilegeAssignPrimaryToken             = wrappers.SE_ASSIGNPRIMARYTOKEN_NAME
+	PrivilegeLockMemory                     = wrappers.SE_LOCK_MEMORY_NAME
+	PrivilegeIncreaseQuota                  = wrappers.SE_INCREASE_QUOTA_NAME
+	PrivilegeUnsolicitedInput               = wrappers.SE_UNSOLICITED_INPUT_NAME
+	PrivilegeMachineAccount                 = wrappers.SE_MACHINE_ACCOUNT_NAME
+	PrivilegeTrustedComputerBase            = wrappers.SE_TCB_NAME
+	PrivilegeSecurity                       = wrappers.SE_SECURITY_NAME
+	PrivilegeTakeOwnership                  = wrappers.SE_TAKE_OWNERSHIP_NAME
+	PrivilegeLoadDriver                     = wrappers.SE_LOAD_DRIVER_NAME
+	PrivilegeSystemProfile                  = wrappers.SE_SYSTEM_PROFILE_NAME
+	PrivilegeSystemTime                     = wrappers.SE_SYSTEMTIME_NAME
+	PrivilegeProfileSingleProcess           = wrappers.SE_PROF_SINGLE_PROCESS_NAME
+	PrivilegeIncreaseBasePriority           = wrappers.SE_INC_BASE_PRIORITY_NAME
+	PrivilegeCreatePageFile                 = wrappers.SE_CREATE_PAGEFILE_NAME
+	PrivilegeCreatePermanent                = wrappers.SE_CREATE_PERMANENT_NAME
+	PrivilegeBackup                         = wrappers.SE_BACKUP_NAME
+	PrivilegeRestore                        = wrappers.SE_RESTORE_NAME
+	PrivilegeShutdown                       = wrappers.SE_SHUTDOWN_NAME
+	PrivilegeDebug                          = wrappers.SE_DEBUG_NAME
+	PrivilegeAudit                          = wrappers.SE_AUDIT_NAME
+	PrivilegeSystemEnvironment              = wrappers.SE_SYSTEM_ENVIRONMENT_NAME
+	PrivilegeChangeNotify                   = wrappers.SE_CHANGE_NOTIFY_NAME
+	PrivilegeRemoteShutdown                 = wrappers.SE_REMOTE_SHUTDOWN_NAME
+	PrivilegeUndock                         = wrappers.SE_UNDOCK_NAME
+	PrivilegeSyncAgent                      = wrappers.SE_SYNC_AGENT_NAME
+	PrivilegeEnableDelegation               = wrappers.SE_ENABLE_DELEGATION_NAME
+	PrivilegeManageVolume                   = wrappers.SE_MANAGE_VOLUME_NAME
+	PrivilegeImpersonate                    = wrappers.SE_IMPERSONATE_NAME
+	PrivilegeCreateGlobal                   = wrappers.SE_CREATE_GLOBAL_NAME
+	PrivilegeTrustedCredentialManagerAccess = wrappers.SE_TRUSTED_CREDMAN_ACCESS_NAME
+	PrivilegeRelabel                        = wrappers.SE_RELABEL_NAME
+	PrivilegeIncreaseWorkingSet             = wrappers.SE_INC_WORKING_SET_NAME
+	PrivilegeTimeZone                       = wrappers.SE_TIME_ZONE_NAME
+	PrivilegeCreateSymbolicLink             = wrappers.SE_CREATE_SYMBOLIC_LINK_NAME
+)
+
+type Privilege struct {
+	luid wrappers.LUID
+}
+
+func GetPrivilegeByName(name string) (*Privilege, error) {
+	var luid wrappers.LUID
+	if err := wrappers.LookupPrivilegeValue(nil, syscall.StringToUTF16Ptr(name), &luid); err != nil {
+		return nil, NewWindowsError("LookupPrivilegeValue", err)
+	}
+	return &Privilege{luid: luid}, nil
+}
+
+func (privilege *Privilege) EnableForCurrentProcess() error {
+	hProcess := wrappers.GetCurrentProcess()
+	var hToken syscall.Handle
+	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_ADJUST_PRIVILEGES, &hToken); err != nil {
+		return NewWindowsError("OpenProcessToken", err)
+	}
+	defer wrappers.CloseHandle(hToken)
+	state := wrappers.TOKEN_PRIVILEGES{
+		PrivilegeCount: 1,
+		Privileges:     [1]wrappers.LUID_AND_ATTRIBUTES{
+			wrappers.LUID_AND_ATTRIBUTES{
+				Luid:       privilege.luid,
+				Attributes: wrappers.SE_PRIVILEGE_ENABLED,
+			},
+		},
+	}
+	if err := wrappers.AdjustTokenPrivileges(hToken, false, &state, 0, nil, nil); err != nil {
+		return NewWindowsError("AdjustTokenPrivileges", err)
+	}
+	return nil
+}
+
 type Token struct {
 	handle syscall.Handle
 }
