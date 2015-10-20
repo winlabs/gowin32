@@ -528,6 +528,17 @@ func (self *INetFwRules) Item(name *uint16, rule **INetFwRule) uint32 {
 	return uint32(r1)
 }
 
+func (self *INetFwRules) Get__NewEnum(newEnum **IUnknown) uint32 {
+	vtbl := (*INetFwRulesVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Get__NewEnum,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(newEnum)),
+		0)
+	return uint32(r1)
+}
+
 type INetFwPolicy2Vtbl struct {
 	IDispatchVtbl
 	Get_CurrentProfileTypes                          uintptr

@@ -21,14 +21,22 @@ import (
 	"unsafe"
 )
 
+const (
+	VARIANT_NOVALUEPROP    = 0x0001
+	VARIANT_ALPHABOOL      = 0x0002
+	VARIANT_NOUSEROVERRIDE = 0x0004
+	VARIANT_LOCALBOOL      = 0x0010
+)
+
 var (
 	modoleaut32 = syscall.NewLazyDLL("oleaut32.dll")
 
-	procSysAllocString = modoleaut32.NewProc("SysAllocString")
-	procSysFreeString  = modoleaut32.NewProc("SysFreeString")
-	procSysStringLen   = modoleaut32.NewProc("SysStringLen")
-	procVariantClear   = modoleaut32.NewProc("VariantClear")
-	procVariantInit    = modoleaut32.NewProc("VariantInit")
+	procSysAllocString    = modoleaut32.NewProc("SysAllocString")
+	procSysFreeString     = modoleaut32.NewProc("SysFreeString")
+	procSysStringLen      = modoleaut32.NewProc("SysStringLen")
+	procVariantChangeType = modoleaut32.NewProc("VariantChangeType")
+	procVariantClear      = modoleaut32.NewProc("VariantClear")
+	procVariantInit       = modoleaut32.NewProc("VariantInit")
 )
 
 func SysAllocString(psz *uint16) *uint16 {
@@ -42,6 +50,15 @@ func SysFreeString(bstrString *uint16) {
 
 func SysStringLen(bstr *uint16) uint32 {
 	r1, _, _ := procSysStringLen.Call(uintptr(unsafe.Pointer(bstr)))
+	return uint32(r1)
+}
+
+func VariantChangeType(dest *VARIANT, src *VARIANT, flags uint16, vt uint16) uint32 {
+	r1, _, _ := procVariantChangeType.Call(
+		uintptr(unsafe.Pointer(dest)),
+		uintptr(unsafe.Pointer(src)),
+		uintptr(flags),
+		uintptr(vt))
 	return uint32(r1)
 }
 

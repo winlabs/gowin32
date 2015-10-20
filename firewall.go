@@ -437,6 +437,62 @@ func (self *FirewallRule) SetAction(action FirewallAction) error {
 	return nil
 }
 
+type FirewallRuleEnumerator struct {
+	object *wrappers.IEnumVARIANT
+}
+
+func (self *FirewallRuleEnumerator) Close() error {
+	if self.object != nil {
+		self.object.Release()
+		self.object = nil
+	}
+	return nil
+}
+
+func (self *FirewallRuleEnumerator) Next() (*FirewallRule, error) {
+	if self.object == nil {
+		return nil, NewWindowsError("IEnumVARIANT::Next", COMErrorPointer)
+	}
+	var varRaw wrappers.VARIANT
+	if hr := self.object.Next(1, &varRaw, nil); wrappers.FAILED(hr) {
+		return nil, NewWindowsError("IEnumVARIANT::Next", COMError(hr))
+	} else if hr == wrappers.S_FALSE {
+		return nil, nil
+	}
+	defer wrappers.VariantClear(&varRaw)
+	var varDispatch wrappers.VARIANT
+	if hr := wrappers.VariantChangeType(&varDispatch, &varRaw, 0, wrappers.VT_DISPATCH); wrappers.FAILED(hr) {
+		return nil, NewWindowsError("VariantChangeType", COMError(hr))
+	}
+	defer wrappers.VariantClear(&varDispatch)
+	dispatch := (*wrappers.IDispatch)(unsafe.Pointer(uintptr(varDispatch.Val[0])))
+	var rule uintptr
+	if hr := dispatch.QueryInterface(&wrappers.IID_INetFwRule, &rule); wrappers.FAILED(hr) {
+		return nil, NewWindowsError("IUnknown::QueryInterface", COMError(hr))
+	}
+	return &FirewallRule{object: (*wrappers.INetFwRule)(unsafe.Pointer(rule))}, nil
+}
+
+func (self *FirewallRuleEnumerator) Skip(count uint) error {
+	if self.object == nil {
+		return NewWindowsError("IEnumVARIANT::Skip", COMErrorPointer)
+	}
+	if hr := self.object.Skip(uint32(count)); wrappers.FAILED(hr) {
+		return NewWindowsError("IEnumVARIANT::Skip", COMError(hr))
+	}
+	return nil
+}
+
+func (self *FirewallRuleEnumerator) Reset() error {
+	if self.object == nil {
+		return NewWindowsError("IEnumVARIANT::Reset", COMErrorPointer)
+	}
+	if hr := self.object.Reset(); wrappers.FAILED(hr) {
+		return NewWindowsError("IEnumVARIANT::Reset", COMError(hr))
+	}
+	return nil
+}
+
 type FirewallRuleCollection struct {
 	object *wrappers.INetFwRules
 }
@@ -493,6 +549,22 @@ func (self *FirewallRuleCollection) Item(name string) (*FirewallRule, error) {
 		return nil, NewWindowsError("INetFwRules::Item", COMError(hr))
 	}
 	return &FirewallRule{object: rule}, nil
+}
+
+func (self *FirewallRuleCollection) NewEnumerator() (*FirewallRuleEnumerator, error) {
+	if self.object == nil {
+		return nil, NewWindowsError("INetFwRules::get__NewEnum", COMErrorPointer)
+	}
+	var punkEnumerator *wrappers.IUnknown
+	if hr := self.object.Get__NewEnum(&punkEnumerator); wrappers.FAILED(hr) {
+		return nil, NewWindowsError("INetFwRules::get__NewEnum", COMError(hr))
+	}
+	defer punkEnumerator.Release()
+	var enumerator uintptr
+	if hr := punkEnumerator.QueryInterface(&wrappers.IID_IEnumVARIANT, &enumerator); wrappers.FAILED(hr) {
+		return nil, NewWindowsError("IUnknown::QueryInterface", COMError(hr))
+	}
+	return &FirewallRuleEnumerator{object: (*wrappers.IEnumVARIANT)(unsafe.Pointer(enumerator))}, nil
 }
 
 type FirewallPolicy struct {

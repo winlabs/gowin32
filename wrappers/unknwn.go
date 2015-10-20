@@ -35,17 +35,14 @@ type IUnknown struct {
 	Vtbl *IUnknownVtbl
 }
 
-func (self *IUnknown) QueryInterface(iid *GUID, object *uintptr) error {
+func (self *IUnknown) QueryInterface(iid *GUID, object *uintptr) uint32 {
 	r1, _, _ := syscall.Syscall(
 		self.Vtbl.QueryInterface,
 		3,
 		uintptr(unsafe.Pointer(self)),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(object)))
-	if int32(r1) < 0 {
-		return syscall.Errno(r1)
-	}
-	return nil
+	return uint32(r1)
 }
 
 func (self *IUnknown) AddRef() uint32 {
