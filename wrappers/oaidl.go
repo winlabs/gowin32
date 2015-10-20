@@ -16,6 +16,11 @@
 
 package wrappers
 
+import (
+	"syscall"
+	"unsafe"
+)
+
 type VARIANT struct {
 	Vt        uint16
 	Reserved1 uint16
@@ -25,7 +30,8 @@ type VARIANT struct {
 }
 
 var (
-	IID_IDispatch = GUID{0x0020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+	IID_IDispatch    = GUID{0x0020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+	IID_IEnumVARIANT = GUID{0x0020404, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 )
 
 type IDispatchVtbl struct {
@@ -38,4 +44,63 @@ type IDispatchVtbl struct {
 
 type IDispatch struct {
 	IUnknown
+}
+
+type IEnumVARIANTVtbl struct {
+	IUnknownVtbl
+	Next  uintptr
+	Skip  uintptr
+	Reset uintptr
+	Clone uintptr
+}
+
+type IEnumVARIANT struct {
+	IUnknown
+}
+
+func (self *IEnumVARIANT) Next(celt uint32, rgVar *VARIANT, celtFetched *uint32) uint32 {
+	vtbl := (*IEnumVARIANTVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall6(
+		vtbl.Next,
+		4,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(celt),
+		uintptr(unsafe.Pointer(rgVar)),
+		uintptr(unsafe.Pointer(celtFetched)),
+		0,
+		0)
+	return uint32(r1)
+}
+
+func (self *IEnumVARIANT) Skip(celt uint32) uint32 {
+	vtbl := (*IEnumVARIANTVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Skip,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(celt),
+		0)
+	return uint32(r1)
+}
+
+func (self *IEnumVARIANT) Reset() uint32 {
+	vtbl := (*IEnumVARIANTVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Reset,
+		1,
+		uintptr(unsafe.Pointer(self)),
+		0,
+		0)
+	return uint32(r1)
+}
+
+func (self *IEnumVARIANT) Clone(ppEnum *IEnumVARIANT) uint32 {
+	vtbl := (*IEnumVARIANTVtbl)(unsafe.Pointer(self.Vtbl))
+	r1, _, _ := syscall.Syscall(
+		vtbl.Clone,
+		2,
+		uintptr(unsafe.Pointer(self)),
+		uintptr(unsafe.Pointer(ppEnum)),
+		0)
+	return uint32(r1)
 }
