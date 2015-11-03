@@ -54,6 +54,14 @@ type JobBasicLimitInfo struct {
 	SchedulingClass         uint
 }
 
+type JobExtendedLimitInfo struct {
+	JobBasicLimitInfo
+	ProcessMemoryLimit    uintptr
+	JobMemoryLimit        uintptr
+	PeakProcessMemoryUsed uintptr
+	PeakJobMemoryUsed     uintptr
+}
+
 type JobUILimitFlags uint32
 
 const (
@@ -72,7 +80,11 @@ type Job struct {
 }
 
 func NewJob(name string) (*Job, error) {
-	hJob, err := wrappers.CreateJobObject(nil, syscall.StringToUTF16Ptr(name))
+	var nameRaw *uint16
+	if name != "" {
+		nameRaw = syscall.StringToUTF16Ptr(name)
+	}
+	hJob, err := wrappers.CreateJobObject(nil, nameRaw)
 	if err != nil {
 		return nil, NewWindowsError("CreateJobObject", err)
 	}
@@ -139,6 +151,36 @@ func (self *Job) GetBasicLimitInfo() (*JobBasicLimitInfo, error) {
 	}, nil
 }
 
+func (self *Job) GetExtendedLimitInfo() (*JobExtendedLimitInfo, error) {
+	var info wrappers.JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+	err := wrappers.QueryInformationJobObject(
+		self.handle,
+		wrappers.JobObjectExtendedLimitInformation,
+		(*byte)(unsafe.Pointer(&info)),
+		uint32(unsafe.Sizeof(info)),
+		nil)
+	if err != nil {
+		return nil, NewWindowsError("QueryInformationJobObject", err)
+	}
+	return &JobExtendedLimitInfo{
+		JobBasicLimitInfo: JobBasicLimitInfo{
+			PerProcessUserTimeLimit: info.BasicLimitInformation.PerProcessUserTimeLimit,
+			PerJobUserTimeLimit:     info.BasicLimitInformation.PerJobUserTimeLimit,
+			LimitFlags:              JobLimitFlags(info.BasicLimitInformation.LimitFlags),
+			MinimumWorkingSetSize:   info.BasicLimitInformation.MinimumWorkingSetSize,
+			MaximumWorkingSetSize:   info.BasicLimitInformation.MaximumWorkingSetSize,
+			ActiveProcessLimit:      uint(info.BasicLimitInformation.ActiveProcessLimit),
+			Affinity:                info.BasicLimitInformation.Affinity,
+			PriorityClass:           uint(info.BasicLimitInformation.PriorityClass),
+			SchedulingClass:         uint(info.BasicLimitInformation.SchedulingClass),
+		},
+		ProcessMemoryLimit:      info.ProcessMemoryLimit,
+		JobMemoryLimit:          info.JobMemoryLimit,
+		PeakProcessMemoryUsed:   info.PeakProcessMemoryUsed,
+		PeakJobMemoryUsed:       info.PeakJobMemoryUsed,
+	}, nil
+}
+
 func (self *Job) GetBasicUIRestrictions() (JobUILimitFlags, error) {
 	var info wrappers.JOBOBJECT_BASIC_UI_RESTRICTIONS
 	err := wrappers.QueryInformationJobObject(
@@ -202,6 +244,35 @@ func (self *Job) SetBasicLimitInfo(info *JobBasicLimitInfo) error {
 	err := wrappers.SetInformationJobObject(
 		self.handle,
 		wrappers.JobObjectBasicLimitInformation,
+		(*byte)(unsafe.Pointer(&rawInfo)),
+		uint32(unsafe.Sizeof(rawInfo)))
+	if err != nil {
+		return NewWindowsError("SetInformationJobObject", err)
+	}
+	return nil
+}
+
+func (self *Job) SetExtendedLimitInfo(info *JobExtendedLimitInfo) error {
+	rawInfo := wrappers.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{
+		BasicLimitInformation: wrappers.JOBOBJECT_BASIC_LIMIT_INFORMATION{
+			PerProcessUserTimeLimit: info.PerProcessUserTimeLimit,
+			PerJobUserTimeLimit:     info.PerJobUserTimeLimit,
+			LimitFlags:              uint32(info.LimitFlags),
+			MinimumWorkingSetSize:   info.MinimumWorkingSetSize,
+			MaximumWorkingSetSize:   info.MaximumWorkingSetSize,
+			ActiveProcessLimit:      uint32(info.ActiveProcessLimit),
+			Affinity:                info.Affinity,
+			PriorityClass:           uint32(info.PriorityClass),
+			SchedulingClass:         uint32(info.SchedulingClass),
+		},
+		ProcessMemoryLimit:    info.ProcessMemoryLimit,
+		JobMemoryLimit:        info.JobMemoryLimit,
+		PeakProcessMemoryUsed: info.PeakProcessMemoryUsed,
+		PeakJobMemoryUsed:     info.PeakJobMemoryUsed,
+	}
+	err := wrappers.SetInformationJobObject(
+		self.handle,
+		wrappers.JobObjectExtendedLimitInformation,
 		(*byte)(unsafe.Pointer(&rawInfo)),
 		uint32(unsafe.Sizeof(rawInfo)))
 	if err != nil {
