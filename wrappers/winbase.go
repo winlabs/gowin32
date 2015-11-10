@@ -266,6 +266,7 @@ var (
 	procFindNextFileW                     = modkernel32.NewProc("FindNextFileW")
 	procFormatMessageW                    = modkernel32.NewProc("FormatMessageW")
 	procFreeEnvironmentStringsW           = modkernel32.NewProc("FreeEnvironmentStringsW")
+	procFreeLibrary                       = modkernel32.NewProc("FreeLibrary")
 	procGetCompressedFileSizeW            = modkernel32.NewProc("GetCompressedFileSizeW")
 	procGetComputerNameExW                = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess                 = modkernel32.NewProc("GetCurrentProcess")
@@ -295,6 +296,7 @@ var (
 	procInitializeCriticalSection         = modkernel32.NewProc("InitializeCriticalSection")
 	procIsProcessInJob                    = modkernel32.NewProc("IsProcessInJob")
 	procLeaveCriticalSection              = modkernel32.NewProc("LeaveCriticalSection")
+	procLoadLibraryW                      = modkernel32.NewProc("LoadLibraryW")
 	procLocalFree                         = modkernel32.NewProc("LocalFree")
 	procMoveFileExW                       = modkernel32.NewProc("MoveFileExW")
 	procMoveFileW                         = modkernel32.NewProc("MoveFileW")
@@ -303,6 +305,7 @@ var (
 	procQueryFullProcessImageNameW        = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procQueryInformationJobObject         = modkernel32.NewProc("QueryInformationJobObject")
 	procReadFile                          = modkernel32.NewProc("ReadFile")
+	procReadProcessMemory                 = modkernel32.NewProc("ReadProcessMemory")
 	procSetEnvironmentVariableW           = modkernel32.NewProc("SetEnvironmentVariableW")
 	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
@@ -608,6 +611,18 @@ func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId ui
 
 func FreeEnvironmentStrings(environmentBlock *uint16) error {
 	r1, _, e1 := procFreeEnvironmentStringsW.Call(uintptr(unsafe.Pointer(environmentBlock)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func FreeLibrary(module syscall.Handle) error {
+	r1, _, e1 := procFreeLibrary.Call(uintptr(module))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -988,6 +1003,18 @@ func LeaveCriticalSection(criticalSection *CRITICAL_SECTION) {
 	procLeaveCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
 }
 
+func LoadLibrary(fileName *uint16) (syscall.Handle, error) {
+	r1, _, e1 := procLoadLibraryW.Call(uintptr(unsafe.Pointer(fileName)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
 func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 	// LocalFree returns NULL to indicate success!
 	r1, _, e1 := procLocalFree.Call(uintptr(mem))
@@ -1112,6 +1139,23 @@ func ReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, num
 		uintptr(numberOfBytesToRead),
 		uintptr(unsafe.Pointer(numberOfBytesRead)),
 		uintptr(unsafe.Pointer(overlapped)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func ReadProcessMemory(process syscall.Handle, baseAddress uintptr, buffer *byte, size uint32, numberOfBytesRead *uint32) error {
+	r1, _, e1 := procReadProcessMemory.Call(
+		uintptr(process),
+		baseAddress,
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size),
+		uintptr(unsafe.Pointer(numberOfBytesRead)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

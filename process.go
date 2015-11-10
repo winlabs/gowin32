@@ -213,3 +213,55 @@ func GetProcessTimeCounters(pid uint) (*ProcessTimeCounters, error) {
 		User:     fileTimeToUint64(userTime),
 	}, nil
 }
+
+func GetProcessCommandLine(pid uint) (string, error) {
+	hProcess, err := wrappers.OpenProcess(
+		wrappers.PROCESS_QUERY_INFORMATION | wrappers.PROCESS_VM_READ,
+		false,
+		uint32(pid))
+	if err != nil {
+		return "", NewWindowsError("OpenProcess", err)
+	}
+	defer wrappers.CloseHandle(hProcess)
+	var basicInfo wrappers.PROCESS_BASIC_INFORMATION
+	status := wrappers.NtQueryInformationProcess(
+		hProcess,
+		wrappers.ProcessBasicInformation,
+		(*byte)(unsafe.Pointer(&basicInfo)),
+		uint32(unsafe.Sizeof(basicInfo)),
+		nil)
+	if !wrappers.NT_SUCCESS(status) {
+		return "", NewWindowsError("NtQueryInformationProcess", NTError(status))
+	}
+	var peb wrappers.PEB
+	err = wrappers.ReadProcessMemory(
+		hProcess,
+		basicInfo.PebBaseAddress,
+		(*byte)(unsafe.Pointer(&peb)),
+		uint32(unsafe.Sizeof(peb)),
+		nil)
+	if err != nil {
+		return "", NewWindowsError("ReadProcessMemory", err)
+	}
+	var params wrappers.RTL_USER_PROCESS_PARAMETERS
+	err = wrappers.ReadProcessMemory(
+		hProcess,
+		peb.ProcessParameters,
+		(*byte)(unsafe.Pointer(&params)),
+		uint32(unsafe.Sizeof(params)),
+		nil)
+	if err != nil {
+		return "", NewWindowsError("ReadProcessMemory", err)
+	}
+	commandLine := make([]uint16, params.CommandLine.Length)
+	err = wrappers.ReadProcessMemory(
+		hProcess,
+		params.CommandLine.Buffer,
+		(*byte)(unsafe.Pointer(&commandLine[0])),
+		uint32(params.CommandLine.Length),
+		nil)
+	if err != nil {
+		return "", NewWindowsError("ReadProcessMemory", err)
+	}
+	return syscall.UTF16ToString(commandLine), nil
+}
