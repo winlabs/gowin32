@@ -46,6 +46,15 @@ func (self SecurityID) Equal(other SecurityID) bool {
 	return wrappers.EqualSid(self.sid, other.sid)
 }
 
+func (self SecurityID) String() (string, error) {
+	var stringSid *uint16
+	if err := wrappers.ConvertSidToStringSid(self.sid, &stringSid); err != nil {
+		return "", NewWindowsError("ConvertSidToStringSid", err)
+	}
+	defer wrappers.LocalFree(syscall.Handle(unsafe.Pointer(stringSid)))
+	return LpstrToString(stringSid), nil
+}
+
 func GetFileOwner(path string) (SecurityID, error) {
 	var needed uint32
 	wrappers.GetFileSecurity(
@@ -77,6 +86,19 @@ type Token struct {
 
 func OpenCurrentProcessToken() (*Token, error) {
 	hProcess := wrappers.GetCurrentProcess()
+	var hToken syscall.Handle
+	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_QUERY, &hToken); err != nil {
+		return nil, NewWindowsError("OpenProcessToken", err)
+	}
+	return &Token{handle: hToken}, nil
+}
+
+func OpenOtherProcessToken(pid uint) (*Token, error) {
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return nil, NewWindowsError("OpenProcess", err)
+	}
+	defer syscall.CloseHandle(hProcess)
 	var hToken syscall.Handle
 	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_QUERY, &hToken); err != nil {
 		return nil, NewWindowsError("OpenProcessToken", err)
