@@ -266,9 +266,11 @@ var (
 	procFindNextFileW                     = modkernel32.NewProc("FindNextFileW")
 	procFormatMessageW                    = modkernel32.NewProc("FormatMessageW")
 	procFreeEnvironmentStringsW           = modkernel32.NewProc("FreeEnvironmentStringsW")
+	procFreeLibrary                       = modkernel32.NewProc("FreeLibrary")
 	procGetCompressedFileSizeW            = modkernel32.NewProc("GetCompressedFileSizeW")
 	procGetComputerNameExW                = modkernel32.NewProc("GetComputerNameExW")
 	procGetCurrentProcess                 = modkernel32.NewProc("GetCurrentProcess")
+	procGetCurrentThread                  = modkernel32.NewProc("GetCurrentThread")
 	procGetDriveTypeW                     = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW               = modkernel32.NewProc("GetDiskFreeSpaceExW")
 	procGetDiskFreeSpaceW                 = modkernel32.NewProc("GetDiskFreeSpaceW")
@@ -295,6 +297,7 @@ var (
 	procInitializeCriticalSection         = modkernel32.NewProc("InitializeCriticalSection")
 	procIsProcessInJob                    = modkernel32.NewProc("IsProcessInJob")
 	procLeaveCriticalSection              = modkernel32.NewProc("LeaveCriticalSection")
+	procLoadLibraryW                      = modkernel32.NewProc("LoadLibraryW")
 	procLocalFree                         = modkernel32.NewProc("LocalFree")
 	procMoveFileExW                       = modkernel32.NewProc("MoveFileExW")
 	procMoveFileW                         = modkernel32.NewProc("MoveFileW")
@@ -303,6 +306,7 @@ var (
 	procQueryFullProcessImageNameW        = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procQueryInformationJobObject         = modkernel32.NewProc("QueryInformationJobObject")
 	procReadFile                          = modkernel32.NewProc("ReadFile")
+	procReadProcessMemory                 = modkernel32.NewProc("ReadProcessMemory")
 	procSetEnvironmentVariableW           = modkernel32.NewProc("SetEnvironmentVariableW")
 	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
@@ -316,6 +320,7 @@ var (
 	procWaitForSingleObject               = modkernel32.NewProc("WaitForSingleObject")
 	proclstrlenW                          = modkernel32.NewProc("lstrlenW")
 
+	procAdjustTokenPrivileges      = modadvapi32.NewProc("AdjustTokenPrivileges")
 	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
 	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
 	procCopySid                    = modadvapi32.NewProc("CopySid")
@@ -326,9 +331,13 @@ var (
 	procGetLengthSid               = modadvapi32.NewProc("GetLengthSid")
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
 	procGetTokenInformation        = modadvapi32.NewProc("GetTokenInformation")
+	procImpersonateSelf            = modadvapi32.NewProc("ImpersonateSelf")
+	procLookupPrivilegeValueW      = modadvapi32.NewProc("LookupPrivilegeValueW")
 	procOpenProcessToken           = modadvapi32.NewProc("OpenProcessToken")
+	procOpenThreadToken            = modadvapi32.NewProc("OpenThreadToken")
 	procRegisterEventSourceW       = modadvapi32.NewProc("RegisterEventSourceW")
 	procReportEventW               = modadvapi32.NewProc("ReportEventW")
+	procRevertToSelf               = modadvapi32.NewProc("RevertToSelf")
 )
 
 func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
@@ -618,6 +627,18 @@ func FreeEnvironmentStrings(environmentBlock *uint16) error {
 	return nil
 }
 
+func FreeLibrary(module syscall.Handle) error {
+	r1, _, e1 := procFreeLibrary.Call(uintptr(module))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func GetCompressedFileSize(fileName *uint16, fileSizeHigh *uint32) (uint32, error) {
 	r1, _, e1 := procGetCompressedFileSizeW.Call(
 		uintptr(unsafe.Pointer(fileName)),
@@ -649,6 +670,11 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 
 func GetCurrentProcess() syscall.Handle {
 	r1, _, _ := procGetCurrentProcess.Call()
+	return syscall.Handle(r1)
+}
+
+func GetCurrentThread() syscall.Handle {
+	r1, _, _ := procGetCurrentThread.Call()
 	return syscall.Handle(r1)
 }
 
@@ -988,6 +1014,18 @@ func LeaveCriticalSection(criticalSection *CRITICAL_SECTION) {
 	procLeaveCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
 }
 
+func LoadLibrary(fileName *uint16) (syscall.Handle, error) {
+	r1, _, e1 := procLoadLibraryW.Call(uintptr(unsafe.Pointer(fileName)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
 func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 	// LocalFree returns NULL to indicate success!
 	r1, _, e1 := procLocalFree.Call(uintptr(mem))
@@ -1112,6 +1150,23 @@ func ReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, num
 		uintptr(numberOfBytesToRead),
 		uintptr(unsafe.Pointer(numberOfBytesRead)),
 		uintptr(unsafe.Pointer(overlapped)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func ReadProcessMemory(process syscall.Handle, baseAddress uintptr, buffer *byte, size uint32, numberOfBytesRead *uint32) error {
+	r1, _, e1 := procReadProcessMemory.Call(
+		uintptr(process),
+		baseAddress,
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(size),
+		uintptr(unsafe.Pointer(numberOfBytesRead)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1273,6 +1328,30 @@ func Lstrlen(string *uint16) int32 {
 	return int32(r1)
 }
 
+func AdjustTokenPrivileges(tokenHandle syscall.Handle, disableAllPrivileges bool, newState *TOKEN_PRIVILEGES, bufferLength uint32, previousState *TOKEN_PRIVILEGES, returnLength *uint32) error {
+	var disableAllPrivilegesRaw int32
+	if disableAllPrivileges {
+		disableAllPrivilegesRaw = 1
+	} else {
+		disableAllPrivilegesRaw = 0
+	}
+	r1, _, e1 := procAdjustTokenPrivileges.Call(
+		uintptr(tokenHandle),
+		uintptr(disableAllPrivilegesRaw),
+		uintptr(unsafe.Pointer(newState)),
+		uintptr(bufferLength),
+		uintptr(unsafe.Pointer(previousState)),
+		uintptr(unsafe.Pointer(returnLength)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **SID) error {
 	r1, _, e1 := procAllocateAndInitializeSid.Call(
 		uintptr(unsafe.Pointer(identifierAuthority)),
@@ -1411,10 +1490,59 @@ func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32
 	return nil
 }
 
+func ImpersonateSelf(impersonationLevel int32) error {
+	r1, _, e1 := procImpersonateSelf.Call(uintptr(impersonationLevel))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func LookupPrivilegeValue(systemName *uint16, name *uint16, luid *LUID) error {
+	r1, _, e1 := procLookupPrivilegeValueW.Call(
+		uintptr(unsafe.Pointer(systemName)),
+		uintptr(unsafe.Pointer(name)),
+		uintptr(unsafe.Pointer(luid)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func OpenProcessToken(processHandle syscall.Handle, desiredAccess uint32, tokenHandle *syscall.Handle) error {
 	r1, _, e1 := procOpenProcessToken.Call(
 		uintptr(processHandle),
 		uintptr(desiredAccess),
+		uintptr(unsafe.Pointer(tokenHandle)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func OpenThreadToken(threadHandle syscall.Handle, desiredAccess uint32, openAsSelf bool, tokenHandle *syscall.Handle) error {
+	var openAsSelfRaw int32
+	if openAsSelf {
+		openAsSelfRaw = 1
+	} else {
+		openAsSelfRaw = 0
+	}
+	r1, _, e1 := procOpenThreadToken.Call(
+		uintptr(threadHandle),
+		uintptr(desiredAccess),
+		uintptr(openAsSelfRaw),
 		uintptr(unsafe.Pointer(tokenHandle)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -1451,6 +1579,18 @@ func ReportEvent(eventLog syscall.Handle, eventType uint16, category uint16, eve
 		uintptr(dataSize),
 		uintptr(unsafe.Pointer(strings)),
 		uintptr(unsafe.Pointer(rawData)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func RevertToSelf() error {
+	r1, _, e1 := procRevertToSelf.Call()
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

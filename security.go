@@ -23,6 +23,62 @@ import (
 	"unsafe"
 )
 
+type PrivilegeName string
+
+const (
+	PrivilegeCreateToken          PrivilegeName = wrappers.SE_CREATE_TOKEN_NAME
+	PrivilegeAssignPrimaryToken   PrivilegeName = wrappers.SE_ASSIGNPRIMARYTOKEN_NAME
+	PrivilegeLockMemory           PrivilegeName = wrappers.SE_LOCK_MEMORY_NAME
+	PrivilegeIncreaseQuota        PrivilegeName = wrappers.SE_INCREASE_QUOTA_NAME
+	PrivilegeUnsolicitedInput     PrivilegeName = wrappers.SE_UNSOLICITED_INPUT_NAME
+	PrivilegeMachineAccount       PrivilegeName = wrappers.SE_MACHINE_ACCOUNT_NAME
+	PrivilegeTCB                  PrivilegeName = wrappers.SE_TCB_NAME
+	PrivilegeSecurity             PrivilegeName = wrappers.SE_SECURITY_NAME
+	PrivilegeTakeOwnership        PrivilegeName = wrappers.SE_TAKE_OWNERSHIP_NAME
+	PrivilegeLoadDriver           PrivilegeName = wrappers.SE_LOAD_DRIVER_NAME
+	PrivilegeSystemProfile        PrivilegeName = wrappers.SE_SYSTEM_PROFILE_NAME
+	PrivilegeSystemTime           PrivilegeName = wrappers.SE_SYSTEMTIME_NAME
+	PrivilegeProfileSingleProcess PrivilegeName = wrappers.SE_PROF_SINGLE_PROCESS_NAME
+	PrivilegeIncreaseBasePriority PrivilegeName = wrappers.SE_INC_BASE_PRIORITY_NAME
+	PrivilegeCreatePagefile       PrivilegeName = wrappers.SE_CREATE_PAGEFILE_NAME
+	PrivilegeCreatePermanent      PrivilegeName = wrappers.SE_CREATE_PERMANENT_NAME
+	PrivilegeBackup               PrivilegeName = wrappers.SE_BACKUP_NAME
+	PrivilegeRestore              PrivilegeName = wrappers.SE_RESTORE_NAME
+	PrivilegeShutdown             PrivilegeName = wrappers.SE_SHUTDOWN_NAME
+	PrivilegeDebug                PrivilegeName = wrappers.SE_DEBUG_NAME
+	PrivilegeAudit                PrivilegeName = wrappers.SE_AUDIT_NAME
+	PrivilegeSystemEnvironment    PrivilegeName = wrappers.SE_SYSTEM_ENVIRONMENT_NAME
+	PrivilegeChangeNotify         PrivilegeName = wrappers.SE_CHANGE_NOTIFY_NAME
+	PrivilegeRemoteShutdown       PrivilegeName = wrappers.SE_REMOTE_SHUTDOWN_NAME
+	PrivilegeUndock               PrivilegeName = wrappers.SE_UNDOCK_NAME
+	PrivilegeSyncAgent            PrivilegeName = wrappers.SE_SYNC_AGENT_NAME
+	PrivilegeEnableDelegation     PrivilegeName = wrappers.SE_ENABLE_DELEGATION_NAME
+	PrivilegeManageVolume         PrivilegeName = wrappers.SE_MANAGE_VOLUME_NAME
+	PrivilegeImpersonate          PrivilegeName = wrappers.SE_IMPERSONATE_NAME
+	PrivilegeCreateGlobal         PrivilegeName = wrappers.SE_CREATE_GLOBAL_NAME
+	PrivilegeTrustedCredManAccess PrivilegeName = wrappers.SE_TRUSTED_CREDMAN_ACCESS_NAME
+	PrivilegeRelabel              PrivilegeName = wrappers.SE_RELABEL_NAME
+	PrivilegeIncreaseWorkingSet   PrivilegeName = wrappers.SE_INC_WORKING_SET_NAME
+	PrivilegeTimeZone             PrivilegeName = wrappers.SE_TIME_ZONE_NAME
+	PrivilegeCreateSymbolicLink   PrivilegeName = wrappers.SE_CREATE_SYMBOLIC_LINK_NAME
+)
+
+type Privilege struct {
+	luid wrappers.LUID
+}
+
+func GetPrivilege(name PrivilegeName) (*Privilege, error) {
+	var luid wrappers.LUID
+	err := wrappers.LookupPrivilegeValue(
+		nil,
+		syscall.StringToUTF16Ptr(string(name)),
+		&luid)
+	if err != nil {
+		return nil, NewWindowsError("LookupPrivilegeValue", err)
+	}
+	return &Privilege{luid: luid}, nil
+}
+
 type SecurityID struct {
 	sid *wrappers.SID
 }
@@ -44,6 +100,15 @@ func (self SecurityID) Copy() (SecurityID, error) {
 
 func (self SecurityID) Equal(other SecurityID) bool {
 	return wrappers.EqualSid(self.sid, other.sid)
+}
+
+func (self SecurityID) String() (string, error) {
+	var stringSid *uint16
+	if err := wrappers.ConvertSidToStringSid(self.sid, &stringSid); err != nil {
+		return "", NewWindowsError("ConvertSidToStringSid", err)
+	}
+	defer wrappers.LocalFree(syscall.Handle(unsafe.Pointer(stringSid)))
+	return LpstrToString(stringSid), nil
 }
 
 func GetFileOwner(path string) (SecurityID, error) {
@@ -71,6 +136,20 @@ func GetFileOwner(path string) (SecurityID, error) {
 	return SecurityID{ownerSid}, nil
 }
 
+func BeginImpersonateSelf() error {
+	if err := wrappers.ImpersonateSelf(wrappers.SecurityImpersonation); err != nil {
+		return NewWindowsError("ImpersonateSelf", nil)
+	}
+	return nil
+}
+
+func EndImpersonate() error {
+	if err := wrappers.RevertToSelf(); err != nil {
+		return NewWindowsError("RevertToSelf", nil)
+	}
+	return nil
+}
+
 type Token struct {
 	handle syscall.Handle
 }
@@ -84,12 +163,55 @@ func OpenCurrentProcessToken() (*Token, error) {
 	return &Token{handle: hToken}, nil
 }
 
+func OpenOtherProcessToken(pid uint) (*Token, error) {
+	hProcess, err := wrappers.OpenProcess(wrappers.PROCESS_QUERY_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return nil, NewWindowsError("OpenProcess", err)
+	}
+	defer syscall.CloseHandle(hProcess)
+	var hToken syscall.Handle
+	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_QUERY, &hToken); err != nil {
+		return nil, NewWindowsError("OpenProcessToken", err)
+	}
+	return &Token{handle: hToken}, nil
+}
+
+func OpenCurrentThreadToken(openAsSelf bool) (*Token, error) {
+	hThread := wrappers.GetCurrentThread()
+	var hToken syscall.Handle
+	err := wrappers.OpenThreadToken(
+		hThread,
+		wrappers.TOKEN_QUERY|wrappers.TOKEN_ADJUST_PRIVILEGES,
+		openAsSelf,
+		&hToken)
+	if err != nil {
+		return nil, NewWindowsError("OpenThreadToken", err)
+	}
+	return &Token{handle: hToken}, nil
+}
+
 func (self *Token) Close() error {
 	if self.handle != 0 {
 		if err := wrappers.CloseHandle(self.handle); err != nil {
 			return NewWindowsError("CloseHandle", err)
 		}
 		self.handle = 0
+	}
+	return nil
+}
+
+func (self *Token) EnablePrivilege(privilege *Privilege, enable bool) error {
+	tokenPrivileges := wrappers.TOKEN_PRIVILEGES{
+		PrivilegeCount: 1,
+		Privileges: [1]wrappers.LUID_AND_ATTRIBUTES{
+			{Luid: privilege.luid},
+		},
+	}
+	if enable {
+		tokenPrivileges.Privileges[0].Attributes = wrappers.SE_PRIVILEGE_ENABLED
+	}
+	if err := wrappers.AdjustTokenPrivileges(self.handle, false, &tokenPrivileges, 0, nil, nil); err != nil {
+		return NewWindowsError("AdjustTokenPrivileges", err)
 	}
 	return nil
 }
