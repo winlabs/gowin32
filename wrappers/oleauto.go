@@ -40,33 +40,37 @@ var (
 )
 
 func SysAllocString(psz *uint16) *uint16 {
-	r1, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(psz)))
+	r1, _, _ := syscall.Syscall(procSysAllocString.Addr(), 1, uintptr(unsafe.Pointer(psz)), 0, 0)
 	return (*uint16)(unsafe.Pointer(r1))
 }
 
 func SysFreeString(bstrString *uint16) {
-	procSysFreeString.Call(uintptr(unsafe.Pointer(bstrString)))
+	syscall.Syscall(procSysFreeString.Addr(), 1, uintptr(unsafe.Pointer(bstrString)), 0, 0)
 }
 
 func SysStringLen(bstr *uint16) uint32 {
-	r1, _, _ := procSysStringLen.Call(uintptr(unsafe.Pointer(bstr)))
+	r1, _, _ := syscall.Syscall(procSysStringLen.Addr(), 1, uintptr(unsafe.Pointer(bstr)), 0, 0)
 	return uint32(r1)
 }
 
 func VariantChangeType(dest *VARIANT, src *VARIANT, flags uint16, vt uint16) uint32 {
-	r1, _, _ := procVariantChangeType.Call(
+	r1, _, _ := syscall.Syscall6(
+		procVariantChangeType.Addr(),
+		4,
 		uintptr(unsafe.Pointer(dest)),
 		uintptr(unsafe.Pointer(src)),
 		uintptr(flags),
-		uintptr(vt))
+		uintptr(vt),
+		0,
+		0)
 	return uint32(r1)
 }
 
 func VariantClear(variant *VARIANT) uint32 {
-	r1, _, _ := procVariantClear.Call(uintptr(unsafe.Pointer(variant)))
+	r1, _, _ := syscall.Syscall(procVariantClear.Addr(), 1, uintptr(unsafe.Pointer(variant)), 0, 0)
 	return uint32(r1)
 }
 
 func VariantInit(variant *VARIANT) {
-	procVariantInit.Call(uintptr(unsafe.Pointer(variant)))
+	syscall.Syscall(procVariantInit.Addr(), 1, uintptr(unsafe.Pointer(variant)), 0, 0)
 }

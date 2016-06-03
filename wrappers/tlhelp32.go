@@ -68,7 +68,12 @@ var (
 )
 
 func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, error) {
-	r1, _, e1 := procCreateToolhelp32Snapshot.Call(uintptr(flags), uintptr(processID))
+	r1, _, e1 := syscall.Syscall(
+		procCreateToolhelp32Snapshot.Addr(),
+		2,
+		uintptr(flags),
+		uintptr(processID),
+		0)
 	handle := syscall.Handle(r1)
 	if handle == INVALID_HANDLE_VALUE {
 		if e1 != ERROR_SUCCESS {
@@ -81,7 +86,12 @@ func CreateToolhelp32Snapshot(flags uint32, processID uint32) (syscall.Handle, e
 }
 
 func Module32First(snapshot syscall.Handle, me *MODULEENTRY32) error {
-	r1, _, e1 := procModule32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
+	r1, _, e1 := syscall.Syscall(
+		procModule32FirstW.Addr(),
+		2,
+		uintptr(snapshot),
+		uintptr(unsafe.Pointer(me)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -93,7 +103,12 @@ func Module32First(snapshot syscall.Handle, me *MODULEENTRY32) error {
 }
 
 func Module32Next(snapshot syscall.Handle, me *MODULEENTRY32) error {
-	r1, _, e1 := procModule32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(me)))
+	r1, _, e1 := syscall.Syscall(
+		procModule32NextW.Addr(),
+		2,
+		uintptr(snapshot),
+		uintptr(unsafe.Pointer(me)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -105,7 +120,12 @@ func Module32Next(snapshot syscall.Handle, me *MODULEENTRY32) error {
 }
 
 func Process32First(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
-	r1, _, e1 := procProcess32FirstW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(pe)))
+	r1, _, e1 := syscall.Syscall(
+		procProcess32FirstW.Addr(),
+		2,
+		uintptr(snapshot),
+		uintptr(unsafe.Pointer(pe)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -117,7 +137,12 @@ func Process32First(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
 }
 
 func Process32Next(snapshot syscall.Handle, pe *PROCESSENTRY32) error {
-	r1, _, e1 := procProcess32NextW.Call(uintptr(snapshot), uintptr(unsafe.Pointer(pe)))
+	r1, _, e1 := syscall.Syscall(
+		procProcess32NextW.Addr(),
+		2,
+		uintptr(snapshot),
+		uintptr(unsafe.Pointer(pe)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

@@ -67,9 +67,12 @@ var (
 )
 
 func CommandLineToArgvW(cmdLine *uint16, numArgs *int32) (**uint16, error) {
-	r1, _, e1 := procCommandLineToArgvW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procCommandLineToArgvW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(cmdLine)),
-		uintptr(unsafe.Pointer(numArgs)))
+		uintptr(unsafe.Pointer(numArgs)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return nil, e1
@@ -81,7 +84,7 @@ func CommandLineToArgvW(cmdLine *uint16, numArgs *int32) (**uint16, error) {
 }
 
 func SHFileOperation(fileOp *SHFILEOPSTRUCT) error {
-	r1, _, _ := procSHFileOperationW.Call(uintptr(unsafe.Pointer(fileOp)))
+	r1, _, _ := syscall.Syscall(procSHFileOperationW.Addr(), 1, uintptr(unsafe.Pointer(fileOp)), 0, 0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}

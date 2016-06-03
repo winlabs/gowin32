@@ -255,7 +255,9 @@ var (
 )
 
 func ChangeServiceConfig(service syscall.Handle, serviceType uint32, startType uint32, errorControl uint32, binaryPathName *uint16, loadOrderGroup *uint16, tagId *uint32, dependencies *uint16, serviceStartName *uint16, password *uint16, displayName *uint16) error {
-	r1, _, e1 := procChangeServiceConfigW.Call(
+	r1, _, e1 := syscall.Syscall12(
+		procChangeServiceConfigW.Addr(),
+		11,
 		uintptr(service),
 		uintptr(serviceType),
 		uintptr(startType),
@@ -266,7 +268,8 @@ func ChangeServiceConfig(service syscall.Handle, serviceType uint32, startType u
 		uintptr(unsafe.Pointer(dependencies)),
 		uintptr(unsafe.Pointer(serviceStartName)),
 		uintptr(unsafe.Pointer(password)),
-		uintptr(unsafe.Pointer(displayName)))
+		uintptr(unsafe.Pointer(displayName)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -278,7 +281,9 @@ func ChangeServiceConfig(service syscall.Handle, serviceType uint32, startType u
 }
 
 func ChangeServiceConfig2(service syscall.Handle, infoLevel uint32, info *byte) error {
-	r1, _, e1 := procChangeServiceConfig2W.Call(
+	r1, _, e1 := syscall.Syscall(
+		procChangeServiceConfig2W.Addr(),
+		3,
 		uintptr(service),
 		uintptr(infoLevel),
 		uintptr(unsafe.Pointer(info)))
@@ -293,7 +298,7 @@ func ChangeServiceConfig2(service syscall.Handle, infoLevel uint32, info *byte) 
 }
 
 func CloseServiceHandle(scObject syscall.Handle) error {
-	r1, _, e1 := procCloseServiceHandle.Call(uintptr(scObject))
+	r1, _, e1 := syscall.Syscall(procCloseServiceHandle.Addr(), 1, uintptr(scObject), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -305,7 +310,9 @@ func CloseServiceHandle(scObject syscall.Handle) error {
 }
 
 func ControlService(service syscall.Handle, control uint32, serviceStatus *SERVICE_STATUS) error {
-	r1, _, e1 := procControlService.Call(
+	r1, _, e1 := syscall.Syscall(
+		procControlService.Addr(),
+		3,
 		uintptr(service),
 		uintptr(control),
 		uintptr(unsafe.Pointer(serviceStatus)))
@@ -320,7 +327,9 @@ func ControlService(service syscall.Handle, control uint32, serviceStatus *SERVI
 }
 
 func CreateService(scManager syscall.Handle, serviceName *uint16, databaseName *uint16, desiredAccess uint32, serviceType uint32, startType uint32, errorControl uint32, binaryPathName *uint16, loadOrderGroup *uint16, tagId *uint32, dependencies *uint16, serviceStartName *uint16, password *uint16) (syscall.Handle, error) {
-	r1, _, e1 := procCreateServiceW.Call(
+	r1, _, e1 := syscall.Syscall15(
+		procCreateServiceW.Addr(),
+		13,
 		uintptr(scManager),
 		uintptr(unsafe.Pointer(serviceName)),
 		uintptr(unsafe.Pointer(databaseName)),
@@ -333,7 +342,9 @@ func CreateService(scManager syscall.Handle, serviceName *uint16, databaseName *
 		uintptr(unsafe.Pointer(tagId)),
 		uintptr(unsafe.Pointer(dependencies)),
 		uintptr(unsafe.Pointer(serviceStartName)),
-		uintptr(unsafe.Pointer(password)))
+		uintptr(unsafe.Pointer(password)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -345,7 +356,7 @@ func CreateService(scManager syscall.Handle, serviceName *uint16, databaseName *
 }
 
 func DeleteService(service syscall.Handle) error {
-	r1, _, e1 := procDeleteService.Call(uintptr(service))
+	r1, _, e1 := syscall.Syscall(procDeleteService.Addr(), 1, uintptr(service), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -357,7 +368,9 @@ func DeleteService(service syscall.Handle) error {
 }
 
 func EnumServicesStatus(scManager syscall.Handle, serviceType uint32, serviceState uint32, services *byte, bufSize uint32, bytesNeeded *uint32, servicesReturned *uint32, resumeHandle *uint32) error {
-	r1, _, e1 := procEnumServicesStatusW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procEnumServicesStatusW.Addr(),
+		8,
 		uintptr(scManager),
 		uintptr(serviceType),
 		uintptr(serviceState),
@@ -365,7 +378,8 @@ func EnumServicesStatus(scManager syscall.Handle, serviceType uint32, serviceSta
 		uintptr(bufSize),
 		uintptr(unsafe.Pointer(bytesNeeded)),
 		uintptr(unsafe.Pointer(servicesReturned)),
-		uintptr(unsafe.Pointer(resumeHandle)))
+		uintptr(unsafe.Pointer(resumeHandle)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -377,7 +391,9 @@ func EnumServicesStatus(scManager syscall.Handle, serviceType uint32, serviceSta
 }
 
 func OpenSCManager(machineName *uint16, databaseName *uint16, desiredAccess uint32) (syscall.Handle, error) {
-	r1, _, e1 := procOpenSCManagerW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procOpenSCManagerW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(machineName)),
 		uintptr(unsafe.Pointer(databaseName)),
 		uintptr(desiredAccess))
@@ -392,7 +408,9 @@ func OpenSCManager(machineName *uint16, databaseName *uint16, desiredAccess uint
 }
 
 func OpenService(scManager syscall.Handle, serviceName *uint16, desiredAccess uint32) (syscall.Handle, error) {
-	r1, _, e1 := procOpenServiceW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procOpenServiceW.Addr(),
+		3,
 		uintptr(scManager),
 		uintptr(unsafe.Pointer(serviceName)),
 		uintptr(desiredAccess))
@@ -407,11 +425,15 @@ func OpenService(scManager syscall.Handle, serviceName *uint16, desiredAccess ui
 }
 
 func QueryServiceConfig(service syscall.Handle, serviceConfig *QUERY_SERVICE_CONFIG, bufSize uint32, bytesNeeded *uint32) error {
-	r1, _, e1 := procQueryServiceConfigW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procQueryServiceConfigW.Addr(),
+		4,
 		uintptr(service),
 		uintptr(unsafe.Pointer(serviceConfig)),
 		uintptr(bufSize),
-		uintptr(unsafe.Pointer(bytesNeeded)))
+		uintptr(unsafe.Pointer(bytesNeeded)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -423,12 +445,15 @@ func QueryServiceConfig(service syscall.Handle, serviceConfig *QUERY_SERVICE_CON
 }
 
 func QueryServiceConfig2(service syscall.Handle, infoLevel uint32, buffer *byte, bufSize uint32, bytesNeeded *uint32) error {
-	r1, _, e1 := procQueryServiceConfig2W.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procQueryServiceConfig2W.Addr(),
+		5,
 		uintptr(service),
 		uintptr(infoLevel),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(bufSize),
-		uintptr(unsafe.Pointer(bytesNeeded)))
+		uintptr(unsafe.Pointer(bytesNeeded)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -440,9 +465,12 @@ func QueryServiceConfig2(service syscall.Handle, infoLevel uint32, buffer *byte,
 }
 
 func QueryServiceStatus(service syscall.Handle, serviceStatus *SERVICE_STATUS) error {
-	r1, _, e1 := procQueryServiceStatus.Call(
+	r1, _, e1 := syscall.Syscall(
+		procQueryServiceStatus.Addr(),
+		2,
 		uintptr(service),
-		uintptr(unsafe.Pointer(serviceStatus)))
+		uintptr(unsafe.Pointer(serviceStatus)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -454,12 +482,15 @@ func QueryServiceStatus(service syscall.Handle, serviceStatus *SERVICE_STATUS) e
 }
 
 func QueryServiceStatusEx(service syscall.Handle, infoLevel int32, buffer *byte, bufSize uint32, bytesNeeded *uint32) error {
-	r1, _, e1 := procQueryServiceStatusEx.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procQueryServiceStatusEx.Addr(),
+		5,
 		uintptr(service),
 		uintptr(infoLevel),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(bufSize),
-		uintptr(unsafe.Pointer(bytesNeeded)))
+		uintptr(unsafe.Pointer(bytesNeeded)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -471,7 +502,9 @@ func QueryServiceStatusEx(service syscall.Handle, infoLevel int32, buffer *byte,
 }
 
 func StartService(service syscall.Handle, numServiceArgs uint32, serviceArgVectors **uint16) error {
-	r1, _, e1 := procStartServiceW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procStartServiceW.Addr(),
+		3,
 		uintptr(service),
 		uintptr(numServiceArgs),
 		uintptr(unsafe.Pointer(serviceArgVectors)))

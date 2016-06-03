@@ -38,24 +38,32 @@ var (
 )
 
 func CoCreateInstance(clsid *GUID, outer *IUnknown, clsContext uint32, iid *GUID, object *uintptr) uint32 {
-	r1, _, _ := procCoCreateInstance.Call(
+	r1, _, _ := syscall.Syscall6(
+		procCoCreateInstance.Addr(),
+		5,
 		uintptr(unsafe.Pointer(clsid)),
 		uintptr(unsafe.Pointer(outer)),
 		uintptr(clsContext),
 		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(object)))
+		uintptr(unsafe.Pointer(object)),
+		0)
 	return uint32(r1)
 }
 
 func CoInitializeEx(reserved *byte, flags uint32) uint32 {
-	r1, _, _ := procCoInitializeEx.Call(uintptr(unsafe.Pointer(reserved)), uintptr(flags))
+	r1, _, _ := syscall.Syscall(
+		procCoInitializeEx.Addr(),
+		2,
+		uintptr(unsafe.Pointer(reserved)),
+		uintptr(flags),
+		0)
 	return uint32(r1)
 }
 
 func CoTaskMemFree(mem *byte) {
-	procCoTaskMemFree.Call(uintptr(unsafe.Pointer(mem)))
+	syscall.Syscall(procCoTaskMemFree.Addr(), 1, uintptr(unsafe.Pointer(mem)), 0, 0)
 }
 
 func CoUninitialize() {
-	procCoUninitialize.Call()
+	syscall.Syscall(procCoUninitialize.Addr(), 0, 0, 0, 0)
 }

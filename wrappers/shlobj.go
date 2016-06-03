@@ -110,20 +110,27 @@ var (
 )
 
 func SHGetFolderPath(owner syscall.Handle, folder uint32, token syscall.Handle, flags uint32, path *uint16) uint32 {
-	r1, _, _ := procSHGetFolderPathW.Call(
+	r1, _, _ := syscall.Syscall6(
+		procSHGetFolderPathW.Addr(),
+		5,
 		uintptr(owner),
 		uintptr(folder),
 		uintptr(token),
 		uintptr(flags),
-		uintptr(unsafe.Pointer(path)))
+		uintptr(unsafe.Pointer(path)),
+		0)
 	return uint32(r1)
 }
 
 func SHGetKnownFolderPath(fid *GUID, flags uint32, token syscall.Handle, path **uint16) uint32 {
-	r1, _, _ := procSHGetKnownFolderPath.Call(
+	r1, _, _ := syscall.Syscall6(
+		procSHGetKnownFolderPath.Addr(),
+		4,
 		uintptr(unsafe.Pointer(fid)),
 		uintptr(flags),
 		uintptr(token),
-		uintptr(unsafe.Pointer(path)))
+		uintptr(unsafe.Pointer(path)),
+		0,
+		0)
 	return uint32(r1)
 }

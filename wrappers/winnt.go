@@ -1357,18 +1357,27 @@ var (
 )
 
 func RtlMoveMemory(destination *byte, source *byte, length uintptr) {
-	procRtlMoveMemory.Call(
+	syscall.Syscall(
+		procRtlMoveMemory.Addr(),
+		3,
 		uintptr(unsafe.Pointer(destination)),
 		uintptr(unsafe.Pointer(source)),
 		length)
 }
 
 func RtlZeroMemory(destination *byte, length uintptr) {
-	procRtlZeroMemory.Call(uintptr(unsafe.Pointer(destination)), length)
+	syscall.Syscall(
+		procRtlZeroMemory.Addr(),
+		2,
+		uintptr(unsafe.Pointer(destination)),
+		length,
+		0)
 }
 
 func VerSetConditionMask(conditionMask uint64, typeBitMask uint32, condition uint8) uint64 {
-	r1, _, _ := procVerSetConditionMask.Call(
+	r1, _, _ := syscall.Syscall(
+		procVerSetConditionMask.Addr(),
+		3,
 		uintptr(conditionMask),
 		uintptr(typeBitMask),
 		uintptr(condition))
