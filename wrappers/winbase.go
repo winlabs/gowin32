@@ -341,7 +341,12 @@ var (
 )
 
 func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
-	r1, _, e1 := procAssignProcessToJobObject.Call(uintptr(job), uintptr(process))
+	r1, _, e1 := syscall.Syscall(
+		procAssignProcessToJobObject.Addr(),
+		2,
+		uintptr(job),
+		uintptr(process),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -359,9 +364,12 @@ func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscal
 	} else {
 		deleteExistingResourcesRaw = 0
 	}
-	r1, _, e1 := procBeginUpdateResourceW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procBeginUpdateResourceW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(fileName)),
-		uintptr(deleteExistingResourcesRaw))
+		uintptr(deleteExistingResourcesRaw),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -373,7 +381,7 @@ func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscal
 }
 
 func CloseHandle(object syscall.Handle) error {
-	r1, _, e1 := procCloseHandle.Call(uintptr(object))
+	r1, _, e1 := syscall.Syscall(procCloseHandle.Addr(), 1, uintptr(object), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -391,7 +399,9 @@ func CopyFile(existingFileName *uint16, newFileName *uint16, failIfExists bool) 
 	} else {
 		failIfExistsRaw = 0
 	}
-	r1, _, e1 := procCopyFileW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procCopyFileW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(existingFileName)),
 		uintptr(unsafe.Pointer(newFileName)),
 		uintptr(failIfExistsRaw))
@@ -406,14 +416,18 @@ func CopyFile(existingFileName *uint16, newFileName *uint16, failIfExists bool) 
 }
 
 func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securityAttributes *SECURITY_ATTRIBUTES, creationDisposition uint32, flagsAndAttributes uint32, templateFile syscall.Handle) (syscall.Handle, error) {
-	r1, _, e1 := procCreateFileW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procCreateFileW.Addr(),
+		7,
 		uintptr(unsafe.Pointer(fileName)),
 		uintptr(desiredAccess),
 		uintptr(shareMode),
 		uintptr(unsafe.Pointer(securityAttributes)),
 		uintptr(creationDisposition),
 		uintptr(flagsAndAttributes),
-		uintptr(templateFile))
+		uintptr(templateFile),
+		0,
+		0)
 	handle := syscall.Handle(r1)
 	if handle == INVALID_HANDLE_VALUE {
 		if e1 != ERROR_SUCCESS {
@@ -426,9 +440,12 @@ func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securi
 }
 
 func CreateJobObject(jobAttributes *SECURITY_ATTRIBUTES, name *uint16) (syscall.Handle, error) {
-	r1, _, e1 := procCreateJobObjectW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procCreateJobObjectW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(jobAttributes)),
-		uintptr(unsafe.Pointer(name)))
+		uintptr(unsafe.Pointer(name)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -446,7 +463,9 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 	} else {
 		inheritHandlesRaw = 0
 	}
-	r1, _, e1 := procCreateProcessW.Call(
+	r1, _, e1 := syscall.Syscall12(
+		procCreateProcessW.Addr(),
+		10,
 		uintptr(unsafe.Pointer(applicationName)),
 		uintptr(unsafe.Pointer(commandLine)),
 		uintptr(unsafe.Pointer(processAttributes)),
@@ -456,7 +475,9 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		uintptr(unsafe.Pointer(environment)),
 		uintptr(unsafe.Pointer(currentDirectory)),
 		uintptr(unsafe.Pointer(startupInfo)),
-		uintptr(unsafe.Pointer(processInformation)))
+		uintptr(unsafe.Pointer(processInformation)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -468,7 +489,9 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 }
 
 func CreateSymbolicLink(symlinkFileName *uint16, targetFileName *uint16, flags uint32) error {
-	r1, _, e1 := procCreateSymbolicLinkW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procCreateSymbolicLinkW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(symlinkFileName)),
 		uintptr(unsafe.Pointer(targetFileName)),
 		uintptr(flags))
@@ -483,11 +506,11 @@ func CreateSymbolicLink(symlinkFileName *uint16, targetFileName *uint16, flags u
 }
 
 func DeleteCriticalSection(criticalSection *CRITICAL_SECTION) {
-	procDeleteCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+	syscall.Syscall(procDeleteCriticalSection.Addr(), 1, uintptr(unsafe.Pointer(criticalSection)), 0, 0)
 }
 
 func DeleteFile(fileName *uint16) error {
-	r1, _, e1 := procDeleteFileW.Call(uintptr(unsafe.Pointer(fileName)))
+	r1, _, e1 := syscall.Syscall(procDeleteFileW.Addr(), 1, uintptr(unsafe.Pointer(fileName)), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -499,7 +522,9 @@ func DeleteFile(fileName *uint16) error {
 }
 
 func DeviceIoControl(device syscall.Handle, ioControlCode uint32, inBuffer *byte, inBufferSize uint32, outBuffer *byte, outBufferSize uint32, bytesReturned *uint32, overlapped *syscall.Overlapped) error {
-	r1, _, e1 := procDeviceIoControl.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procDeviceIoControl.Addr(),
+		8,
 		uintptr(device),
 		uintptr(ioControlCode),
 		uintptr(unsafe.Pointer(inBuffer)),
@@ -507,7 +532,8 @@ func DeviceIoControl(device syscall.Handle, ioControlCode uint32, inBuffer *byte
 		uintptr(unsafe.Pointer(outBuffer)),
 		uintptr(outBufferSize),
 		uintptr(unsafe.Pointer(bytesReturned)),
-		uintptr(unsafe.Pointer(overlapped)))
+		uintptr(unsafe.Pointer(overlapped)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -525,9 +551,12 @@ func EndUpdateResource(update syscall.Handle, discard bool) error {
 	} else {
 		discardRaw = 0
 	}
-	r1, _, e1 := procEndUpdateResourceW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procEndUpdateResourceW.Addr(),
+		2,
 		uintptr(update),
-		uintptr(discardRaw))
+		uintptr(discardRaw),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -539,11 +568,13 @@ func EndUpdateResource(update syscall.Handle, discard bool) error {
 }
 
 func EnterCriticalSection(criticalSection *CRITICAL_SECTION) {
-	procEnterCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+	syscall.Syscall(procEnterCriticalSection.Addr(), 1, uintptr(unsafe.Pointer(criticalSection)), 0, 0)
 }
 
 func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procExpandEnvironmentStringsW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procExpandEnvironmentStringsW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(src)),
 		uintptr(unsafe.Pointer(dst)),
 		uintptr(size))
@@ -558,7 +589,7 @@ func ExpandEnvironmentStrings(src *uint16, dst *uint16, size uint32) (uint32, er
 }
 
 func FindClose(findFile syscall.Handle) error {
-	r1, _, e1 := procFindClose.Call(uintptr(findFile))
+	r1, _, e1 := syscall.Syscall(procFindClose.Addr(), 1, uintptr(findFile), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -570,9 +601,12 @@ func FindClose(findFile syscall.Handle) error {
 }
 
 func FindFirstFile(fileName *uint16, findFileData *WIN32_FIND_DATA) (syscall.Handle, error) {
-	r1, _, e1 := procFindFirstFileW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procFindFirstFileW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(fileName)),
-		uintptr(unsafe.Pointer(findFileData)))
+		uintptr(unsafe.Pointer(findFileData)),
+		0)
 	handle := syscall.Handle(r1)
 	if handle == INVALID_HANDLE_VALUE {
 		if e1 != ERROR_SUCCESS {
@@ -585,7 +619,12 @@ func FindFirstFile(fileName *uint16, findFileData *WIN32_FIND_DATA) (syscall.Han
 }
 
 func FindNextFile(findFile syscall.Handle, findFileData *WIN32_FIND_DATA) error {
-	r1, _, e1 := procFindNextFileW.Call(uintptr(findFile), uintptr(unsafe.Pointer(findFileData)))
+	r1, _, e1 := syscall.Syscall(
+		procFindNextFileW.Addr(),
+		2,
+		uintptr(findFile),
+		uintptr(unsafe.Pointer(findFileData)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -597,16 +636,20 @@ func FindNextFile(findFile syscall.Handle, findFileData *WIN32_FIND_DATA) error 
 }
 
 func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId uint32, buffer *uint16, size uint32, arguments *byte) (uint32, error) {
-	r1, _, e1 := procFormatMessageW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procFormatMessageW.Addr(),
+		7,
 		uintptr(flags),
 		source,
 		uintptr(messageId),
 		uintptr(languageId),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(size),
-		uintptr(unsafe.Pointer(arguments)))
+		uintptr(unsafe.Pointer(arguments)),
+		0,
+		0)
 	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != 0 {
 			return 0, e1
 		} else {
 			return 0, syscall.EINVAL
@@ -616,7 +659,12 @@ func FormatMessage(flags uint32, source uintptr, messageId uint32, languageId ui
 }
 
 func FreeEnvironmentStrings(environmentBlock *uint16) error {
-	r1, _, e1 := procFreeEnvironmentStringsW.Call(uintptr(unsafe.Pointer(environmentBlock)))
+	r1, _, e1 := syscall.Syscall(
+		procFreeEnvironmentStringsW.Addr(),
+		1,
+		uintptr(unsafe.Pointer(environmentBlock)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -628,7 +676,7 @@ func FreeEnvironmentStrings(environmentBlock *uint16) error {
 }
 
 func FreeLibrary(module syscall.Handle) error {
-	r1, _, e1 := procFreeLibrary.Call(uintptr(module))
+	r1, _, e1 := syscall.Syscall(procFreeLibrary.Addr(), 1, uintptr(module), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -640,9 +688,12 @@ func FreeLibrary(module syscall.Handle) error {
 }
 
 func GetCompressedFileSize(fileName *uint16, fileSizeHigh *uint32) (uint32, error) {
-	r1, _, e1 := procGetCompressedFileSizeW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetCompressedFileSizeW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(fileName)),
-		uintptr(unsafe.Pointer(fileSizeHigh)))
+		uintptr(unsafe.Pointer(fileSizeHigh)),
+		0)
 	if r1 == INVALID_FILE_SIZE {
 		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
@@ -654,7 +705,9 @@ func GetCompressedFileSize(fileName *uint16, fileSizeHigh *uint32) (uint32, erro
 }
 
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
-	r1, _, e1 := procGetComputerNameExW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetComputerNameExW.Addr(),
+		3,
 		uintptr(nameType),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(unsafe.Pointer(size)))
@@ -669,22 +722,25 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 }
 
 func GetCurrentProcess() syscall.Handle {
-	r1, _, _ := procGetCurrentProcess.Call()
+	r1, _, _ := syscall.Syscall(procGetCurrentProcess.Addr(), 0, 0, 0, 0)
 	return syscall.Handle(r1)
 }
 
 func GetCurrentThread() syscall.Handle {
-	r1, _, _ := procGetCurrentThread.Call()
+	r1, _, _ := syscall.Syscall(procGetCurrentThread.Addr(), 0, 0, 0, 0)
 	return syscall.Handle(r1)
 }
 
 func GetDiskFreeSpace(rootPathName *uint16, sectorsPerCluster *uint32, bytesPerSector *uint32, numberOfFreeClusters *uint32, totalNumberOfClusters *uint32) error {
-	r1, _, e1 := procGetDiskFreeSpaceW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procGetDiskFreeSpaceW.Addr(),
+		5,
 		uintptr(unsafe.Pointer(rootPathName)),
 		uintptr(unsafe.Pointer(sectorsPerCluster)),
 		uintptr(unsafe.Pointer(bytesPerSector)),
 		uintptr(unsafe.Pointer(numberOfFreeClusters)),
-		uintptr(unsafe.Pointer(totalNumberOfClusters)))
+		uintptr(unsafe.Pointer(totalNumberOfClusters)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -696,11 +752,15 @@ func GetDiskFreeSpace(rootPathName *uint16, sectorsPerCluster *uint32, bytesPerS
 }
 
 func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, totalNumberOfBytes *uint64, totalNumberOfFreeBytes *uint64) error {
-	r1, _, e1 := procGetDiskFreeSpaceExW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procGetDiskFreeSpaceExW.Addr(),
+		4,
 		uintptr(unsafe.Pointer(directoryName)),
 		uintptr(unsafe.Pointer(freeBytesAvailable)),
 		uintptr(unsafe.Pointer(totalNumberOfBytes)),
-		uintptr(unsafe.Pointer(totalNumberOfFreeBytes)))
+		uintptr(unsafe.Pointer(totalNumberOfFreeBytes)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -712,12 +772,12 @@ func GetDiskFreeSpaceEx(directoryName *uint16, freeBytesAvailable *uint64, total
 }
 
 func GetDriveType(rootPathName *uint16) uint32 {
-	r1, _, _ := procGetDriveTypeW.Call(uintptr(unsafe.Pointer(rootPathName)))
+	r1, _, _ := syscall.Syscall(procGetDriveTypeW.Addr(), 1, uintptr(unsafe.Pointer(rootPathName)), 0, 0)
 	return uint32(r1)
 }
 
 func GetEnvironmentStrings() (*uint16, error) {
-	r1, _, e1 := procGetEnvironmentStringsW.Call()
+	r1, _, e1 := syscall.Syscall(procGetEnvironmentStringsW.Addr(), 0, 0, 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return nil, e1
@@ -729,7 +789,9 @@ func GetEnvironmentStrings() (*uint16, error) {
 }
 
 func GetEnvironmentVariable(name *uint16, buffer *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procGetEnvironmentVariableW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetEnvironmentVariableW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(name)),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(size))
@@ -744,7 +806,7 @@ func GetEnvironmentVariable(name *uint16, buffer *uint16, size uint32) (uint32, 
 }
 
 func GetFileAttributes(fileName *uint16) (uint32, error) {
-	r1, _, e1 := procGetFileAttributesW.Call(uintptr(unsafe.Pointer(fileName)))
+	r1, _, e1 := syscall.Syscall(procGetFileAttributesW.Addr(), 1, uintptr(unsafe.Pointer(fileName)), 0, 0)
 	if r1 == INVALID_FILE_ATTRIBUTES {
 		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
@@ -756,9 +818,12 @@ func GetFileAttributes(fileName *uint16) (uint32, error) {
 }
 
 func GetFileSize(file syscall.Handle, fileSizeHigh *uint32) (uint32, error) {
-	r1, _, e1 := procGetFileSize.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetFileSize.Addr(),
+		2,
 		uintptr(file),
-		uintptr(unsafe.Pointer(fileSizeHigh)))
+		uintptr(unsafe.Pointer(fileSizeHigh)),
+		0)
 	if r1 == INVALID_FILE_SIZE {
 		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
@@ -770,7 +835,9 @@ func GetFileSize(file syscall.Handle, fileSizeHigh *uint32) (uint32, error) {
 }
 
 func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procGetModuleFileNameW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetModuleFileNameW.Addr(),
+		3,
 		uintptr(module),
 		uintptr(unsafe.Pointer(filename)),
 		uintptr(size))
@@ -787,12 +854,15 @@ func GetModuleFileName(module syscall.Handle, filename *uint16, size uint32) (ui
 }
 
 func GetProcessTimes(hProcess syscall.Handle, creationTime, exitTime, kernelTime, userTime *FILETIME) error {
-	r1, _, e1 := procGetProcessTimes.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procGetProcessTimes.Addr(),
+		5,
 		uintptr(hProcess),
 		uintptr(unsafe.Pointer(creationTime)),
 		uintptr(unsafe.Pointer(exitTime)),
 		uintptr(unsafe.Pointer(kernelTime)),
-		uintptr(unsafe.Pointer(userTime)))
+		uintptr(unsafe.Pointer(userTime)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -804,7 +874,7 @@ func GetProcessTimes(hProcess syscall.Handle, creationTime, exitTime, kernelTime
 }
 
 func GetStdHandle(stdHandle uint32) (syscall.Handle, error) {
-	r1, _, e1 := procGetStdHandle.Call(uintptr(stdHandle))
+	r1, _, e1 := syscall.Syscall(procGetStdHandle.Addr(), 1, uintptr(stdHandle), 0, 0)
 	handle := (syscall.Handle)(r1)
 	if handle == INVALID_HANDLE_VALUE {
 		if e1 != ERROR_SUCCESS {
@@ -817,9 +887,12 @@ func GetStdHandle(stdHandle uint32) (syscall.Handle, error) {
 }
 
 func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procGetSystemDirectoryW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetSystemDirectoryW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(buffer)),
-		uintptr(size))
+		uintptr(size),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -831,15 +904,17 @@ func GetSystemDirectory(buffer *uint16, size uint32) (uint32, error) {
 }
 
 func GetSystemInfo(systemInfo *SYSTEM_INFO) {
-	procGetSystemInfo.Call(uintptr(unsafe.Pointer(systemInfo)))
+	syscall.Syscall(procGetSystemInfo.Addr(), 1, uintptr(unsafe.Pointer(systemInfo)), 0, 0)
 }
 
 func GetSystemTimeAsFileTime(systemTimeAsFileTime *FILETIME) {
-	procGetSystemTimeAsFileTime.Call(uintptr(unsafe.Pointer(systemTimeAsFileTime)))
+	syscall.Syscall(procGetSystemTimeAsFileTime.Addr(), 1, uintptr(unsafe.Pointer(systemTimeAsFileTime)), 0, 0)
 }
 
 func GetSystemTimes(idleTime, kernelTime, userTime *FILETIME) error {
-	r1, _, e1 := procGetSystemTimes.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetSystemTimes.Addr(),
+		3,
 		uintptr(unsafe.Pointer(idleTime)),
 		uintptr(unsafe.Pointer(kernelTime)),
 		uintptr(unsafe.Pointer(userTime)))
@@ -854,9 +929,12 @@ func GetSystemTimes(idleTime, kernelTime, userTime *FILETIME) error {
 }
 
 func GetSystemWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procGetSystemWindowsDirectoryW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetSystemWindowsDirectoryW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(buffer)),
-		uintptr(size))
+		uintptr(size),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -868,9 +946,12 @@ func GetSystemWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
 }
 
 func GetSystemWow64Directory(buffer *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procGetSystemWow64DirectoryW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetSystemWow64DirectoryW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(buffer)),
-		uintptr(size))
+		uintptr(size),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -882,11 +963,15 @@ func GetSystemWow64Directory(buffer *uint16, size uint32) (uint32, error) {
 }
 
 func GetTempFileName(pathName *uint16, prefixString *uint16, unique uint32, tempFileName *uint16) (uint32, error) {
-	r1, _, e1 := procGetTempFileNameW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procGetTempFileNameW.Addr(),
+		4,
 		uintptr(unsafe.Pointer(pathName)),
 		uintptr(unsafe.Pointer(prefixString)),
 		uintptr(unique),
-		uintptr(unsafe.Pointer(tempFileName)))
+		uintptr(unsafe.Pointer(tempFileName)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -898,9 +983,12 @@ func GetTempFileName(pathName *uint16, prefixString *uint16, unique uint32, temp
 }
 
 func GetTempPath(bufferLength uint32, buffer *uint16) (uint32, error) {
-	r1, _, e1 := procGetTempPathW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetTempPathW.Addr(),
+		2,
 		uintptr(bufferLength),
-		uintptr(unsafe.Pointer(buffer)))
+		uintptr(unsafe.Pointer(buffer)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -912,7 +1000,7 @@ func GetTempPath(bufferLength uint32, buffer *uint16) (uint32, error) {
 }
 
 func GetVersionEx(osvi *OSVERSIONINFOEX) error {
-	r1, _, e1 := procGetVersionExW.Call(uintptr(unsafe.Pointer(osvi)))
+	r1, _, e1 := syscall.Syscall(procGetVersionExW.Addr(), 1, uintptr(unsafe.Pointer(osvi)), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -924,7 +1012,9 @@ func GetVersionEx(osvi *OSVERSIONINFOEX) error {
 }
 
 func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volumeNameSize uint32, volumeSerialNumber *uint32, maximumComponentLength *uint32, fileSystemFlags *uint32, fileSystemNameBuffer *uint16, fileSystemNameSize uint32) error {
-	r1, _, e1 := procGetVolumeInformationW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procGetVolumeInformationW.Addr(),
+		8,
 		uintptr(unsafe.Pointer(rootPathName)),
 		uintptr(unsafe.Pointer(volumeNameBuffer)),
 		uintptr(volumeNameSize),
@@ -932,7 +1022,8 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 		uintptr(unsafe.Pointer(maximumComponentLength)),
 		uintptr(unsafe.Pointer(fileSystemFlags)),
 		uintptr(unsafe.Pointer(fileSystemNameBuffer)),
-		uintptr(fileSystemNameSize))
+		uintptr(fileSystemNameSize),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -944,7 +1035,9 @@ func GetVolumeInformation(rootPathName *uint16, volumeNameBuffer *uint16, volume
 }
 
 func GetVolumeNameForVolumeMountPoint(volumeMountPoint *uint16, volumeName *uint16, bufferLength uint32) error {
-	r1, _, e1 := procGetVolumeNameForVolumeMountPointW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetVolumeNameForVolumeMountPointW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(volumeMountPoint)),
 		uintptr(unsafe.Pointer(volumeName)),
 		uintptr(bufferLength))
@@ -959,7 +1052,9 @@ func GetVolumeNameForVolumeMountPoint(volumeMountPoint *uint16, volumeName *uint
 }
 
 func GetVolumePathName(fileName *uint16, volumePathName *uint16, bufferLength uint32) error {
-	r1, _, e1 := procGetVolumePathNameW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetVolumePathNameW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(fileName)),
 		uintptr(unsafe.Pointer(volumePathName)),
 		uintptr(bufferLength))
@@ -974,9 +1069,12 @@ func GetVolumePathName(fileName *uint16, volumePathName *uint16, bufferLength ui
 }
 
 func GetWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
-	r1, _, e1 := procGetWindowsDirectoryW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetWindowsDirectoryW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(buffer)),
-		uintptr(size))
+		uintptr(size),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -988,12 +1086,14 @@ func GetWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
 }
 
 func InitializeCriticalSection(criticalSection *CRITICAL_SECTION) {
-	procInitializeCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+	syscall.Syscall(procInitializeCriticalSection.Addr(), 1, uintptr(unsafe.Pointer(criticalSection)), 0, 0)
 }
 
 func IsProcessInJob(processHandle syscall.Handle, jobHandle syscall.Handle, result *bool) error {
 	var resultRaw int32
-	r1, _, e1 := procIsProcessInJob.Call(
+	r1, _, e1 := syscall.Syscall(
+		procIsProcessInJob.Addr(),
+		3,
 		uintptr(processHandle),
 		uintptr(jobHandle),
 		uintptr(unsafe.Pointer(&resultRaw)))
@@ -1011,11 +1111,11 @@ func IsProcessInJob(processHandle syscall.Handle, jobHandle syscall.Handle, resu
 }
 
 func LeaveCriticalSection(criticalSection *CRITICAL_SECTION) {
-	procLeaveCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+	syscall.Syscall(procLeaveCriticalSection.Addr(), 1, uintptr(unsafe.Pointer(criticalSection)), 0, 0)
 }
 
 func LoadLibrary(fileName *uint16) (syscall.Handle, error) {
-	r1, _, e1 := procLoadLibraryW.Call(uintptr(unsafe.Pointer(fileName)))
+	r1, _, e1 := syscall.Syscall(procLoadLibraryW.Addr(), 1, uintptr(unsafe.Pointer(fileName)), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -1028,9 +1128,9 @@ func LoadLibrary(fileName *uint16) (syscall.Handle, error) {
 
 func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 	// LocalFree returns NULL to indicate success!
-	r1, _, e1 := procLocalFree.Call(uintptr(mem))
+	r1, _, e1 := syscall.Syscall(procLocalFree.Addr(), 1, uintptr(mem), 0, 0)
 	if r1 != 0 {
-		if e1.(syscall.Errno) != 0 {
+		if e1 != 0 {
 			return syscall.Handle(r1), e1
 		} else {
 			return syscall.Handle(r1), syscall.EINVAL
@@ -1040,9 +1140,12 @@ func LocalFree(mem syscall.Handle) (syscall.Handle, error) {
 }
 
 func MoveFile(existingFileName *uint16, newFileName *uint16) error {
-	r1, _, e1 := procMoveFileW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procMoveFileW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(existingFileName)),
-		uintptr(unsafe.Pointer(newFileName)))
+		uintptr(unsafe.Pointer(newFileName)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1054,7 +1157,9 @@ func MoveFile(existingFileName *uint16, newFileName *uint16) error {
 }
 
 func MoveFileEx(existingFileName *uint16, newFileName *uint16, flags uint32) error {
-	r1, _, e1 := procMoveFileExW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procMoveFileExW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(existingFileName)),
 		uintptr(unsafe.Pointer(newFileName)),
 		uintptr(flags))
@@ -1075,7 +1180,9 @@ func OpenJobObject(desiredAccess uint32, inheritHandle bool, name *uint16) (sysc
 	} else {
 		inheritHandleRaw = 0
 	}
-	r1, _, e1 := procOpenJobObjectW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procOpenJobObjectW.Addr(),
+		3,
 		uintptr(desiredAccess),
 		uintptr(inheritHandleRaw),
 		uintptr(unsafe.Pointer(name)))
@@ -1096,7 +1203,9 @@ func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (sy
 	} else {
 		inheritHandleRaw = 0
 	}
-	r1, _, e1 := procOpenProcess.Call(
+	r1, _, e1 := syscall.Syscall(
+		procOpenProcess.Addr(),
+		3,
 		uintptr(desiredAccess),
 		uintptr(inheritHandleRaw),
 		uintptr(processId))
@@ -1111,11 +1220,15 @@ func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (sy
 }
 
 func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *uint16, size *uint32) error {
-	r1, _, e1 := procQueryFullProcessImageNameW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procQueryFullProcessImageNameW.Addr(),
+		4,
 		uintptr(process),
 		uintptr(flags),
 		uintptr(unsafe.Pointer(exeName)),
-		uintptr(unsafe.Pointer(size)))
+		uintptr(unsafe.Pointer(size)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1127,12 +1240,15 @@ func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *ui
 }
 
 func QueryInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, jobObjectInfo *byte, jobObjectInfoLength uint32, returnLength *uint32) error {
-	r1, _, e1 := procQueryInformationJobObject.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procQueryInformationJobObject.Addr(),
+		5,
 		uintptr(job),
 		uintptr(jobObjectInfoClass),
 		uintptr(unsafe.Pointer(jobObjectInfo)),
 		uintptr(jobObjectInfoLength),
-		uintptr(unsafe.Pointer(returnLength)))
+		uintptr(unsafe.Pointer(returnLength)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1144,12 +1260,15 @@ func QueryInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, job
 }
 
 func ReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, numberOfBytesRead *uint32, overlapped *OVERLAPPED) error {
-	r1, _, e1 := procReadFile.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procReadFile.Addr(),
+		5,
 		uintptr(file),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(numberOfBytesToRead),
 		uintptr(unsafe.Pointer(numberOfBytesRead)),
-		uintptr(unsafe.Pointer(overlapped)))
+		uintptr(unsafe.Pointer(overlapped)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1161,12 +1280,15 @@ func ReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, num
 }
 
 func ReadProcessMemory(process syscall.Handle, baseAddress uintptr, buffer *byte, size uint32, numberOfBytesRead *uint32) error {
-	r1, _, e1 := procReadProcessMemory.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procReadProcessMemory.Addr(),
+		5,
 		uintptr(process),
 		baseAddress,
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(size),
-		uintptr(unsafe.Pointer(numberOfBytesRead)))
+		uintptr(unsafe.Pointer(numberOfBytesRead)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1178,9 +1300,12 @@ func ReadProcessMemory(process syscall.Handle, baseAddress uintptr, buffer *byte
 }
 
 func SetEnvironmentVariable(name *uint16, value *uint16) error {
-	r1, _, e1 := procSetEnvironmentVariableW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procSetEnvironmentVariableW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(name)),
-		uintptr(unsafe.Pointer(value)))
+		uintptr(unsafe.Pointer(value)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1192,9 +1317,12 @@ func SetEnvironmentVariable(name *uint16, value *uint16) error {
 }
 
 func SetFileAttributes(fileName *uint16, fileAttributes uint32) error {
-	r1, _, e1 := procSetFileAttributesW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procSetFileAttributesW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(fileName)),
-		uintptr(fileAttributes))
+		uintptr(fileAttributes),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1206,11 +1334,15 @@ func SetFileAttributes(fileName *uint16, fileAttributes uint32) error {
 }
 
 func SetFileTime(file syscall.Handle, creationTime *FILETIME, lastAccessTime *FILETIME, lastWriteTime *FILETIME) error {
-	r1, _, e1 := procSetFileTime.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procSetFileTime.Addr(),
+		4,
 		uintptr(file),
 		uintptr(unsafe.Pointer(creationTime)),
 		uintptr(unsafe.Pointer(lastAccessTime)),
-		uintptr(unsafe.Pointer(lastWriteTime)))
+		uintptr(unsafe.Pointer(lastWriteTime)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1222,11 +1354,15 @@ func SetFileTime(file syscall.Handle, creationTime *FILETIME, lastAccessTime *FI
 }
 
 func SetInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, jobObjectInfo *byte, jobObjectInfoLength uint32) error {
-	r1, _, e1 := procSetInformationJobObject.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procSetInformationJobObject.Addr(),
+		4,
 		uintptr(job),
 		uintptr(jobObjectInfoClass),
 		uintptr(unsafe.Pointer(jobObjectInfo)),
-		uintptr(jobObjectInfoLength))
+		uintptr(jobObjectInfoLength),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1238,7 +1374,12 @@ func SetInformationJobObject(job syscall.Handle, jobObjectInfoClass int32, jobOb
 }
 
 func SetStdHandle(stdHandle uint32, handle syscall.Handle) error {
-	r1, _, e1 := procSetStdHandle.Call(uintptr(stdHandle), uintptr(handle))
+	r1, _, e1 := syscall.Syscall(
+		procSetStdHandle.Addr(),
+		2,
+		uintptr(stdHandle),
+		uintptr(handle),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1250,7 +1391,12 @@ func SetStdHandle(stdHandle uint32, handle syscall.Handle) error {
 }
 
 func TerminateJobObject(job syscall.Handle, exitCode uint32) error {
-	r1, _, e1 := procTerminateJobObject.Call(uintptr(job), uintptr(exitCode))
+	r1, _, e1 := syscall.Syscall(
+		procTerminateJobObject.Addr(),
+		2,
+		uintptr(job),
+		uintptr(exitCode),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1262,7 +1408,12 @@ func TerminateJobObject(job syscall.Handle, exitCode uint32) error {
 }
 
 func TerminateProcess(process syscall.Handle, exitCode uint32) error {
-	r1, _, e1 := procTerminateProcess.Call(uintptr(process), uintptr(exitCode))
+	r1, _, e1 := syscall.Syscall(
+		procTerminateProcess.Addr(),
+		2,
+		uintptr(process),
+		uintptr(exitCode),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1274,12 +1425,19 @@ func TerminateProcess(process syscall.Handle, exitCode uint32) error {
 }
 
 func TryEnterCriticalSection(criticalSection *CRITICAL_SECTION) bool {
-	r1, _, _ := procTryEnterCriticalSection.Call(uintptr(unsafe.Pointer(criticalSection)))
+	r1, _, _ := syscall.Syscall(
+		procTryEnterCriticalSection.Addr(),
+		1,
+		uintptr(unsafe.Pointer(criticalSection)),
+		0,
+		0)
 	return r1 != 0
 }
 
 func UpdateResource(update syscall.Handle, resourceType uintptr, name uintptr, language uint16, data *byte, cbData uint32) error {
-	r1, _, e1 := procUpdateResourceW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procUpdateResourceW.Addr(),
+		6,
 		uintptr(update),
 		resourceType,
 		name,
@@ -1297,7 +1455,9 @@ func UpdateResource(update syscall.Handle, resourceType uintptr, name uintptr, l
 }
 
 func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
-	r1, _, e1 := procVerifyVersionInfoW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procVerifyVersionInfoW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(versionInfo)),
 		uintptr(typeMask),
 		uintptr(conditionMask))
@@ -1312,7 +1472,12 @@ func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionM
 }
 
 func WaitForSingleObject(handle syscall.Handle, milliseconds uint32) (uint32, error) {
-	r1, _, e1 := procWaitForSingleObject.Call(uintptr(handle), uintptr(milliseconds))
+	r1, _, e1 := syscall.Syscall(
+		procWaitForSingleObject.Addr(),
+		2,
+		uintptr(handle),
+		uintptr(milliseconds),
+		0)
 	if r1 == WAIT_FAILED {
 		if e1 != ERROR_SUCCESS {
 			return uint32(r1), e1
@@ -1324,7 +1489,7 @@ func WaitForSingleObject(handle syscall.Handle, milliseconds uint32) (uint32, er
 }
 
 func Lstrlen(string *uint16) int32 {
-	r1, _, _ := proclstrlenW.Call(uintptr(unsafe.Pointer(string)))
+	r1, _, _ := syscall.Syscall(proclstrlenW.Addr(), 1, uintptr(unsafe.Pointer(string)), 0, 0)
 	return int32(r1)
 }
 
@@ -1335,7 +1500,9 @@ func AdjustTokenPrivileges(tokenHandle syscall.Handle, disableAllPrivileges bool
 	} else {
 		disableAllPrivilegesRaw = 0
 	}
-	r1, _, e1 := procAdjustTokenPrivileges.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procAdjustTokenPrivileges.Addr(),
+		6,
 		uintptr(tokenHandle),
 		uintptr(disableAllPrivilegesRaw),
 		uintptr(unsafe.Pointer(newState)),
@@ -1353,7 +1520,9 @@ func AdjustTokenPrivileges(tokenHandle syscall.Handle, disableAllPrivileges bool
 }
 
 func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, subAuthorityCount byte, subAuthority0 uint32, subAuthority1 uint32, subAuthority2 uint32, subAuthority3 uint32, subAuthority4 uint32, subAuthority5 uint32, subAuthority6 uint32, subAuthority7 uint32, sid **SID) error {
-	r1, _, e1 := procAllocateAndInitializeSid.Call(
+	r1, _, e1 := syscall.Syscall12(
+		procAllocateAndInitializeSid.Addr(),
+		11,
 		uintptr(unsafe.Pointer(identifierAuthority)),
 		uintptr(subAuthorityCount),
 		uintptr(subAuthority0),
@@ -1364,7 +1533,8 @@ func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, sub
 		uintptr(subAuthority5),
 		uintptr(subAuthority6),
 		uintptr(subAuthority7),
-		uintptr(unsafe.Pointer(sid)))
+		uintptr(unsafe.Pointer(sid)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1377,7 +1547,9 @@ func AllocateAndInitializeSid(identifierAuthority *SID_IDENTIFIER_AUTHORITY, sub
 
 func CheckTokenMembership(tokenHandle syscall.Handle, sidToCheck *SID, isMember *bool) error {
 	var isMemberRaw int32
-	r1, _, e1 := procCheckTokenMembership.Call(
+	r1, _, e1 := syscall.Syscall(
+		procCheckTokenMembership.Addr(),
+		3,
 		uintptr(tokenHandle),
 		uintptr(unsafe.Pointer(sidToCheck)),
 		uintptr(unsafe.Pointer(&isMemberRaw)))
@@ -1395,7 +1567,9 @@ func CheckTokenMembership(tokenHandle syscall.Handle, sidToCheck *SID, isMember 
 }
 
 func CopySid(destinationSidLength uint32, destinationSid *SID, sourceSid *SID) error {
-	r1, _, e1 := procCopySid.Call(
+	r1, _, e1 := syscall.Syscall(
+		procCopySid.Addr(),
+		3,
 		uintptr(destinationSidLength),
 		uintptr(unsafe.Pointer(destinationSid)),
 		uintptr(unsafe.Pointer(sourceSid)))
@@ -1410,7 +1584,7 @@ func CopySid(destinationSidLength uint32, destinationSid *SID, sourceSid *SID) e
 }
 
 func DeregisterEventSource(eventLog syscall.Handle) error {
-	r1, _, e1 := procDeregisterEventSource.Call(uintptr(eventLog))
+	r1, _, e1 := syscall.Syscall(procDeregisterEventSource.Addr(), 1, uintptr(eventLog), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1422,23 +1596,29 @@ func DeregisterEventSource(eventLog syscall.Handle) error {
 }
 
 func EqualSid(sid1 *SID, sid2 *SID) bool {
-	r1, _, _ := procEqualSid.Call(
+	r1, _, _ := syscall.Syscall(
+		procEqualSid.Addr(),
+		2,
 		uintptr(unsafe.Pointer(sid1)),
-		uintptr(unsafe.Pointer(sid2)))
+		uintptr(unsafe.Pointer(sid2)),
+		0)
 	return r1 != 0
 }
 
 func FreeSid(sid *SID) {
-	procFreeSid.Call(uintptr(unsafe.Pointer(sid)))
+	syscall.Syscall(procFreeSid.Addr(), 1, uintptr(unsafe.Pointer(sid)), 0, 0)
 }
 
 func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDescriptor *byte, length uint32, lengthNeeded *uint32) error {
-	r1, _, e1 := procGetFileSecurityW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procGetFileSecurityW.Addr(),
+		5,
 		uintptr(unsafe.Pointer(fileName)),
 		uintptr(requestedInformation),
 		uintptr(unsafe.Pointer(securityDescriptor)),
 		uintptr(length),
-		uintptr(unsafe.Pointer(lengthNeeded)))
+		uintptr(unsafe.Pointer(lengthNeeded)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1450,13 +1630,15 @@ func GetFileSecurity(fileName *uint16, requestedInformation uint32, securityDesc
 }
 
 func GetLengthSid(sid *SID) uint32 {
-	r1, _, _ := procGetLengthSid.Call(uintptr(unsafe.Pointer(sid)))
+	r1, _, _ := syscall.Syscall(procGetLengthSid.Addr(), 1, uintptr(unsafe.Pointer(sid)), 0, 0)
 	return uint32(r1)
 }
 
 func GetSecurityDescriptorOwner(securityDescriptor *byte, owner **SID, ownerDefaulted *bool) error {
 	var ownerDefaultedRaw int32
-	r1, _, e1 := procGetSecurityDescriptorOwner.Call(
+	r1, _, e1 := syscall.Syscall(
+		procGetSecurityDescriptorOwner.Addr(),
+		3,
 		uintptr(unsafe.Pointer(securityDescriptor)),
 		uintptr(unsafe.Pointer(owner)),
 		uintptr(unsafe.Pointer(&ownerDefaultedRaw)))
@@ -1474,12 +1656,15 @@ func GetSecurityDescriptorOwner(securityDescriptor *byte, owner **SID, ownerDefa
 }
 
 func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32, tokenInformation *byte, tokenInformationLength uint32, returnLength *uint32) error {
-	r1, _, e1 := procGetTokenInformation.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procGetTokenInformation.Addr(),
+		5,
 		uintptr(tokenHandle),
 		uintptr(tokenInformationClass),
 		uintptr(unsafe.Pointer(tokenInformation)),
 		uintptr(tokenInformationLength),
-		uintptr(unsafe.Pointer(returnLength)))
+		uintptr(unsafe.Pointer(returnLength)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1491,7 +1676,7 @@ func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32
 }
 
 func ImpersonateSelf(impersonationLevel int32) error {
-	r1, _, e1 := procImpersonateSelf.Call(uintptr(impersonationLevel))
+	r1, _, e1 := syscall.Syscall(procImpersonateSelf.Addr(), 1, uintptr(impersonationLevel), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1503,7 +1688,9 @@ func ImpersonateSelf(impersonationLevel int32) error {
 }
 
 func LookupPrivilegeValue(systemName *uint16, name *uint16, luid *LUID) error {
-	r1, _, e1 := procLookupPrivilegeValueW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procLookupPrivilegeValueW.Addr(),
+		3,
 		uintptr(unsafe.Pointer(systemName)),
 		uintptr(unsafe.Pointer(name)),
 		uintptr(unsafe.Pointer(luid)))
@@ -1518,7 +1705,9 @@ func LookupPrivilegeValue(systemName *uint16, name *uint16, luid *LUID) error {
 }
 
 func OpenProcessToken(processHandle syscall.Handle, desiredAccess uint32, tokenHandle *syscall.Handle) error {
-	r1, _, e1 := procOpenProcessToken.Call(
+	r1, _, e1 := syscall.Syscall(
+		procOpenProcessToken.Addr(),
+		3,
 		uintptr(processHandle),
 		uintptr(desiredAccess),
 		uintptr(unsafe.Pointer(tokenHandle)))
@@ -1539,11 +1728,15 @@ func OpenThreadToken(threadHandle syscall.Handle, desiredAccess uint32, openAsSe
 	} else {
 		openAsSelfRaw = 0
 	}
-	r1, _, e1 := procOpenThreadToken.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procOpenThreadToken.Addr(),
+		4,
 		uintptr(threadHandle),
 		uintptr(desiredAccess),
 		uintptr(openAsSelfRaw),
-		uintptr(unsafe.Pointer(tokenHandle)))
+		uintptr(unsafe.Pointer(tokenHandle)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1555,9 +1748,12 @@ func OpenThreadToken(threadHandle syscall.Handle, desiredAccess uint32, openAsSe
 }
 
 func RegisterEventSource(uncServerName *uint16, sourceName *uint16) (syscall.Handle, error) {
-	r1, _, e1 := procRegisterEventSourceW.Call(
+	r1, _, e1 := syscall.Syscall(
+		procRegisterEventSourceW.Addr(),
+		2,
 		uintptr(unsafe.Pointer(uncServerName)),
-		uintptr(unsafe.Pointer(sourceName)))
+		uintptr(unsafe.Pointer(sourceName)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -1569,7 +1765,9 @@ func RegisterEventSource(uncServerName *uint16, sourceName *uint16) (syscall.Han
 }
 
 func ReportEvent(eventLog syscall.Handle, eventType uint16, category uint16, eventID uint32, userSid *SID, numStrings uint16, dataSize uint32, strings **uint16, rawData *byte) error {
-	r1, _, e1 := procReportEventW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procReportEventW.Addr(),
+		9,
 		uintptr(eventLog),
 		uintptr(eventType),
 		uintptr(category),
@@ -1590,7 +1788,7 @@ func ReportEvent(eventLog syscall.Handle, eventType uint16, category uint16, eve
 }
 
 func RevertToSelf() error {
-	r1, _, e1 := procRevertToSelf.Call()
+	r1, _, e1 := syscall.Syscall(procRevertToSelf.Addr(), 0, 0, 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

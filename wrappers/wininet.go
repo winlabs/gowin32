@@ -220,7 +220,9 @@ var (
 )
 
 func HttpOpenRequest(connect syscall.Handle, verb *uint16, objectName *uint16, version *uint16, referer *uint16, acceptTypes **uint16, flags uint32, context uintptr) (syscall.Handle, error) {
-	r1, _, e1 := procHttpOpenRequestW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procHttpOpenRequestW.Addr(),
+		8,
 		uintptr(connect),
 		uintptr(unsafe.Pointer(verb)),
 		uintptr(unsafe.Pointer(objectName)),
@@ -228,7 +230,8 @@ func HttpOpenRequest(connect syscall.Handle, verb *uint16, objectName *uint16, v
 		uintptr(unsafe.Pointer(referer)),
 		uintptr(unsafe.Pointer(acceptTypes)),
 		uintptr(flags),
-		uintptr(context))
+		uintptr(context),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -240,12 +243,15 @@ func HttpOpenRequest(connect syscall.Handle, verb *uint16, objectName *uint16, v
 }
 
 func HttpQueryInfo(request syscall.Handle, infoLevel uint32, buffer *byte, bufferLength *uint32, index *uint32) error {
-	r1, _, e1 := procHttpQueryInfoW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procHttpQueryInfoW.Addr(),
+		5,
 		uintptr(request),
 		uintptr(infoLevel),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(unsafe.Pointer(bufferLength)),
-		uintptr(unsafe.Pointer(index)))
+		uintptr(unsafe.Pointer(index)),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -257,12 +263,15 @@ func HttpQueryInfo(request syscall.Handle, infoLevel uint32, buffer *byte, buffe
 }
 
 func HttpSendRequest(request syscall.Handle, headers *uint16, headersLength uint32, optional *byte, optionalLength uint32) error {
-	r1, _, e1 := procHttpSendRequestW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procHttpSendRequestW.Addr(),
+		5,
 		uintptr(request),
 		uintptr(unsafe.Pointer(headers)),
 		uintptr(headersLength),
 		uintptr(unsafe.Pointer(optional)),
-		uintptr(optionalLength))
+		uintptr(optionalLength),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -274,7 +283,7 @@ func HttpSendRequest(request syscall.Handle, headers *uint16, headersLength uint
 }
 
 func InternetCloseHandle(internet syscall.Handle) error {
-	r1, _, e1 := procInternetCloseHandle.Call(uintptr(internet))
+	r1, _, e1 := syscall.Syscall(procInternetCloseHandle.Addr(), 1, uintptr(internet), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -286,7 +295,9 @@ func InternetCloseHandle(internet syscall.Handle) error {
 }
 
 func InternetConnect(internet syscall.Handle, serverName *uint16, serverPort uint16, username *uint16, password *uint16, service uint32, flags uint32, context uintptr) (syscall.Handle, error) {
-	r1, _, e1 := procInternetConnectW.Call(
+	r1, _, e1 := syscall.Syscall9(
+		procInternetConnectW.Addr(),
+		8,
 		uintptr(internet),
 		uintptr(unsafe.Pointer(serverName)),
 		uintptr(serverPort),
@@ -294,7 +305,8 @@ func InternetConnect(internet syscall.Handle, serverName *uint16, serverPort uin
 		uintptr(unsafe.Pointer(password)),
 		uintptr(service),
 		uintptr(flags),
-		context)
+		context,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -306,12 +318,15 @@ func InternetConnect(internet syscall.Handle, serverName *uint16, serverPort uin
 }
 
 func InternetOpen(agent *uint16, accessType uint32, proxyName *uint16, proxyBypass *uint16, flags uint32) (syscall.Handle, error) {
-	r1, _, e1 := procInternetOpenW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procInternetOpenW.Addr(),
+		5,
 		uintptr(unsafe.Pointer(agent)),
 		uintptr(accessType),
 		uintptr(unsafe.Pointer(proxyName)),
 		uintptr(unsafe.Pointer(proxyBypass)),
-		uintptr(flags))
+		uintptr(flags),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1
@@ -323,7 +338,9 @@ func InternetOpen(agent *uint16, accessType uint32, proxyName *uint16, proxyBypa
 }
 
 func InternetOpenUrl(internet syscall.Handle, url *uint16, headers *uint16, headersLength uint32, flags uint32, context uintptr) (syscall.Handle, error) {
-	r1, _, e1 := procInternetOpenUrlW.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procInternetOpenUrlW.Addr(),
+		6,
 		uintptr(internet),
 		uintptr(unsafe.Pointer(url)),
 		uintptr(unsafe.Pointer(headers)),
@@ -341,11 +358,15 @@ func InternetOpenUrl(internet syscall.Handle, url *uint16, headers *uint16, head
 }
 
 func InternetReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uint32, numberOfBytesRead *uint32) error {
-	r1, _, e1 := procInternetReadFile.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procInternetReadFile.Addr(),
+		4,
 		uintptr(file),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(numberOfBytesToRead),
-		uintptr(unsafe.Pointer(numberOfBytesRead)))
+		uintptr(unsafe.Pointer(numberOfBytesRead)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -357,11 +378,15 @@ func InternetReadFile(file syscall.Handle, buffer *byte, numberOfBytesToRead uin
 }
 
 func InternetQueryDataAvailable(file syscall.Handle, numberOfBytesAvailable *uint32, flags uint32, context uintptr) error {
-	r1, _, e1 := procInternetQueryDataAvailable.Call(
+	r1, _, e1 := syscall.Syscall6(
+		procInternetQueryDataAvailable.Addr(),
+		4,
 		uintptr(file),
 		uintptr(unsafe.Pointer(numberOfBytesAvailable)),
 		uintptr(flags),
-		context)
+		context,
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

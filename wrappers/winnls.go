@@ -34,9 +34,12 @@ var (
 )
 
 func LocaleNameToLCID(name *uint16, flags uint32) (uint32, error) {
-	r1, _, e1 := procLocaleNameToLCID.Call(
+	r1, _, e1 := syscall.Syscall(
+		procLocaleNameToLCID.Addr(),
+		2,
 		uintptr(unsafe.Pointer(name)),
-		uintptr(flags))
+		uintptr(flags),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return 0, e1

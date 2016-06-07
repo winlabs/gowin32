@@ -85,11 +85,14 @@ var (
 )
 
 func NtQueryInformationProcess(processHandle syscall.Handle, processInformationClass int32, processInformation *byte, processInformationLength uint32, returnLength *uint32) uint32 {
-	r1, _, _ := procNtQueryInformationProcess.Call(
+	r1, _, _ := syscall.Syscall6(
+		procNtQueryInformationProcess.Addr(),
+		5,
 		uintptr(processHandle),
 		uintptr(processInformationClass),
 		uintptr(unsafe.Pointer(processInformation)),
 		uintptr(processInformationLength),
-		uintptr(unsafe.Pointer(returnLength)))
+		uintptr(unsafe.Pointer(returnLength)),
+		0)
 	return uint32(r1)
 }

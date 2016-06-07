@@ -48,7 +48,7 @@ var (
 )
 
 func RegCloseKey(key syscall.Handle) error {
-	r1, _, _ := procRegCloseKey.Call(uintptr(key))
+	r1, _, _ := syscall.Syscall(procRegCloseKey.Addr(), 1, uintptr(key), 0, 0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -56,7 +56,9 @@ func RegCloseKey(key syscall.Handle) error {
 }
 
 func RegCreateKeyEx(key syscall.Handle, subKey *uint16, reserved uint32, class *uint16, options uint32, samDesired uint32, securityAttributes *syscall.SecurityAttributes, result *syscall.Handle, disposition *uint32) error {
-	r1, _, _ := procRegCreateKeyExW.Call(
+	r1, _, _ := syscall.Syscall9(
+		procRegCreateKeyExW.Addr(),
+		9,
 		uintptr(key),
 		uintptr(unsafe.Pointer(subKey)),
 		uintptr(reserved),
@@ -73,9 +75,12 @@ func RegCreateKeyEx(key syscall.Handle, subKey *uint16, reserved uint32, class *
 }
 
 func RegDeleteKey(key syscall.Handle, subKey *uint16) error {
-	r1, _, _ := procRegDeleteKeyW.Call(
+	r1, _, _ := syscall.Syscall(
+		procRegDeleteKeyW.Addr(),
+		2,
 		uintptr(key),
-		uintptr(unsafe.Pointer(subKey)))
+		uintptr(unsafe.Pointer(subKey)),
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -83,9 +88,12 @@ func RegDeleteKey(key syscall.Handle, subKey *uint16) error {
 }
 
 func RegDeleteValue(key syscall.Handle, valueName *uint16) error {
-	r1, _, _ := procRegDeleteValueW.Call(
+	r1, _, _ := syscall.Syscall(
+		procRegDeleteValueW.Addr(),
+		2,
 		uintptr(key),
-		uintptr(unsafe.Pointer(valueName)))
+		uintptr(unsafe.Pointer(valueName)),
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -93,7 +101,9 @@ func RegDeleteValue(key syscall.Handle, valueName *uint16) error {
 }
 
 func RegEnumKeyEx(key syscall.Handle, index uint32, name *uint16, cName *uint32, reserved *uint32, class *uint16, cClass *uint32, lastWriteTime *FILETIME) error {
-	r1, _,_ := procRegEnumKeyExW.Call(
+	r1, _,_ := syscall.Syscall9(
+		procRegEnumKeyExW.Addr(),
+		8,
 		uintptr(key),
 		uintptr(index),
 		uintptr(unsafe.Pointer(name)),
@@ -101,7 +111,8 @@ func RegEnumKeyEx(key syscall.Handle, index uint32, name *uint16, cName *uint32,
 		uintptr(unsafe.Pointer(reserved)),
 		uintptr(unsafe.Pointer(class)),
 		uintptr(unsafe.Pointer(cClass)),
-		uintptr(unsafe.Pointer(lastWriteTime)))
+		uintptr(unsafe.Pointer(lastWriteTime)),
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -109,7 +120,9 @@ func RegEnumKeyEx(key syscall.Handle, index uint32, name *uint16, cName *uint32,
 }
 
 func RegEnumValue(key syscall.Handle, index uint32, valueName *uint16, cchValueName *uint32, reserved *uint32, valueType *uint32, data *byte, cbData *uint32) error {
-	r1, _, _ := procRegEnumValueW.Call(
+	r1, _, _ := syscall.Syscall9(
+		procRegEnumValueW.Addr(),
+		8,
 		uintptr(key),
 		uintptr(index),
 		uintptr(unsafe.Pointer(valueName)),
@@ -117,7 +130,8 @@ func RegEnumValue(key syscall.Handle, index uint32, valueName *uint16, cchValueN
 		uintptr(unsafe.Pointer(reserved)),
 		uintptr(unsafe.Pointer(valueType)),
 		uintptr(unsafe.Pointer(data)),
-		uintptr(unsafe.Pointer(cbData)))
+		uintptr(unsafe.Pointer(cbData)),
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -125,12 +139,15 @@ func RegEnumValue(key syscall.Handle, index uint32, valueName *uint16, cchValueN
 }
 
 func RegOpenKeyEx(key syscall.Handle, subKey *uint16, options uint32, samDesired uint32, result *syscall.Handle) error {
-	r1, _, _ := procRegOpenKeyExW.Call(
+	r1, _, _ := syscall.Syscall6(
+		procRegOpenKeyExW.Addr(),
+		5,
 		uintptr(key),
 		uintptr(unsafe.Pointer(subKey)),
 		uintptr(options),
 		uintptr(samDesired),
-		uintptr(unsafe.Pointer(result)))
+		uintptr(unsafe.Pointer(result)),
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
@@ -138,7 +155,9 @@ func RegOpenKeyEx(key syscall.Handle, subKey *uint16, options uint32, samDesired
 }
 
 func RegQueryInfoKey(key syscall.Handle, class *uint16, cClass *uint32, reserved *uint32, subKeys *uint32, maxSubKeyLen *uint32, maxClassLen *uint32, values *uint32, maxValueNameLen *uint32, maxValueLen *uint32, cbSecurityDescriptor *uint32, lastWriteTime *FILETIME) error {
-	r1, _, _ := procRegQueryInfoKeyW.Call(
+	r1, _, _ := syscall.Syscall12(
+		procRegQueryInfoKeyW.Addr(),
+		12,
 		uintptr(key),
 		uintptr(unsafe.Pointer(class)),
 		uintptr(unsafe.Pointer(cClass)),
@@ -158,7 +177,9 @@ func RegQueryInfoKey(key syscall.Handle, class *uint16, cClass *uint32, reserved
 }
 
 func RegQueryValueEx(key syscall.Handle, valueName *uint16, reserved *uint32, valueType *uint32, data *byte, cbData *uint32) error {
-	r1, _, _ := procRegQueryValueExW.Call(
+	r1, _, _ := syscall.Syscall6(
+		procRegQueryValueExW.Addr(),
+		6,
 		uintptr(key),
 		uintptr(unsafe.Pointer(valueName)),
 		uintptr(unsafe.Pointer(reserved)),
@@ -172,7 +193,9 @@ func RegQueryValueEx(key syscall.Handle, valueName *uint16, reserved *uint32, va
 }
 
 func RegSetValueEx(key syscall.Handle, valueName *uint16, reserved uint32, valueType uint32, data *byte, cbData uint32) error {
-	r1, _, _ := procRegSetValueExW.Call(
+	r1, _, _ := syscall.Syscall6(
+		procRegSetValueExW.Addr(),
+		6,
 		uintptr(key),
 		uintptr(unsafe.Pointer(valueName)),
 		uintptr(reserved),
