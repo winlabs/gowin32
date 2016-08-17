@@ -53,6 +53,10 @@ const (
 	COMErrorPending         COMError = wrappers.E_PENDING
 )
 
+var (
+	COMErrorNoneMapped = COMError(wrappers.HRESULT_FROM_WIN32(wrappers.ERROR_NONE_MAPPED))
+)
+
 func (self COMError) Error() string {
 	var message *uint16
 	_, err := wrappers.FormatMessage(
