@@ -54,8 +54,9 @@ const (
 )
 
 var (
-	COMErrorNoneMapped   = COMError(wrappers.HRESULT_FROM_WIN32(wrappers.ERROR_NONE_MAPPED))
-	COMErrorNoSuchDomain = COMError(wrappers.HRESULT_FROM_WIN32(wrappers.ERROR_NO_SUCH_DOMAIN))
+	COMErrorNoneMapped           = COMError(wrappers.HRESULT_FROM_WIN32(wrappers.ERROR_NONE_MAPPED))
+	COMErrorCantAccessDomainInfo = COMError(wrappers.HRESULT_FROM_WIN32(wrappers.ERROR_CANT_ACCESS_DOMAIN_INFO))
+	COMErrorNoSuchDomain         = COMError(wrappers.HRESULT_FROM_WIN32(wrappers.ERROR_NO_SUCH_DOMAIN))
 )
 
 func (self COMError) Error() string {
