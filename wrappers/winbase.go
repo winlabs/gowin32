@@ -229,6 +229,10 @@ const (
 )
 
 const (
+	MAX_COMPUTERNAME_LENGTH = 15
+)
+
+const (
 	ComputerNameNetBIOS                   = 0
 	ComputerNameDnsHostname               = 1
 	ComputerNameDnsDomain                 = 2
@@ -269,6 +273,7 @@ var (
 	procFreeLibrary                       = modkernel32.NewProc("FreeLibrary")
 	procGetCompressedFileSizeW            = modkernel32.NewProc("GetCompressedFileSizeW")
 	procGetComputerNameExW                = modkernel32.NewProc("GetComputerNameExW")
+	procGetComputerNameW                  = modkernel32.NewProc("GetComputerNameW")
 	procGetCurrentProcess                 = modkernel32.NewProc("GetCurrentProcess")
 	procGetCurrentThread                  = modkernel32.NewProc("GetCurrentThread")
 	procGetDriveTypeW                     = modkernel32.NewProc("GetDriveTypeW")
@@ -332,6 +337,7 @@ var (
 	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
 	procGetTokenInformation        = modadvapi32.NewProc("GetTokenInformation")
 	procImpersonateSelf            = modadvapi32.NewProc("ImpersonateSelf")
+	procLookupAccountNameW         = modadvapi32.NewProc("LookupAccountNameW")
 	procLookupPrivilegeValueW      = modadvapi32.NewProc("LookupPrivilegeValueW")
 	procOpenProcessToken           = modadvapi32.NewProc("OpenProcessToken")
 	procOpenThreadToken            = modadvapi32.NewProc("OpenThreadToken")
@@ -702,6 +708,23 @@ func GetCompressedFileSize(fileName *uint16, fileSizeHigh *uint32) (uint32, erro
 		}
 	}
 	return uint32(r1), nil
+}
+
+func GetComputerName(buffer *uint16, size *uint32) error {
+	r1, _, e1 := syscall.Syscall(
+		procGetComputerNameW.Addr(),
+		2,
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(unsafe.Pointer(size)),
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
@@ -1677,6 +1700,29 @@ func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32
 
 func ImpersonateSelf(impersonationLevel int32) error {
 	r1, _, e1 := syscall.Syscall(procImpersonateSelf.Addr(), 1, uintptr(impersonationLevel), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func LookupAccountName(systemName *uint16, accountName *uint16, sid *SID, cbSid *uint32, referencedDomainName *uint16, cchReferencedDomainName *uint32, use *int32) error {
+	r1, _, e1 := syscall.Syscall9(
+		procLookupAccountNameW.Addr(),
+		7,
+		uintptr(unsafe.Pointer(systemName)),
+		uintptr(unsafe.Pointer(accountName)),
+		uintptr(unsafe.Pointer(sid)),
+		uintptr(unsafe.Pointer(cbSid)),
+		uintptr(unsafe.Pointer(referencedDomainName)),
+		uintptr(unsafe.Pointer(cchReferencedDomainName)),
+		uintptr(unsafe.Pointer(use)),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

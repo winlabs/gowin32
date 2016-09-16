@@ -565,6 +565,19 @@ type SID_IDENTIFIER_AUTHORITY struct {
 
 type SID struct {}
 
+const (
+	SidTypeUser           = 1
+	SidTypeGroup          = 2
+	SidTypeDomain         = 3
+	SidTypeAlias          = 4
+	SidTypeWellKnownGroup = 5
+	SidTypeDeletedAccount = 6
+	SidTypeInvalid        = 7
+	SidTypeUnknown        = 8
+	SidTypeComputer       = 9
+	SidTypeLabel          = 10
+)
+
 type SID_AND_ATTRIBUTES struct {
 	Sid        *SID
 	Attributes uint32

@@ -23,7 +23,7 @@ import (
 )
 
 func GetFQDN() (string, error) {
-	fqdnLength := uint32(0)
+	var fqdnLength uint32
 	err := wrappers.GetComputerNameEx(wrappers.ComputerNameDnsFullyQualified, nil, &fqdnLength)
 	if err != wrappers.ERROR_MORE_DATA {
 		return "", NewWindowsError("GetComputerNameEx", err)
@@ -34,4 +34,13 @@ func GetFQDN() (string, error) {
 		return "", NewWindowsError("GetComputerNameEx", err)
 	}
 	return syscall.UTF16ToString(fqdnBuffer), nil
+}
+
+func GetNetBIOSName() (string, error) {
+	nbLength := uint32(wrappers.MAX_COMPUTERNAME_LENGTH)
+	nbBuffer := make([]uint16, nbLength + 1)
+	if err := wrappers.GetComputerName(&nbBuffer[0], &nbLength); err != nil {
+		return "", NewWindowsError("GetComputerName", err)
+	}
+	return syscall.UTF16ToString(nbBuffer), nil
 }
