@@ -129,6 +129,17 @@ func (self *ADWinNTSystemInfo) GetUserName() (string, error) {
 	return BstrToString(retvalRaw), nil
 }
 
+func (self *ADWinNTSystemInfo) GetComputerName() (string, error) {
+	if self.object == nil {
+		return "", NewWindowsError("IADsWinNTSystemInfo::get_ComputerName", COMErrorPointer)
+	}
+	var retvalRaw *uint16
+	if hr := self.object.Get_ComputerName(&retvalRaw); wrappers.FAILED(hr) {
+		return "", NewWindowsError("IADsWinNTSystemInfo::get_ComputerName", COMError(hr))
+	}
+	return BstrToString(retvalRaw), nil
+}
+
 func (self *ADWinNTSystemInfo) GetDomainName() (string, error) {
 	if self.object == nil {
 		return "", NewWindowsError("IADsWinNTSystemInfo::get_DomainName", COMErrorPointer)

@@ -79,6 +79,21 @@ func GetPrivilege(name PrivilegeName) (*Privilege, error) {
 	return &Privilege{luid: luid}, nil
 }
 
+type SecurityIDType int32
+
+const (
+	SecurityIDTypeUser           SecurityIDType = wrappers.SidTypeUser
+	SecurityIDTypeGroup          SecurityIDType = wrappers.SidTypeGroup
+	SecurityIDTypeDomain         SecurityIDType = wrappers.SidTypeDomain
+	SecurityIDTypeAlias          SecurityIDType = wrappers.SidTypeAlias
+	SecurityIDTypeWellKnownGroup SecurityIDType = wrappers.SidTypeWellKnownGroup
+	SecurityIDTypeDeletedAccount SecurityIDType = wrappers.SidTypeDeletedAccount
+	SecurityIDTypeInvalid        SecurityIDType = wrappers.SidTypeInvalid
+	SecurityIDTypeUnknown        SecurityIDType = wrappers.SidTypeUnknown
+	SecurityIDTypeComputer       SecurityIDType = wrappers.SidTypeComputer
+	SecurityIDTypeLabel          SecurityIDType = wrappers.SidTypeLabel
+)
+
 type SecurityID struct {
 	sid *wrappers.SID
 }
@@ -134,6 +149,35 @@ func GetFileOwner(path string) (SecurityID, error) {
 		return SecurityID{}, NewWindowsError("GetSecurityDescriptorOwner", err)
 	}
 	return SecurityID{ownerSid}, nil
+}
+
+func GetLocalAccountByName(accountName string) (SecurityID, string, SecurityIDType, error) {
+	var neededForSid uint32
+	var neededForDomain uint32
+	var use int32
+	wrappers.LookupAccountName(
+		nil,
+		syscall.StringToUTF16Ptr(accountName),
+		nil,
+		&neededForSid,
+		nil,
+		&neededForDomain,
+		&use)
+	sidBuf := make([]byte, neededForSid)
+	sid := (*wrappers.SID)(unsafe.Pointer(&sidBuf[0]))
+	domainBuf := make([]uint16, neededForDomain)
+	err := wrappers.LookupAccountName(
+		nil,
+		syscall.StringToUTF16Ptr(accountName),
+		sid,
+		&neededForSid,
+		&domainBuf[0],
+		&neededForDomain,
+		&use)
+	if err != nil {
+		return SecurityID{}, "", 0, NewWindowsError("LookupAccountName", err)
+	}
+	return SecurityID{sid}, syscall.UTF16ToString(domainBuf), SecurityIDType(use), nil
 }
 
 func BeginImpersonateSelf() error {

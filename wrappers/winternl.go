@@ -49,6 +49,15 @@ type PEB struct {
 	SessionId              uint32
 }
 
+type OBJECT_ATTRIBUTES struct {
+	Length                   uint32
+	RootDirectory            syscall.Handle
+	ObjectName               *UNICODE_STRING
+	Attributes               uint32
+	SecurityDescriptor       uintptr
+	SecurityQualityOfService uintptr
+}
+
 type PROCESS_BASIC_INFORMATION struct {
 	Reserved1       uintptr
 	PebBaseAddress  uintptr
@@ -82,6 +91,8 @@ var (
 	modntdll = syscall.NewLazyDLL("ntdll.dll")
 
 	procNtQueryInformationProcess = modntdll.NewProc("NtQueryInformationProcess")
+	procRtlFreeUnicodeString      = modntdll.NewProc("RtlFreeUnicodeString")
+	procRtlInitUnicodeString      = modntdll.NewProc("RtlInitUnicodeString")
 )
 
 func NtQueryInformationProcess(processHandle syscall.Handle, processInformationClass int32, processInformation *byte, processInformationLength uint32, returnLength *uint32) uint32 {
@@ -95,4 +106,22 @@ func NtQueryInformationProcess(processHandle syscall.Handle, processInformationC
 		uintptr(unsafe.Pointer(returnLength)),
 		0)
 	return uint32(r1)
+}
+
+func RtlFreeUnicodeString(unicodeString *UNICODE_STRING) {
+	syscall.Syscall(
+		procRtlFreeUnicodeString.Addr(),
+		1,
+		uintptr(unsafe.Pointer(unicodeString)),
+		0,
+		0)
+}
+
+func RtlInitUnicodeString(destinationString *UNICODE_STRING, sourceString *uint16) {
+	syscall.Syscall(
+		procRtlInitUnicodeString.Addr(),
+		2,
+		uintptr(unsafe.Pointer(destinationString)),
+		uintptr(unsafe.Pointer(sourceString)),
+		0)
 }
