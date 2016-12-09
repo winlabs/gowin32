@@ -66,6 +66,15 @@ func VariantChangeType(dest *VARIANT, src *VARIANT, flags uint16, vt uint16) uin
 	return uint32(r1)
 }
 
+func VariantChangeType(dest *VARIANT, src *VARIANT, flags uint16, vt uint16) uint32 {
+	r1, _, _ := procVariantChangeType.Call(
+		uintptr(unsafe.Pointer(dest)),
+		uintptr(unsafe.Pointer(src)),
+		uintptr(flags),
+		uintptr(vt))
+	return uint32(r1)
+}
+
 func VariantClear(variant *VARIANT) uint32 {
 	r1, _, _ := syscall.Syscall(procVariantClear.Addr(), 1, uintptr(unsafe.Pointer(variant)), 0, 0)
 	return uint32(r1)
