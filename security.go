@@ -126,6 +126,28 @@ func (self SecurityID) String() (string, error) {
 	return LpstrToString(stringSid), nil
 }
 
+type WellKnownSecurityIDType int32
+
+const (
+	WellKnownSecurityIDLocalSystem    WellKnownSecurityIDType = wrappers.WinLocalSystemSid
+	WellKnownSecurityIDLocalService   WellKnownSecurityIDType = wrappers.WinLocalServiceSid
+	WellKnownSecurityIDNetworkService WellKnownSecurityIDType = wrappers.WinNetworkServiceSid
+)
+
+func GetWellKnownSecurityID(wellKnownType WellKnownSecurityIDType) (SecurityID, error) {
+	var needed uint32
+	err := wrappers.CreateWellKnownSid(int32(wellKnownType), nil, nil, &needed)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, NewWindowsError("CreateWellKnownSid", err)
+	}
+	buf := make([]byte, needed)
+	sid := (*wrappers.SID)(unsafe.Pointer(&buf[0]))
+	if err := wrappers.CreateWellKnownSid(int32(wellKnownType), nil, sid, &needed); err != nil {
+		return SecurityID{}, NewWindowsError("CreateWellKnownSid", err)
+	}
+	return SecurityID{sid}, nil
+}
+
 func GetFileOwner(path string) (SecurityID, error) {
 	var needed uint32
 	wrappers.GetFileSecurity(
@@ -155,7 +177,7 @@ func GetLocalAccountByName(accountName string) (SecurityID, string, SecurityIDTy
 	var neededForSid uint32
 	var neededForDomain uint32
 	var use int32
-	wrappers.LookupAccountName(
+	err := wrappers.LookupAccountName(
 		nil,
 		syscall.StringToUTF16Ptr(accountName),
 		nil,
@@ -163,10 +185,13 @@ func GetLocalAccountByName(accountName string) (SecurityID, string, SecurityIDTy
 		nil,
 		&neededForDomain,
 		&use)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, "", 0, NewWindowsError("LookupAccountName", err)
+	}
 	sidBuf := make([]byte, neededForSid)
 	sid := (*wrappers.SID)(unsafe.Pointer(&sidBuf[0]))
 	domainBuf := make([]uint16, neededForDomain)
-	err := wrappers.LookupAccountName(
+	err = wrappers.LookupAccountName(
 		nil,
 		syscall.StringToUTF16Ptr(accountName),
 		sid,
@@ -260,16 +285,48 @@ func (self *Token) EnablePrivilege(privilege *Privilege, enable bool) error {
 	return nil
 }
 
+func (self *Token) GetUser() (SecurityID, error) {
+	var needed uint32
+	err := wrappers.GetTokenInformation(
+		self.handle,
+		wrappers.TokenUser,
+		nil,
+		0,
+		&needed)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, NewWindowsError("GetTokenInformation", err)
+	}
+	buf := make([]byte, needed)
+	err = wrappers.GetTokenInformation(
+		self.handle,
+		wrappers.TokenUser,
+		&buf[0],
+		needed,
+		&needed)
+	if err != nil {
+		return SecurityID{}, NewWindowsError("GetTokenInformation", err)
+	}
+	userData := (*wrappers.TOKEN_USER)(unsafe.Pointer(&buf[0]))
+	sid, err := SecurityID{userData.User.Sid}.Copy()
+	if err != nil {
+		return SecurityID{}, err
+	}
+	return sid, nil
+}
+
 func (self *Token) GetOwner() (SecurityID, error) {
 	var needed uint32
-	wrappers.GetTokenInformation(
+	err := wrappers.GetTokenInformation(
 		self.handle,
 		wrappers.TokenOwner,
 		nil,
 		0,
 		&needed)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, NewWindowsError("GetTokenInformation", err)
+	}
 	buf := make([]byte, needed)
-	err := wrappers.GetTokenInformation(
+	err = wrappers.GetTokenInformation(
 		self.handle,
 		wrappers.TokenOwner,
 		&buf[0],
