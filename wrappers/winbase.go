@@ -325,25 +325,29 @@ var (
 	procWaitForSingleObject               = modkernel32.NewProc("WaitForSingleObject")
 	proclstrlenW                          = modkernel32.NewProc("lstrlenW")
 
-	procAdjustTokenPrivileges      = modadvapi32.NewProc("AdjustTokenPrivileges")
-	procAllocateAndInitializeSid   = modadvapi32.NewProc("AllocateAndInitializeSid")
-	procCheckTokenMembership       = modadvapi32.NewProc("CheckTokenMembership")
-	procCopySid                    = modadvapi32.NewProc("CopySid")
-	procDeregisterEventSource      = modadvapi32.NewProc("DeregisterEventSource")
-	procEqualSid                   = modadvapi32.NewProc("EqualSid")
-	procFreeSid                    = modadvapi32.NewProc("FreeSid")
-	procGetFileSecurityW           = modadvapi32.NewProc("GetFileSecurityW")
-	procGetLengthSid               = modadvapi32.NewProc("GetLengthSid")
-	procGetSecurityDescriptorOwner = modadvapi32.NewProc("GetSecurityDescriptorOwner")
-	procGetTokenInformation        = modadvapi32.NewProc("GetTokenInformation")
-	procImpersonateSelf            = modadvapi32.NewProc("ImpersonateSelf")
-	procLookupAccountNameW         = modadvapi32.NewProc("LookupAccountNameW")
-	procLookupPrivilegeValueW      = modadvapi32.NewProc("LookupPrivilegeValueW")
-	procOpenProcessToken           = modadvapi32.NewProc("OpenProcessToken")
-	procOpenThreadToken            = modadvapi32.NewProc("OpenThreadToken")
-	procRegisterEventSourceW       = modadvapi32.NewProc("RegisterEventSourceW")
-	procReportEventW               = modadvapi32.NewProc("ReportEventW")
-	procRevertToSelf               = modadvapi32.NewProc("RevertToSelf")
+	procAdjustTokenPrivileges        = modadvapi32.NewProc("AdjustTokenPrivileges")
+	procAllocateAndInitializeSid     = modadvapi32.NewProc("AllocateAndInitializeSid")
+	procCheckTokenMembership         = modadvapi32.NewProc("CheckTokenMembership")
+	procCopySid                      = modadvapi32.NewProc("CopySid")
+	procCreateWellKnownSid           = modadvapi32.NewProc("CreateWellKnownSid")
+	procDeregisterEventSource        = modadvapi32.NewProc("DeregisterEventSource")
+	procEqualSid                     = modadvapi32.NewProc("EqualSid")
+	procFreeSid                      = modadvapi32.NewProc("FreeSid")
+	procGetFileSecurityW             = modadvapi32.NewProc("GetFileSecurityW")
+	procGetLengthSid                 = modadvapi32.NewProc("GetLengthSid")
+	procGetSecurityDescriptorOwner   = modadvapi32.NewProc("GetSecurityDescriptorOwner")
+	procGetTokenInformation          = modadvapi32.NewProc("GetTokenInformation")
+	procImpersonateSelf              = modadvapi32.NewProc("ImpersonateSelf")
+	procInitializeSecurityDescriptor = modadvapi32.NewProc("InitializeSecurityDescriptor")
+	procLookupAccountNameW           = modadvapi32.NewProc("LookupAccountNameW")
+	procLookupPrivilegeValueW        = modadvapi32.NewProc("LookupPrivilegeValueW")
+	procOpenProcessToken             = modadvapi32.NewProc("OpenProcessToken")
+	procOpenThreadToken              = modadvapi32.NewProc("OpenThreadToken")
+	procRegisterEventSourceW         = modadvapi32.NewProc("RegisterEventSourceW")
+	procReportEventW                 = modadvapi32.NewProc("ReportEventW")
+	procRevertToSelf                 = modadvapi32.NewProc("RevertToSelf")
+	procSetFileSecurityW             = modadvapi32.NewProc("SetFileSecurityW")
+	procSetSecurityDescriptorDacl    = modadvapi32.NewProc("SetSecurityDescriptorDacl")
 )
 
 func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
@@ -1606,6 +1610,26 @@ func CopySid(destinationSidLength uint32, destinationSid *SID, sourceSid *SID) e
 	return nil
 }
 
+func CreateWellKnownSid(wellKnownSidType int32, domainSid *SID, sid *SID, cbSid *uint32) error {
+	r1, _, e1 := syscall.Syscall6(
+		procCreateWellKnownSid.Addr(),
+		6,
+		uintptr(wellKnownSidType),
+		uintptr(unsafe.Pointer(domainSid)),
+		uintptr(unsafe.Pointer(sid)),
+		uintptr(unsafe.Pointer(cbSid)),
+		0,
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func DeregisterEventSource(eventLog syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(procDeregisterEventSource.Addr(), 1, uintptr(eventLog), 0, 0)
 	if r1 == 0 {
@@ -1700,6 +1724,23 @@ func GetTokenInformation(tokenHandle syscall.Handle, tokenInformationClass int32
 
 func ImpersonateSelf(impersonationLevel int32) error {
 	r1, _, e1 := syscall.Syscall(procImpersonateSelf.Addr(), 1, uintptr(impersonationLevel), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func InitializeSecurityDescriptor(securityDescriptor *byte, revision uint32) error {
+	r1, _, e1 := syscall.Syscall(
+		procInitializeSecurityDescriptor.Addr(),
+		2,
+		uintptr(unsafe.Pointer(securityDescriptor)),
+		uintptr(revision),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -1835,6 +1876,55 @@ func ReportEvent(eventLog syscall.Handle, eventType uint16, category uint16, eve
 
 func RevertToSelf() error {
 	r1, _, e1 := syscall.Syscall(procRevertToSelf.Addr(), 0, 0, 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetFileSecurity(fileName *uint16, securityInformation uint32, securityDescriptor *byte) error {
+	r1, _, e1 := syscall.Syscall(
+		procSetFileSecurityW.Addr(),
+		3,
+		uintptr(unsafe.Pointer(fileName)),
+		uintptr(securityInformation),
+		uintptr(unsafe.Pointer(securityDescriptor)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetSecurityDescriptorDacl(securityDescriptor *byte, daclPresent bool, dacl *ACL, daclDefaulted bool) error {
+	var daclPresentRaw int32
+	if daclPresent {
+		daclPresentRaw = 1
+	} else {
+		daclPresentRaw = 0
+	}
+	var daclDefaultedRaw int32
+	if daclDefaulted {
+		daclDefaultedRaw = 1
+	} else {
+		daclDefaultedRaw = 0
+	}
+	r1, _, e1 := syscall.Syscall6(
+		procSetSecurityDescriptorDacl.Addr(),
+		4,
+		uintptr(unsafe.Pointer(securityDescriptor)),
+		uintptr(daclPresentRaw),
+		uintptr(unsafe.Pointer(dacl)),
+		uintptr(daclDefaultedRaw),
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
