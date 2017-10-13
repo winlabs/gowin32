@@ -136,7 +136,10 @@ const (
 
 func GetWellKnownSecurityID(wellKnownType WellKnownSecurityIDType) (SecurityID, error) {
 	var needed uint32
-	wrappers.CreateWellKnownSid(int32(wellKnownType), nil, nil, &needed)
+	err := wrappers.CreateWellKnownSid(int32(wellKnownType), nil, nil, &needed)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, NewWindowsError("CreateWellKnownSid", err)
+	}
 	buf := make([]byte, needed)
 	sid := (*wrappers.SID)(unsafe.Pointer(&buf[0]))
 	if err := wrappers.CreateWellKnownSid(int32(wellKnownType), nil, sid, &needed); err != nil {
@@ -284,14 +287,17 @@ func (self *Token) EnablePrivilege(privilege *Privilege, enable bool) error {
 
 func (self *Token) GetUser() (SecurityID, error) {
 	var needed uint32
-	wrappers.GetTokenInformation(
+	err := wrappers.GetTokenInformation(
 		self.handle,
 		wrappers.TokenUser,
 		nil,
 		0,
 		&needed)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, NewWindowsError("GetTokenInformation", err)
+	}
 	buf := make([]byte, needed)
-	err := wrappers.GetTokenInformation(
+	err = wrappers.GetTokenInformation(
 		self.handle,
 		wrappers.TokenUser,
 		&buf[0],
@@ -310,14 +316,17 @@ func (self *Token) GetUser() (SecurityID, error) {
 
 func (self *Token) GetOwner() (SecurityID, error) {
 	var needed uint32
-	wrappers.GetTokenInformation(
+	err := wrappers.GetTokenInformation(
 		self.handle,
 		wrappers.TokenOwner,
 		nil,
 		0,
 		&needed)
+	if err != nil && err != wrappers.ERROR_INSUFFICIENT_BUFFER {
+		return SecurityID{}, NewWindowsError("GetTokenInformation", err)
+	}
 	buf := make([]byte, needed)
-	err := wrappers.GetTokenInformation(
+	err = wrappers.GetTokenInformation(
 		self.handle,
 		wrappers.TokenOwner,
 		&buf[0],
