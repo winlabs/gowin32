@@ -173,6 +173,26 @@ func GetFileOwner(path string) (SecurityID, error) {
 	return SecurityID{ownerSid}, nil
 }
 
+func SetFileOwner(path string, sid SecurityID) error {
+	sd := make([]byte, wrappers.SECURITY_DESCRIPTOR_MIN_LENGTH)
+	if err := wrappers.InitializeSecurityDescriptor(&sd[0], wrappers.SECURITY_DESCRIPTOR_REVISION); err != nil {
+		return NewWindowsError("InitializeSecurityDescriptor", err)
+	}
+	if err := wrappers.SetSecurityDescriptorOwner(&sd[0], sid.sid, false); err != nil {
+		return NewWindowsError("SetSecurityDescriptorOwner", err)
+	}
+
+	err := wrappers.SetFileSecurity(
+		syscall.StringToUTF16Ptr(path),
+		wrappers.OWNER_SECURITY_INFORMATION,
+		&sd[0])
+	if err != nil {
+		return NewWindowsError("SetFileSecurity", err)
+	}
+
+	return nil
+}
+
 func GetLocalAccountByName(accountName string) (SecurityID, string, SecurityIDType, error) {
 	var neededForSid uint32
 	var neededForDomain uint32

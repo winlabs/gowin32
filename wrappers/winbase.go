@@ -348,6 +348,7 @@ var (
 	procRevertToSelf                 = modadvapi32.NewProc("RevertToSelf")
 	procSetFileSecurityW             = modadvapi32.NewProc("SetFileSecurityW")
 	procSetSecurityDescriptorDacl    = modadvapi32.NewProc("SetSecurityDescriptorDacl")
+	procSetSecurityDescriptorOwner   = modadvapi32.NewProc("SetSecurityDescriptorOwner")
 )
 
 func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
@@ -1925,6 +1926,29 @@ func SetSecurityDescriptorDacl(securityDescriptor *byte, daclPresent bool, dacl 
 		uintptr(daclDefaultedRaw),
 		0,
 		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetSecurityDescriptorOwner(securityDescriptor *byte, owner *SID, ownerDefaulted bool) error {
+	var ownerDefaultedRaw int32
+	if ownerDefaulted {
+		ownerDefaultedRaw = 1
+	} else {
+		ownerDefaultedRaw = 0
+	}
+	r1, _, e1 := syscall.Syscall(
+		procSetSecurityDescriptorOwner.Addr(),
+		3,
+		uintptr(unsafe.Pointer(securityDescriptor)),
+		uintptr(unsafe.Pointer(owner)),
+		uintptr(ownerDefaultedRaw))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
