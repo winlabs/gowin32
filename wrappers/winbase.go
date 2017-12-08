@@ -155,6 +155,18 @@ const (
 	INFINITE = 0xFFFFFFFF
 )
 
+type MEMORYSTATUSEX struct {
+	Length               uint32
+	MemoryLoad           uint32
+	TotalPhys            uint64
+	AvailPhys            uint64
+	TotalPageFile        uint64
+	AvailPageFile        uint64
+	TotalVirtual         uint64
+	AvailVirtual         uint64
+	AvailExtendedVirtual uint64
+}
+
 const (
 	FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
 	FORMAT_MESSAGE_IGNORE_INSERTS  = 0x00000200
@@ -299,6 +311,7 @@ var (
 	procGetVolumeNameForVolumeMountPointW = modkernel32.NewProc("GetVolumeNameForVolumeMountPointW")
 	procGetVolumePathNameW                = modkernel32.NewProc("GetVolumePathNameW")
 	procGetWindowsDirectoryW              = modkernel32.NewProc("GetWindowsDirectoryW")
+	procGlobalMemoryStatusEx              = modkernel32.NewProc("GlobalMemoryStatusEx")
 	procInitializeCriticalSection         = modkernel32.NewProc("InitializeCriticalSection")
 	procIsProcessInJob                    = modkernel32.NewProc("IsProcessInJob")
 	procLeaveCriticalSection              = modkernel32.NewProc("LeaveCriticalSection")
@@ -1111,6 +1124,18 @@ func GetWindowsDirectory(buffer *uint16, size uint32) (uint32, error) {
 		}
 	}
 	return uint32(r1), nil
+}
+
+func GlobalMemoryStatusEx(buffer *MEMORYSTATUSEX) error {
+	r1, _, e1 := syscall.Syscall(procGlobalMemoryStatusEx.Addr(), 1, uintptr(unsafe.Pointer(buffer)), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func InitializeCriticalSection(criticalSection *CRITICAL_SECTION) {
