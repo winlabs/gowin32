@@ -287,6 +287,7 @@ var (
 	procGetComputerNameExW                = modkernel32.NewProc("GetComputerNameExW")
 	procGetComputerNameW                  = modkernel32.NewProc("GetComputerNameW")
 	procGetCurrentProcess                 = modkernel32.NewProc("GetCurrentProcess")
+	procGetCurrentProcessId               = modkernel32.NewProc("GetCurrentProcessId")
 	procGetCurrentThread                  = modkernel32.NewProc("GetCurrentThread")
 	procGetDriveTypeW                     = modkernel32.NewProc("GetDriveTypeW")
 	procGetDiskFreeSpaceExW               = modkernel32.NewProc("GetDiskFreeSpaceExW")
@@ -321,6 +322,7 @@ var (
 	procMoveFileW                         = modkernel32.NewProc("MoveFileW")
 	procOpenJobObjectW                    = modkernel32.NewProc("OpenJobObjectW")
 	procOpenProcess                       = modkernel32.NewProc("OpenProcess")
+	procProcessIdToSessionId              = modkernel32.NewProc("ProcessIdToSessionId")
 	procQueryFullProcessImageNameW        = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procQueryInformationJobObject         = modkernel32.NewProc("QueryInformationJobObject")
 	procReadFile                          = modkernel32.NewProc("ReadFile")
@@ -765,6 +767,11 @@ func GetComputerNameEx(nameType uint32, buffer *uint16, size *uint32) error {
 func GetCurrentProcess() syscall.Handle {
 	r1, _, _ := syscall.Syscall(procGetCurrentProcess.Addr(), 0, 0, 0, 0)
 	return syscall.Handle(r1)
+}
+
+func GetCurrentProcessId() uint32 {
+	r1, _, _ := syscall.Syscall(procGetCurrentProcessId.Addr(), 0, 0, 0, 0)
+	return uint32(r1)
 }
 
 func GetCurrentThread() syscall.Handle {
@@ -1270,6 +1277,23 @@ func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (sy
 		}
 	}
 	return syscall.Handle(r1), nil
+}
+
+func ProcessIdToSessionId(processId uint32, sessionId *uint32) error {
+	r1, _, e1 := syscall.Syscall(
+		procProcessIdToSessionId.Addr(),
+		2,
+		uintptr(processId),
+		uintptr(unsafe.Pointer(sessionId)),
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func QueryFullProcessImageName(process syscall.Handle, flags uint32, exeName *uint16, size *uint32) error {
