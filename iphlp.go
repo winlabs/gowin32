@@ -18,10 +18,10 @@ func SendARP(destIP, srcIP net.IP) (net.HardwareAddr, error) {
 	macLen := uint32(len(mac))
 
 	err := wrappers.SendARP(
-		uintptr(binary.LittleEndian.Uint32(destIP.To4())),
-		uintptr(s),
-		uintptr(unsafe.Pointer(&mac[0])),
-		uintptr(unsafe.Pointer(&macLen)))
+		binary.LittleEndian.Uint32(destIP.To4()),
+		s,
+		(*uint32)(unsafe.Pointer(&mac[0])),
+		&macLen)
 	if err != nil {
 		return nil, err
 	}
