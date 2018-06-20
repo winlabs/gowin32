@@ -16,7 +16,9 @@
 
 package wrappers
 
-import "syscall"
+import (
+	"syscall"
+)
 
 func MAKEINTRESOURCE(integer uint16) uintptr {
 	return uintptr(integer)
@@ -78,6 +80,10 @@ const (
 	DESKTOP_ENUMERATE       = 0x00000040
 	DESKTOP_WRITEOBJECTS    = 0x00000080
 	DESKTOP_SWITCHDESKTOP   = 0x00000100
+)
+
+const (
+	DF_ALLOWOTHERACCOUNTHOOK = 0x00000001
 )
 
 var (
