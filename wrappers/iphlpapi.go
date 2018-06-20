@@ -25,6 +25,7 @@ var (
 	modiphlpapi = syscall.NewLazyDLL("iphlpapi.dll")
 
 	procGetTcpTable = modiphlpapi.NewProc("GetTcpTable")
+	procSendARP     = modiphlpapi.NewProc("SendARP")
 )
 
 func GetTcpTable(tcpTable *MIB_TCPTABLE, size *uint32, order bool) error {
@@ -40,6 +41,22 @@ func GetTcpTable(tcpTable *MIB_TCPTABLE, size *uint32, order bool) error {
 		uintptr(unsafe.Pointer(tcpTable)),
 		uintptr(unsafe.Pointer(size)),
 		uintptr(orderRaw))
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
+func SendARP(destIP, srcIP uint32, macAddr, macAddrLen *uint32) error {
+	r1, _, _ := syscall.Syscall6(
+		procSendARP.Addr(),
+		4,
+		uintptr(destIP),
+		uintptr(srcIP),
+		uintptr(unsafe.Pointer(macAddr)),
+		uintptr(unsafe.Pointer(macAddrLen)),
+		0,
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
