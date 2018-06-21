@@ -16,6 +16,10 @@
 
 package wrappers
 
+import (
+	"syscall"
+)
+
 func MAKEINTRESOURCE(integer uint16) uintptr {
 	return uintptr(integer)
 }
@@ -65,3 +69,75 @@ const (
 	SW_SHOWDEFAULT     = 10
 	SW_FORCEMINIMIZE   = 11
 )
+
+const (
+	DESKTOP_READOBJECTS     = 0x00000001
+	DESKTOP_CREATEWINDOW    = 0x00000002
+	DESKTOP_CREATEMENU      = 0x00000004
+	DESKTOP_HOOKCONTROL     = 0x00000008
+	DESKTOP_JOURNALRECORD   = 0x00000010
+	DESKTOP_JOURNALPLAYBACK = 0x00000020
+	DESKTOP_ENUMERATE       = 0x00000040
+	DESKTOP_WRITEOBJECTS    = 0x00000080
+	DESKTOP_SWITCHDESKTOP   = 0x00000100
+)
+
+const (
+	DF_ALLOWOTHERACCOUNTHOOK = 0x00000001
+)
+
+var (
+	moduser32 = syscall.NewLazyDLL("user32.dll")
+
+	procCloseDesktop     = moduser32.NewProc("CloseDesktop")
+	procOpenInputDesktop = moduser32.NewProc("OpenInputDesktop")
+	procSetThreadDesktop = moduser32.NewProc("SetThreadDesktop")
+)
+
+func CloseDesktop(desktop syscall.Handle) error {
+	r1, _, e1 := syscall.Syscall(procCloseDesktop.Addr(), 1, uintptr(desktop), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func OpenInputDesktop(flags uint32, inherit bool, desiredAccess uint32) (syscall.Handle, error) {
+	var inheritRaw int32
+	if inherit {
+		inheritRaw = 1
+	} else {
+		inheritRaw = 0
+	}
+	r1, _, e1 := syscall.Syscall(
+		procOpenInputDesktop.Addr(),
+		3,
+		uintptr(flags),
+		uintptr(inheritRaw),
+		uintptr(desiredAccess))
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
+func SetThreadDesktop(desktop syscall.Handle) error {
+	r1, _, e1 := syscall.Syscall(procSetThreadDesktop.Addr(), 1, uintptr(desktop), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
