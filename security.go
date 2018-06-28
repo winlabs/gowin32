@@ -244,9 +244,13 @@ type Token struct {
 }
 
 func OpenCurrentProcessToken() (*Token, error) {
+	return OpenCurrentProcessTokenWithAccess(wrappers.TOKEN_QUERY)
+}
+
+func OpenCurrentProcessTokenWithAccess(desiredAccess uint32) (*Token, error) {
 	hProcess := wrappers.GetCurrentProcess()
 	var hToken syscall.Handle
-	if err := wrappers.OpenProcessToken(hProcess, wrappers.TOKEN_QUERY, &hToken); err != nil {
+	if err := wrappers.OpenProcessToken(hProcess, desiredAccess, &hToken); err != nil {
 		return nil, NewWindowsError("OpenProcessToken", err)
 	}
 	return &Token{handle: hToken}, nil
