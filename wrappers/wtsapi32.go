@@ -21,8 +21,16 @@ import (
 	"unsafe"
 )
 
+// Misc consts from WtsApi32.h
+const (
+	CLIENTNAME_LENGTH     = 20
+	DOMAIN_LENGTH         = 17
+	USERNAME_LENGTH       = 20
+	CLIENTADDRESS_LENGTH  = 30
+	WINSTATIONNAME_LENGTH = 32
+)
+
 // WTS_CONNECTSTATE_CLASS enumeration
-// https://msdn.microsoft.com/en-us/library/aa383860%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
 const (
 	WTSActive       = 0
 	WTSConnected    = 1
@@ -36,24 +44,7 @@ const (
 	WTSInit         = 9
 )
 
-// Status code describing the reason the session state change notification was sent
-// http://msdn.microsoft.com/en-us/library/aa383828(v=vs.85).aspx
-const (
-	WTS_CONSOLE_CONNECT        = 0x1
-	WTS_CONSOLE_DISCONNECT     = 0x2
-	WTS_REMOTE_CONNECT         = 0x3
-	WTS_REMOTE_DISCONNECT      = 0x4
-	WTS_SESSION_LOGON          = 0x5
-	WTS_SESSION_LOGOFF         = 0x6
-	WTS_SESSION_LOCK           = 0x7
-	WTS_SESSION_UNLOCK         = 0x8
-	WTS_SESSION_REMOTE_CONTROL = 0x9
-	WTS_SESSION_CREATE         = 0xA
-	WTS_SESSION_TERMINATE      = 0xB
-)
-
 // WTS_INFO_CLASS enumeration
-// https://msdn.microsoft.com/en-us/library/aa383861(v=vs.85).aspx
 const (
 	WTSInitialProgram     = 0
 	WTSApplicationName    = 1
@@ -87,47 +78,12 @@ const (
 	WTSIsRemoteSession    = 29
 )
 
-// WTS_SESSION_INFO structure
-// https://msdn.microsoft.com/en-us/library/aa383864(v=vs.85).aspx
 type WTS_SESSION_INFO struct {
 	SessionId      uint32
 	WinStationName *uint16
 	State          uint32
 }
 
-// WTSSESSION_NOTIFICATION structure
-// https://msdn.microsoft.com/en-us/library/aa383843(v=vs.85).aspx
-type WTSSESSION_NOTIFICATION struct {
-	CbSize      uint32
-	DwSessionId uint32
-}
-
-// WTS_CLIENT_ADDRESS structure
-// https://msdn.microsoft.com/en-us/library/aa383857%28v=vs.85%29.aspx
-type WTS_CLIENT_ADDRESS struct {
-	AddressFamily uint32
-	Address       [20]byte
-}
-
-// WTS_CLIENT_DISPLAY structure
-// https://msdn.microsoft.com/en-us/library/aa383858(v=vs.85).aspx
-type WTS_CLIENT_DISPLAY struct {
-	HorizontalResolution uint32
-	VerticalResolution   uint32
-	ColorDepth           uint32
-}
-
-// Other WTS consts from WtsApi32.h
-const (
-	CLIENTNAME_LENGTH     = 20
-	DOMAIN_LENGTH         = 17
-	USERNAME_LENGTH       = 20
-	CLIENTADDRESS_LENGTH  = 30
-	WINSTATIONNAME_LENGTH = 32
-)
-
-// WTSCLIENT structure
-// https://msdn.microsoft.com/en-us/library/bb736369%28v=vs.85%29.aspx
 type WTSCLIENT struct {
 	ClientName          [CLIENTNAME_LENGTH + 1]uint16
 	Domain              [DOMAIN_LENGTH + 1]uint16
@@ -150,8 +106,17 @@ type WTSCLIENT struct {
 	DeviceId            [MAX_PATH + 1]uint16
 }
 
-// WTSINFO structure
-// https://msdn.microsoft.com/en-us/library/bb736370(v=vs.85).aspx
+type WTS_CLIENT_ADDRESS struct {
+	AddressFamily uint32
+	Address       [20]byte
+}
+
+type WTS_CLIENT_DISPLAY struct {
+	HorizontalResolution uint32
+	VerticalResolution   uint32
+	ColorDepth           uint32
+}
+
 type WTSINFO struct {
 	State                   uint32
 	SessionId               uint32
@@ -207,16 +172,16 @@ func WTSEnumerateSessions(server syscall.Handle, reserved uint32, version uint32
 	return nil
 }
 
-func WTSFreeMemory(memory unsafe.Pointer) {
-	syscall.Syscall6(procWTSFreeMemory.Addr(), 1, uintptr(memory), 0, 0, 0, 0, 0)
+func WTSFreeMemory(memory *byte) {
+	syscall.Syscall(procWTSFreeMemory.Addr(), 1, uintptr(unsafe.Pointer(memory)), 0, 0)
 }
 
 func WTSOpenServer(serverName *uint16) syscall.Handle {
-	r1, _, _ := syscall.Syscall6(procWTSOpenServer.Addr(), 1, uintptr(unsafe.Pointer(serverName)), 0, 0, 0, 0, 0)
+	r1, _, _ := syscall.Syscall(procWTSOpenServer.Addr(), 1, uintptr(unsafe.Pointer(serverName)), 0, 0)
 	return syscall.Handle(r1)
 }
 
-func WTSQuerySessionInformation(handle syscall.Handle, sessionId uint32, infoClass uint32, buffer *uintptr, bytesReturned *uint32) error {
+func WTSQuerySessionInformation(handle syscall.Handle, sessionId uint32, infoClass uint32, buffer **uint16, bytesReturned *uint32) error {
 	r1, _, e1 := syscall.Syscall6(
 		procWTSQuerySessionInformation.Addr(),
 		5,
