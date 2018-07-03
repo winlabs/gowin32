@@ -71,7 +71,7 @@ type WTSClientInfo struct {
 	OutBufCountHost     uint
 	OutBufCountClient   uint
 	OutBufLength        uint
-	DeviceId            string
+	DeviceID            string
 }
 
 func (ci *WTSClientInfo) ClientAddressToIP() (net.IP, error) {
@@ -92,7 +92,7 @@ type WTSClientDisplay struct {
 // Info - go version of WTSINFO structure
 type WTSInfo struct {
 	State                   WTSConnectState
-	SessionId               uint32
+	SessionID               uint32
 	IncomingBytes           uint
 	OutgoingBytes           uint
 	IncomingFrames          uint
@@ -273,7 +273,7 @@ func (wts *WTSServer) QuerySessionClientInfo(sessionID uint32) (WTSClientInfo, e
 		OutBufCountHost:     uint(c.OutBufCountHost),
 		OutBufCountClient:   uint(c.OutBufCountClient),
 		OutBufLength:        uint(c.OutBufLength),
-		DeviceId:            syscall.UTF16ToString(c.DeviceId[:]),
+		DeviceID:            syscall.UTF16ToString(c.DeviceId[:]),
 	}, nil
 }
 
@@ -289,7 +289,7 @@ func (wts *WTSServer) QuerySessionSesionInfo(sessionID uint32) (WTSInfo, error) 
 	i := *(*wrappers.WTSINFO)(unsafe.Pointer(buffer))
 	return WTSInfo{
 		State:                   WTSConnectState(i.State),
-		SessionId:               i.SessionId,
+		SessionID:               i.SessionId,
 		IncomingBytes:           uint(i.IncomingBytes),
 		OutgoingBytes:           uint(i.OutgoingBytes),
 		IncomingFrames:          uint(i.IncomingFrames),
