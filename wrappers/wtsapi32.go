@@ -44,6 +44,12 @@ const (
 	WTSInit         = 9
 )
 
+type WTS_SESSION_INFO struct {
+	SessionId      uint32
+	WinStationName *uint16
+	State          uint32
+}
+
 // WTS_INFO_CLASS enumeration
 const (
 	WTSInitialProgram     = 0
@@ -78,10 +84,23 @@ const (
 	WTSIsRemoteSession    = 29
 )
 
-type WTS_SESSION_INFO struct {
-	SessionId      uint32
-	WinStationName *uint16
-	State          uint32
+type WTSINFO struct {
+	State                   uint32
+	SessionId               uint32
+	IncomingBytes           uint32
+	OutgoingBytes           uint32
+	IncomingFrames          uint32
+	OutgoingFrames          uint32
+	IncomingCompressedBytes uint32
+	OutgoingCompressedBytes uint32
+	WinStationName          [WINSTATIONNAME_LENGTH]uint16
+	Domain                  [DOMAIN_LENGTH]uint16
+	UserName                [USERNAME_LENGTH + 1]uint16
+	ConnectTime             int64
+	DisconnectTime          int64
+	LastInputTime           int64
+	LogonTime               int64
+	CurrentTime             int64
 }
 
 type WTSCLIENT struct {
@@ -115,25 +134,6 @@ type WTS_CLIENT_DISPLAY struct {
 	HorizontalResolution uint32
 	VerticalResolution   uint32
 	ColorDepth           uint32
-}
-
-type WTSINFO struct {
-	State                   uint32
-	SessionId               uint32
-	IncomingBytes           uint32
-	OutgoingBytes           uint32
-	IncomingFrames          uint32
-	OutgoingFrames          uint32
-	IncomingCompressedBytes uint32
-	OutgoingCompressedBytes uint32
-	WinStationName          [WINSTATIONNAME_LENGTH]uint16
-	Domain                  [DOMAIN_LENGTH]uint16
-	UserName                [USERNAME_LENGTH + 1]uint16
-	ConnectTime             int64
-	DisconnectTime          int64
-	LastInputTime           int64
-	LogonTime               int64
-	CurrentTime             int64
 }
 
 var (

@@ -70,6 +70,11 @@ const (
 	SW_FORCEMINIMIZE   = 11
 )
 
+type WTSSESSION_NOTIFICATION struct {
+	Size      uint32
+	SessionId uint32
+}
+
 const (
 	WTS_CONSOLE_CONNECT        = 0x1
 	WTS_CONSOLE_DISCONNECT     = 0x2
@@ -83,11 +88,6 @@ const (
 	WTS_SESSION_CREATE         = 0xA
 	WTS_SESSION_TERMINATE      = 0xB
 )
-
-type WTSSESSION_NOTIFICATION struct {
-	Size      uint32
-	SessionId uint32
-}
 
 const (
 	DESKTOP_READOBJECTS     = 0x00000001

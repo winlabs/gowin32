@@ -61,16 +61,16 @@ type WTSClientInfo struct {
 	EncryptionLevel     byte
 	ClientAddressFamily AddressFamily
 	ClientAddress       [wrappers.CLIENTADDRESS_LENGTH + 1]uint16
-	HRes                uint16
-	VRes                uint16
-	ColorDepth          uint16
+	HRes                uint
+	VRes                uint
+	ColorDepth          uint
 	ClientDirectory     string
-	ClientBuildNumber   uint32
-	ClientHardwareId    uint32
-	ClientProductId     uint16
-	OutBufCountHost     uint16
-	OutBufCountClient   uint16
-	OutBufLength        uint16
+	ClientBuildNumber   uint
+	ClientHardwareId    uint
+	ClientProductId     uint
+	OutBufCountHost     uint
+	OutBufCountClient   uint
+	OutBufLength        uint
 	DeviceId            string
 }
 
@@ -84,21 +84,21 @@ func (ci *WTSClientInfo) ClientAddressToIP() (net.IP, error) {
 
 // WTSClientDisplay - go version of WTS_CLIENT_DISPLAY structure
 type WTSClientDisplay struct {
-	HorizontalResolution uint32
-	VerticalResolution   uint32
-	ColorDepth           uint32
+	HorizontalResolution uint
+	VerticalResolution   uint
+	ColorDepth           uint
 }
 
 // Info - go version of WTSINFO structure
 type WTSInfo struct {
 	State                   WTSConnectState
 	SessionId               uint32
-	IncomingBytes           uint32
-	OutgoingBytes           uint32
-	IncomingFrames          uint32
-	OutgoingFrames          uint32
-	IncomingCompressedBytes uint32
-	OutgoingCompressedBytes uint32
+	IncomingBytes           uint
+	OutgoingBytes           uint
+	IncomingFrames          uint
+	OutgoingFrames          uint
+	IncomingCompressedBytes uint
+	OutgoingCompressedBytes uint
 	WinStationName          string
 	Domain                  string
 	UserName                string
@@ -234,9 +234,9 @@ func (wts *WTSServer) QuerySessionClientDisplay(sessionID uint32) (WTSClientDisp
 
 	cd := *(*wrappers.WTS_CLIENT_DISPLAY)(unsafe.Pointer(buffer))
 	return WTSClientDisplay{
-		HorizontalResolution: cd.HorizontalResolution,
-		VerticalResolution:   cd.HorizontalResolution,
-		ColorDepth:           cd.ColorDepth}, nil
+		HorizontalResolution: uint(cd.HorizontalResolution),
+		VerticalResolution:   uint(cd.HorizontalResolution),
+		ColorDepth:           uint(cd.ColorDepth)}, nil
 }
 
 func (wts *WTSServer) QuerySessionClientProtocolType(sessionID uint32) (WTSClientProtocolType, error) {
@@ -263,16 +263,16 @@ func (wts *WTSServer) QuerySessionClientInfo(sessionID uint32) (WTSClientInfo, e
 		EncryptionLevel:     c.EncryptionLevel,
 		ClientAddressFamily: AddressFamily(c.ClientAddressFamily),
 		ClientAddress:       c.ClientAddress,
-		HRes:                c.HRes,
-		VRes:                c.VRes,
-		ColorDepth:          c.ColorDepth,
+		HRes:                uint(c.HRes),
+		VRes:                uint(c.VRes),
+		ColorDepth:          uint(c.ColorDepth),
 		ClientDirectory:     syscall.UTF16ToString(c.ClientDirectory[:]),
-		ClientBuildNumber:   c.ClientBuildNumber,
-		ClientHardwareId:    c.ClientHardwareId,
-		ClientProductId:     c.ClientProductId,
-		OutBufCountHost:     c.OutBufCountHost,
-		OutBufCountClient:   c.OutBufCountClient,
-		OutBufLength:        c.OutBufLength,
+		ClientBuildNumber:   uint(c.ClientBuildNumber),
+		ClientHardwareId:    uint(c.ClientHardwareId),
+		ClientProductId:     uint(c.ClientProductId),
+		OutBufCountHost:     uint(c.OutBufCountHost),
+		OutBufCountClient:   uint(c.OutBufCountClient),
+		OutBufLength:        uint(c.OutBufLength),
 		DeviceId:            syscall.UTF16ToString(c.DeviceId[:]),
 	}, nil
 }
@@ -290,12 +290,12 @@ func (wts *WTSServer) QuerySessionSesionInfo(sessionID uint32) (WTSInfo, error) 
 	return WTSInfo{
 		State:                   WTSConnectState(i.State),
 		SessionId:               i.SessionId,
-		IncomingBytes:           i.IncomingBytes,
-		OutgoingBytes:           i.OutgoingBytes,
-		IncomingFrames:          i.IncomingFrames,
-		OutgoingFrames:          i.OutgoingFrames,
-		IncomingCompressedBytes: i.IncomingCompressedBytes,
-		OutgoingCompressedBytes: i.OutgoingCompressedBytes,
+		IncomingBytes:           uint(i.IncomingBytes),
+		OutgoingBytes:           uint(i.OutgoingBytes),
+		IncomingFrames:          uint(i.IncomingFrames),
+		OutgoingFrames:          uint(i.OutgoingFrames),
+		IncomingCompressedBytes: uint(i.IncomingCompressedBytes),
+		OutgoingCompressedBytes: uint(i.OutgoingCompressedBytes),
 		WinStationName:          syscall.UTF16ToString(i.WinStationName[:]),
 		Domain:                  syscall.UTF16ToString(i.Domain[:]),
 		UserName:                syscall.UTF16ToString(i.UserName[:]),
@@ -394,11 +394,11 @@ func buferSizeError(excpected, returned uint32) error {
 
 func clientAddressToIP(addressFamily uint32, address []byte) (net.IP, error) {
 	switch addressFamily {
-	case syscall.AF_INET:
+	case wrappers.AF_INET:
 		if len(address) >= 4 {
 			return net.IPv4(address[0], address[1], address[2], address[3]), nil
 		}
-	case syscall.AF_INET6:
+	case wrappers.AF_INET6:
 		if len(address) >= 16 {
 			return net.IP(address[:16]), nil
 		}

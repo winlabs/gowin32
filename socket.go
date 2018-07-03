@@ -23,12 +23,12 @@ import (
 type AddressFamily uint32
 
 const (
-	AddressFamilyUnspec    AddressFamily = wrappers.AF_UNSPEC
-	AddressFamilyInet      AddressFamily = wrappers.AF_INET
-	AddressFamilyIPX       AddressFamily = wrappers.AF_IPX
-	AddressFamilyAppleTalk AddressFamily = wrappers.AF_APPLETALK
-	AddressFamilyNetBIOS   AddressFamily = wrappers.AF_NETBIOS
-	AddressFamilyInet6     AddressFamily = wrappers.AF_INET6
-	AddressFamilyIrDA      AddressFamily = wrappers.AF_IRDA
-	AddressFamilyBTH       AddressFamily = wrappers.AF_BTH
+	AddressFamilyUnspecified AddressFamily = wrappers.AF_UNSPEC
+	AddressFamilyIP          AddressFamily = wrappers.AF_INET
+	AddressFamilyIPX         AddressFamily = wrappers.AF_IPX
+	AddressFamilyAppleTalk   AddressFamily = wrappers.AF_APPLETALK
+	AddressFamilyNetBIOS     AddressFamily = wrappers.AF_NETBIOS
+	AddressFamilyIPv6        AddressFamily = wrappers.AF_INET6
+	AddressFamilyIrDA        AddressFamily = wrappers.AF_IRDA
+	AddressFamilyBluetooth   AddressFamily = wrappers.AF_BTH
 )
