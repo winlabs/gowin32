@@ -92,7 +92,7 @@ type WTSClientDisplay struct {
 // Info - go version of WTSINFO structure
 type WTSInfo struct {
 	State                   WTSConnectState
-	SessionID               uint32
+	SessionID               uint
 	IncomingBytes           uint
 	OutgoingBytes           uint
 	IncomingFrames          uint
@@ -111,7 +111,7 @@ type WTSInfo struct {
 
 // WTSSessionInfo - go version of WTS_SESSION_INFO structure
 type WTSSessionInfo struct {
-	SessionID      uint32
+	SessionID      uint
 	WinStationName string
 	State          WTSConnectState
 }
@@ -147,7 +147,7 @@ func (wts *WTSServer) EnumerateSessions() ([]WTSSessionInfo, error) {
 	si := sessionInfo
 	result := make([]WTSSessionInfo, count)
 	for i := uint32(0); i < count; i++ {
-		result[i] = WTSSessionInfo{SessionID: si.SessionId,
+		result[i] = WTSSessionInfo{SessionID: uint(si.SessionId),
 			WinStationName: LpstrToString(si.WinStationName),
 			State:          WTSConnectState(si.State)}
 		si = (*wrappers.WTS_SESSION_INFO)(unsafe.Pointer(uintptr(unsafe.Pointer(si)) + unsafe.Sizeof(*si)))
@@ -155,64 +155,65 @@ func (wts *WTSServer) EnumerateSessions() ([]WTSSessionInfo, error) {
 	return result, nil
 }
 
-func (wts *WTSServer) QuerySessionInitialProgram(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionInitialProgram(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSInitialProgram)
 }
 
-func (wts *WTSServer) QuerySessionApplicationName(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionApplicationName(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSApplicationName)
 }
 
-func (wts *WTSServer) QuerySessionWorkingDirectory(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionWorkingDirectory(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSWorkingDirectory)
 }
 
-func (wts *WTSServer) QuerySessionID(sessionID uint32) (uint32, error) {
-	return wts.querySessionInformationAsUint32(sessionID, wrappers.WTSSessionId)
+func (wts *WTSServer) QuerySessionID(sessionID uint) (uint, error) {
+	r1, err := wts.querySessionInformationAsUint32(sessionID, wrappers.WTSSessionId)
+	return uint(r1), err
 }
 
-func (wts *WTSServer) QuerySessionUserName(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionUserName(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSUserName)
 }
 
-func (wts *WTSServer) QuerySessionWinStationName(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionWinStationName(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSWinStationName)
 }
 
-func (wts *WTSServer) QuerySessionDomainName(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionDomainName(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSDomainName)
 }
 
-func (wts *WTSServer) QuerySessionConnectState(sessionID uint32) (WTSConnectState, error) {
+func (wts *WTSServer) QuerySessionConnectState(sessionID uint) (WTSConnectState, error) {
 	r1, err := wts.querySessionInformationAsUint32(sessionID, wrappers.WTSConnectState)
 	return WTSConnectState(r1), err
 }
 
-func (wts *WTSServer) QuerySessionClientBuildNumber(sessionID uint32) (uint32, error) {
+func (wts *WTSServer) QuerySessionClientBuildNumber(sessionID uint) (uint32, error) {
 	return wts.querySessionInformationAsUint32(sessionID, wrappers.WTSClientBuildNumber)
 }
 
-func (wts *WTSServer) QuerySessionClientName(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionClientName(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSClientName)
 }
 
-func (wts *WTSServer) QuerySessionClientDirectory(sessionID uint32) (string, error) {
+func (wts *WTSServer) QuerySessionClientDirectory(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSClientDirectory)
 }
 
-func (wts *WTSServer) QuerySessionClientProductId(sessionID uint32) (uint16, error) {
+func (wts *WTSServer) QuerySessionClientProductId(sessionID uint) (uint16, error) {
 	return wts.querySessionInformationAsUint16(sessionID, wrappers.WTSClientProductId)
 }
 
-func (wts *WTSServer) QuerySessionClientHardwareId(sessionID uint32) (uint32, error) {
+func (wts *WTSServer) QuerySessionClientHardwareId(sessionID uint) (uint32, error) {
 	return wts.querySessionInformationAsUint32(sessionID, wrappers.WTSClientHardwareId)
 }
 
-func (wts *WTSServer) QuerySessionClientAddress(sessionID uint32) (net.IP, error) {
+func (wts *WTSServer) QuerySessionClientAddress(sessionID uint) (net.IP, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, wrappers.WTSClientAddress, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSClientAddress, &buffer, &bytesReturned); err != nil {
 		return net.IP{}, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -223,11 +224,11 @@ func (wts *WTSServer) QuerySessionClientAddress(sessionID uint32) (net.IP, error
 	return clientAddressToIP(a.AddressFamily, a.Address[2:])
 }
 
-func (wts *WTSServer) QuerySessionClientDisplay(sessionID uint32) (WTSClientDisplay, error) {
+func (wts *WTSServer) QuerySessionClientDisplay(sessionID uint) (WTSClientDisplay, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, wrappers.WTSClientDisplay, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSClientDisplay, &buffer, &bytesReturned); err != nil {
 		return WTSClientDisplay{}, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -239,16 +240,16 @@ func (wts *WTSServer) QuerySessionClientDisplay(sessionID uint32) (WTSClientDisp
 		ColorDepth:           uint(cd.ColorDepth)}, nil
 }
 
-func (wts *WTSServer) QuerySessionClientProtocolType(sessionID uint32) (WTSClientProtocolType, error) {
+func (wts *WTSServer) QuerySessionClientProtocolType(sessionID uint) (WTSClientProtocolType, error) {
 	r1, err := wts.querySessionInformationAsUint16(sessionID, wrappers.WTSClientProtocolType)
 	return WTSClientProtocolType(r1), err
 }
 
-func (wts *WTSServer) QuerySessionClientInfo(sessionID uint32) (WTSClientInfo, error) {
+func (wts *WTSServer) QuerySessionClientInfo(sessionID uint) (WTSClientInfo, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, wrappers.WTSClientInfo, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSClientInfo, &buffer, &bytesReturned); err != nil {
 		return WTSClientInfo{}, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -277,11 +278,11 @@ func (wts *WTSServer) QuerySessionClientInfo(sessionID uint32) (WTSClientInfo, e
 	}, nil
 }
 
-func (wts *WTSServer) QuerySessionSesionInfo(sessionID uint32) (WTSInfo, error) {
+func (wts *WTSServer) QuerySessionSesionInfo(sessionID uint) (WTSInfo, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, wrappers.WTSSessionInfo, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSSessionInfo, &buffer, &bytesReturned); err != nil {
 		return WTSInfo{}, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -289,7 +290,7 @@ func (wts *WTSServer) QuerySessionSesionInfo(sessionID uint32) (WTSInfo, error) 
 	i := *(*wrappers.WTSINFO)(unsafe.Pointer(buffer))
 	return WTSInfo{
 		State:                   WTSConnectState(i.State),
-		SessionID:               i.SessionId,
+		SessionID:               uint(i.SessionId),
 		IncomingBytes:           uint(i.IncomingBytes),
 		OutgoingBytes:           uint(i.OutgoingBytes),
 		IncomingFrames:          uint(i.IncomingFrames),
@@ -306,11 +307,11 @@ func (wts *WTSServer) QuerySessionSesionInfo(sessionID uint32) (WTSInfo, error) 
 		CurrentTime:             windowsFileTimeToTime(i.CurrentTime)}, nil
 }
 
-func (wts *WTSServer) QuerySessionAddressV4(sessionID uint32) (wrappers.WTS_CLIENT_ADDRESS, error) {
+func (wts *WTSServer) QuerySessionAddressV4(sessionID uint) (wrappers.WTS_CLIENT_ADDRESS, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, wrappers.WTSSessionAddressV4, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), wrappers.WTSSessionAddressV4, &buffer, &bytesReturned); err != nil {
 		return wrappers.WTS_CLIENT_ADDRESS{}, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -318,23 +319,23 @@ func (wts *WTSServer) QuerySessionAddressV4(sessionID uint32) (wrappers.WTS_CLIE
 	return *(*wrappers.WTS_CLIENT_ADDRESS)(unsafe.Pointer(buffer)), nil
 }
 
-func (wts *WTSServer) QuerySessionIsRemoteSession(sessionID uint32) (bool, error) {
+func (wts *WTSServer) QuerySessionIsRemoteSession(sessionID uint) (bool, error) {
 	return wts.querySessionInformationAsBool(sessionID, wrappers.WTSIsRemoteSession)
 }
 
-func (wts *WTSServer) QueryUserToken(sessionID uint32) (*Token, error) {
+func (wts *WTSServer) QueryUserToken(sessionID uint) (*Token, error) {
 	var handle syscall.Handle
-	if err := wrappers.WTSQueryUserToken(sessionID, &handle); err != nil {
+	if err := wrappers.WTSQueryUserToken(uint32(sessionID), &handle); err != nil {
 		return nil, err
 	}
 	return &Token{handle: handle}, nil
 }
 
-func (wts *WTSServer) querySessionInformationAsBool(sessionID uint32, infoClass uint32) (bool, error) {
+func (wts *WTSServer) querySessionInformationAsBool(sessionID uint, infoClass uint32) (bool, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, infoClass, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), infoClass, &buffer, &bytesReturned); err != nil {
 		return false, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -346,11 +347,11 @@ func (wts *WTSServer) querySessionInformationAsBool(sessionID uint32, infoClass 
 	return *(*byte)(unsafe.Pointer(buffer)) != 0, nil
 }
 
-func (wts *WTSServer) querySessionInformationAsString(sessionID uint32, infoClass uint32) (string, error) {
+func (wts *WTSServer) querySessionInformationAsString(sessionID uint, infoClass uint32) (string, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, infoClass, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), infoClass, &buffer, &bytesReturned); err != nil {
 		return "", err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -358,11 +359,11 @@ func (wts *WTSServer) querySessionInformationAsString(sessionID uint32, infoClas
 	return LpstrToString(buffer), nil
 }
 
-func (wts *WTSServer) querySessionInformationAsUint16(sessionID uint32, infoClass uint32) (uint16, error) {
+func (wts *WTSServer) querySessionInformationAsUint16(sessionID uint, infoClass uint32) (uint16, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, infoClass, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), infoClass, &buffer, &bytesReturned); err != nil {
 		return 0, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
@@ -373,11 +374,11 @@ func (wts *WTSServer) querySessionInformationAsUint16(sessionID uint32, infoClas
 	return *(*uint16)(unsafe.Pointer(buffer)), nil
 }
 
-func (wts *WTSServer) querySessionInformationAsUint32(sessionID uint32, infoClass uint32) (uint32, error) {
+func (wts *WTSServer) querySessionInformationAsUint32(sessionID uint, infoClass uint32) (uint32, error) {
 	var buffer *uint16
 	var bytesReturned uint32
 
-	if err := wrappers.WTSQuerySessionInformation(wts.handle, sessionID, infoClass, &buffer, &bytesReturned); err != nil {
+	if err := wrappers.WTSQuerySessionInformation(wts.handle, uint32(sessionID), infoClass, &buffer, &bytesReturned); err != nil {
 		return 0, err
 	}
 	defer wrappers.WTSFreeMemory((*byte)(unsafe.Pointer(buffer)))
