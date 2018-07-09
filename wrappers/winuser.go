@@ -241,7 +241,7 @@ func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DE
 	return r1 != 0
 }
 
-func GetSystemMetrics(index uint32) int {
+func GetSystemMetrics(index int32) int {
 	ret, _, _ := syscall.Syscall(procGetSystemMetrics.Addr(), 1, uintptr(index), 0, 0)
 	return int(ret)
 }
