@@ -131,10 +131,6 @@ const (
 	SM_CXHSCROLL                   = 21
 	SM_DEBUG                       = 22
 	SM_SWAPBUTTON                  = 23
-	SM_RESERVED1                   = 24
-	SM_RESERVED2                   = 25
-	SM_RESERVED3                   = 26
-	SM_RESERVED4                   = 27
 	SM_CXMIN                       = 28
 	SM_CYMIN                       = 29
 	SM_CXSIZE                      = 30
@@ -204,7 +200,10 @@ const (
 	SM_REMOTESESSION               = 0x1000
 	SM_SHUTTINGDOWN                = 0x2000
 	SM_REMOTECONTROL               = 0x2001
-	SM_CARETBLINKINGENABLED        = 0x2002
+)
+
+const (
+	EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
 )
 
 var (
@@ -216,6 +215,36 @@ var (
 	procOpenInputDesktop   = moduser32.NewProc("OpenInputDesktop")
 	procSetThreadDesktop   = moduser32.NewProc("SetThreadDesktop")
 )
+
+func CloseDesktop(desktop syscall.Handle) error {
+	r1, _, e1 := syscall.Syscall(procCloseDesktop.Addr(), 1, uintptr(desktop), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DEVICE, flags uint32) bool {
+	r1, _, _ := syscall.Syscall6(
+		procEnumDisplayDevices.Addr(),
+		4,
+		uintptr(unsafe.Pointer(device)),
+		uintptr(devNum),
+		uintptr(unsafe.Pointer(displayDevice)),
+		uintptr(flags),
+		0,
+		0)
+	return r1 != 0
+}
+
+func GetSystemMetrics(index uint32) int {
+	ret, _, _ := syscall.Syscall(procGetSystemMetrics.Addr(), 1, uintptr(index), 0, 0)
+	return int(ret)
+}
 
 func OpenInputDesktop(flags uint32, inherit bool, desiredAccess uint32) (syscall.Handle, error) {
 	var inheritRaw int32
@@ -251,32 +280,4 @@ func SetThreadDesktop(desktop syscall.Handle) error {
 		}
 	}
 	return nil
-}
-
-func CloseDesktop(desktop syscall.Handle) error {
-	r1, _, e1 := syscall.Syscall(procCloseDesktop.Addr(), 1, uintptr(desktop), 0, 0)
-	if r1 == 0 {
-		if e1 != ERROR_SUCCESS {
-			return e1
-		} else {
-			return syscall.EINVAL
-		}
-	}
-	return nil
-}
-
-func GetSystemMetrics(index int) int {
-	ret, _, _ := syscall.Syscall(procGetSystemMetrics.Addr(), 1, uintptr(index), 0, 0)
-	return int(ret)
-}
-
-func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DEVICE, flags uint32) bool {
-	r1, _, _ := syscall.Syscall6(
-		procEnumDisplayDevices.Addr(),
-		4,
-		uintptr(unsafe.Pointer(device)),
-		uintptr(devNum),
-		uintptr(unsafe.Pointer(displayDevice)),
-		uintptr(flags), 0, 0)
-	return r1 != 0
 }
