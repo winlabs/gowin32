@@ -269,6 +269,7 @@ var (
 	procCopyFileW                         = modkernel32.NewProc("CopyFileW")
 	procCreateFileW                       = modkernel32.NewProc("CreateFileW")
 	procCreateJobObjectW                  = modkernel32.NewProc("CreateJobObjectW")
+	procCreateMutexW                      = modkernel32.NewProc("CreateMutexW")
 	procCreateProcessW                    = modkernel32.NewProc("CreateProcessW")
 	procCreateSymbolicLinkW               = modkernel32.NewProc("CreateSymbolicLinkW")
 	procDeleteCriticalSection             = modkernel32.NewProc("DeleteCriticalSection")
@@ -478,6 +479,32 @@ func CreateJobObject(jobAttributes *SECURITY_ATTRIBUTES, name *uint16) (syscall.
 		} else {
 			return 0, syscall.EINVAL
 		}
+	}
+	return syscall.Handle(r1), nil
+}
+
+func CreateMutex(mutexAttributes *SECURITY_ATTRIBUTES, initialOwner bool, name *uint16) (syscall.Handle, error) {
+	var initialOwnerRaw int32
+	if initialOwner {
+		initialOwnerRaw = 1
+	} else {
+		initialOwnerRaw = 0
+	}
+	r1, _, e1 := syscall.Syscall(
+		procCreateMutexW.Addr(),
+		3,
+		uintptr(unsafe.Pointer(mutexAttributes)),
+		uintptr(initialOwnerRaw),
+		uintptr(unsafe.Pointer(name)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	if e1 == ERROR_ALREADY_EXISTS {
+		return syscall.Handle(r1), e1
 	}
 	return syscall.Handle(r1), nil
 }
