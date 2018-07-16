@@ -29,18 +29,12 @@ var (
 )
 
 func GetTcpTable(tcpTable *MIB_TCPTABLE, size *uint32, order bool) error {
-	var orderRaw int32
-	if order {
-		orderRaw = 1
-	} else {
-		orderRaw = 0
-	}
 	r1, _, _ := syscall.Syscall(
 		procGetTcpTable.Addr(),
 		3,
 		uintptr(unsafe.Pointer(tcpTable)),
 		uintptr(unsafe.Pointer(size)),
-		uintptr(orderRaw))
+		boolToUintptr(order))
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}

@@ -31,3 +31,14 @@ func LOWORD(value uint32) uint16 {
 func HIWORD(value uint32) uint16 {
 	return uint16((value >> 16) & 0x0000FFFF)
 }
+
+func boolToUintptr(value bool) uintptr {
+	var valueRaw int32
+	if value {
+		valueRaw = 1
+	} else {
+		valueRaw = 0
+	}
+
+	return uintptr(valueRaw)
+}
