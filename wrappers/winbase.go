@@ -94,6 +94,11 @@ type FILETIME struct {
 
 type CRITICAL_SECTION RTL_CRITICAL_SECTION
 
+const (
+	MUTEX_MODIFY_STATE = MUTANT_QUERY_STATE
+	MUTEX_ALL_ACCESS   = MUTANT_ALL_ACCESS
+)
+
 type SYSTEM_INFO struct {
 	ProcessorArchitecture     uint16
 	Reserved                  uint16
@@ -267,6 +272,7 @@ var (
 	procBeginUpdateResourceW              = modkernel32.NewProc("BeginUpdateResourceW")
 	procCloseHandle                       = modkernel32.NewProc("CloseHandle")
 	procCopyFileW                         = modkernel32.NewProc("CopyFileW")
+	procCreateEventW                      = modkernel32.NewProc("CreateEventW")
 	procCreateFileW                       = modkernel32.NewProc("CreateFileW")
 	procCreateJobObjectW                  = modkernel32.NewProc("CreateJobObjectW")
 	procCreateMutexW                      = modkernel32.NewProc("CreateMutexW")
@@ -321,14 +327,18 @@ var (
 	procLocalFree                         = modkernel32.NewProc("LocalFree")
 	procMoveFileExW                       = modkernel32.NewProc("MoveFileExW")
 	procMoveFileW                         = modkernel32.NewProc("MoveFileW")
+	procOpenEventW                        = modkernel32.NewProc("OpenEventW")
 	procOpenJobObjectW                    = modkernel32.NewProc("OpenJobObjectW")
+	procOpenMutexW                        = modkernel32.NewProc("OpenMutexW")
 	procOpenProcess                       = modkernel32.NewProc("OpenProcess")
 	procProcessIdToSessionId              = modkernel32.NewProc("ProcessIdToSessionId")
 	procQueryFullProcessImageNameW        = modkernel32.NewProc("QueryFullProcessImageNameW")
 	procQueryInformationJobObject         = modkernel32.NewProc("QueryInformationJobObject")
 	procReadFile                          = modkernel32.NewProc("ReadFile")
 	procReadProcessMemory                 = modkernel32.NewProc("ReadProcessMemory")
+	procResetEvent                        = modkernel32.NewProc("ResetEvent")
 	procSetEnvironmentVariableW           = modkernel32.NewProc("SetEnvironmentVariableW")
+	procSetEvent                          = modkernel32.NewProc("SetEvent")
 	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
 	procSetInformationJobObject           = modkernel32.NewProc("SetInformationJobObject")
@@ -338,6 +348,7 @@ var (
 	procTryEnterCriticalSection           = modkernel32.NewProc("TryEnterCriticalSection")
 	procUpdateResourceW                   = modkernel32.NewProc("UpdateResourceW")
 	procVerifyVersionInfoW                = modkernel32.NewProc("VerifyVersionInfoW")
+	procWaitForMultipleObjects            = modkernel32.NewProc("WaitForMultipleObjects")
 	procWaitForSingleObject               = modkernel32.NewProc("WaitForSingleObject")
 	proclstrlenW                          = modkernel32.NewProc("lstrlenW")
 
@@ -385,17 +396,11 @@ func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error 
 }
 
 func BeginUpdateResource(fileName *uint16, deleteExistingResources bool) (syscall.Handle, error) {
-	var deleteExistingResourcesRaw int32
-	if deleteExistingResources {
-		deleteExistingResourcesRaw = 1
-	} else {
-		deleteExistingResourcesRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procBeginUpdateResourceW.Addr(),
 		2,
 		uintptr(unsafe.Pointer(fileName)),
-		uintptr(deleteExistingResourcesRaw),
+		boolToUintptr(deleteExistingResources),
 		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -420,18 +425,12 @@ func CloseHandle(object syscall.Handle) error {
 }
 
 func CopyFile(existingFileName *uint16, newFileName *uint16, failIfExists bool) error {
-	var failIfExistsRaw int32
-	if failIfExists {
-		failIfExistsRaw = 1
-	} else {
-		failIfExistsRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procCopyFileW.Addr(),
 		3,
 		uintptr(unsafe.Pointer(existingFileName)),
 		uintptr(unsafe.Pointer(newFileName)),
-		uintptr(failIfExistsRaw))
+		boolToUintptr(failIfExists))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
@@ -440,6 +439,29 @@ func CopyFile(existingFileName *uint16, newFileName *uint16, failIfExists bool) 
 		}
 	}
 	return nil
+}
+
+func CreateEvent(eventAttributes *SECURITY_ATTRIBUTES, manualReset bool, initialState bool, name *uint16) (syscall.Handle, error) {
+	r1, _, e1 := syscall.Syscall6(
+		procCreateEventW.Addr(),
+		4,
+		uintptr(unsafe.Pointer(eventAttributes)),
+		boolToUintptr(manualReset),
+		boolToUintptr(initialState),
+		uintptr(unsafe.Pointer(name)),
+		0,
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	if e1 == ERROR_ALREADY_EXISTS {
+		return syscall.Handle(r1), e1
+	}
+	return syscall.Handle(r1), nil
 }
 
 func CreateFile(fileName *uint16, desiredAccess uint32, shareMode uint32, securityAttributes *SECURITY_ATTRIBUTES, creationDisposition uint32, flagsAndAttributes uint32, templateFile syscall.Handle) (syscall.Handle, error) {
@@ -484,17 +506,11 @@ func CreateJobObject(jobAttributes *SECURITY_ATTRIBUTES, name *uint16) (syscall.
 }
 
 func CreateMutex(mutexAttributes *SECURITY_ATTRIBUTES, initialOwner bool, name *uint16) (syscall.Handle, error) {
-	var initialOwnerRaw int32
-	if initialOwner {
-		initialOwnerRaw = 1
-	} else {
-		initialOwnerRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procCreateMutexW.Addr(),
 		3,
 		uintptr(unsafe.Pointer(mutexAttributes)),
-		uintptr(initialOwnerRaw),
+		boolToUintptr(initialOwner),
 		uintptr(unsafe.Pointer(name)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -510,12 +526,6 @@ func CreateMutex(mutexAttributes *SECURITY_ATTRIBUTES, initialOwner bool, name *
 }
 
 func CreateProcess(applicationName *uint16, commandLine *uint16, processAttributes *SECURITY_ATTRIBUTES, threadAttributes *SECURITY_ATTRIBUTES, inheritHandles bool, creationFlags uint32, environment *byte, currentDirectory *uint16, startupInfo *STARTUPINFO, processInformation *PROCESS_INFORMATION) error {
-	var inheritHandlesRaw int32
-	if inheritHandles {
-		inheritHandlesRaw = 1
-	} else {
-		inheritHandlesRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall12(
 		procCreateProcessW.Addr(),
 		10,
@@ -523,7 +533,7 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		uintptr(unsafe.Pointer(commandLine)),
 		uintptr(unsafe.Pointer(processAttributes)),
 		uintptr(unsafe.Pointer(threadAttributes)),
-		uintptr(inheritHandlesRaw),
+		boolToUintptr(inheritHandles),
 		uintptr(creationFlags),
 		uintptr(unsafe.Pointer(environment)),
 		uintptr(unsafe.Pointer(currentDirectory)),
@@ -598,17 +608,11 @@ func DeviceIoControl(device syscall.Handle, ioControlCode uint32, inBuffer *byte
 }
 
 func EndUpdateResource(update syscall.Handle, discard bool) error {
-	var discardRaw int32
-	if discard {
-		discardRaw = 1
-	} else {
-		discardRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procEndUpdateResourceW.Addr(),
 		2,
 		uintptr(update),
-		uintptr(discardRaw),
+		boolToUintptr(discard),
 		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -1260,18 +1264,46 @@ func MoveFileEx(existingFileName *uint16, newFileName *uint16, flags uint32) err
 	return nil
 }
 
-func OpenJobObject(desiredAccess uint32, inheritHandle bool, name *uint16) (syscall.Handle, error) {
-	var inheritHandleRaw int32
-	if inheritHandle {
-		inheritHandleRaw = 1
-	} else {
-		inheritHandleRaw = 0
+func OpenEvent(desiredAccess uint32, inheritHandle bool, name *uint16) (syscall.Handle, error) {
+	r1, _, e1 := syscall.Syscall(
+		procOpenEventW.Addr(),
+		3,
+		uintptr(desiredAccess),
+		boolToUintptr(inheritHandle),
+		uintptr(unsafe.Pointer(name)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
 	}
+	return syscall.Handle(r1), nil
+}
+
+func OpenJobObject(desiredAccess uint32, inheritHandle bool, name *uint16) (syscall.Handle, error) {
 	r1, _, e1 := syscall.Syscall(
 		procOpenJobObjectW.Addr(),
 		3,
 		uintptr(desiredAccess),
-		uintptr(inheritHandleRaw),
+		boolToUintptr(inheritHandle),
+		uintptr(unsafe.Pointer(name)))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
+func OpenMutex(desiredAccess uint32, inheritHandle bool, name *uint16) (syscall.Handle, error) {
+	r1, _, e1 := syscall.Syscall(
+		procOpenMutexW.Addr(),
+		3,
+		uintptr(desiredAccess),
+		boolToUintptr(inheritHandle),
 		uintptr(unsafe.Pointer(name)))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -1284,17 +1316,11 @@ func OpenJobObject(desiredAccess uint32, inheritHandle bool, name *uint16) (sysc
 }
 
 func OpenProcess(desiredAccess uint32, inheritHandle bool, processId uint32) (syscall.Handle, error) {
-	var inheritHandleRaw int32
-	if inheritHandle {
-		inheritHandleRaw = 1
-	} else {
-		inheritHandleRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procOpenProcess.Addr(),
 		3,
 		uintptr(desiredAccess),
-		uintptr(inheritHandleRaw),
+		boolToUintptr(inheritHandle),
 		uintptr(processId))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -1403,12 +1429,46 @@ func ReadProcessMemory(process syscall.Handle, baseAddress uintptr, buffer *byte
 	return nil
 }
 
+func ResetEvent(handle syscall.Handle) error {
+	r1, _, e1 := syscall.Syscall(
+		procResetEvent.Addr(),
+		1,
+		uintptr(handle),
+		0,
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func SetEnvironmentVariable(name *uint16, value *uint16) error {
 	r1, _, e1 := syscall.Syscall(
 		procSetEnvironmentVariableW.Addr(),
 		2,
 		uintptr(unsafe.Pointer(name)),
 		uintptr(unsafe.Pointer(value)),
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetEvent(handle syscall.Handle) error {
+	r1, _, e1 := syscall.Syscall(
+		procSetEvent.Addr(),
+		1,
+		uintptr(handle),
+		0,
 		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
@@ -1575,6 +1635,26 @@ func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionM
 	return nil
 }
 
+func WaitForMultipleObjects(count uint32, handle *syscall.Handle, waitAll bool, milliseconds uint32) (uint32, error) {
+	r1, _, e1 := syscall.Syscall6(
+		procWaitForMultipleObjects.Addr(),
+		4,
+		uintptr(count),
+		uintptr(unsafe.Pointer(handle)),
+		boolToUintptr(waitAll),
+		uintptr(milliseconds),
+		0,
+		0)
+	if r1 == WAIT_FAILED {
+		if e1 != ERROR_SUCCESS {
+			return uint32(r1), e1
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
 func WaitForSingleObject(handle syscall.Handle, milliseconds uint32) (uint32, error) {
 	r1, _, e1 := syscall.Syscall(
 		procWaitForSingleObject.Addr(),
@@ -1598,17 +1678,11 @@ func Lstrlen(string *uint16) int32 {
 }
 
 func AdjustTokenPrivileges(tokenHandle syscall.Handle, disableAllPrivileges bool, newState *TOKEN_PRIVILEGES, bufferLength uint32, previousState *TOKEN_PRIVILEGES, returnLength *uint32) error {
-	var disableAllPrivilegesRaw int32
-	if disableAllPrivileges {
-		disableAllPrivilegesRaw = 1
-	} else {
-		disableAllPrivilegesRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall6(
 		procAdjustTokenPrivileges.Addr(),
 		6,
 		uintptr(tokenHandle),
-		uintptr(disableAllPrivilegesRaw),
+		boolToUintptr(disableAllPrivileges),
 		uintptr(unsafe.Pointer(newState)),
 		uintptr(bufferLength),
 		uintptr(unsafe.Pointer(previousState)),
@@ -1886,18 +1960,12 @@ func OpenProcessToken(processHandle syscall.Handle, desiredAccess uint32, tokenH
 }
 
 func OpenThreadToken(threadHandle syscall.Handle, desiredAccess uint32, openAsSelf bool, tokenHandle *syscall.Handle) error {
-	var openAsSelfRaw int32
-	if openAsSelf {
-		openAsSelfRaw = 1
-	} else {
-		openAsSelfRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall6(
 		procOpenThreadToken.Addr(),
 		4,
 		uintptr(threadHandle),
 		uintptr(desiredAccess),
-		uintptr(openAsSelfRaw),
+		boolToUintptr(openAsSelf),
 		uintptr(unsafe.Pointer(tokenHandle)),
 		0,
 		0)
@@ -1981,25 +2049,13 @@ func SetFileSecurity(fileName *uint16, securityInformation uint32, securityDescr
 }
 
 func SetSecurityDescriptorDacl(securityDescriptor *byte, daclPresent bool, dacl *ACL, daclDefaulted bool) error {
-	var daclPresentRaw int32
-	if daclPresent {
-		daclPresentRaw = 1
-	} else {
-		daclPresentRaw = 0
-	}
-	var daclDefaultedRaw int32
-	if daclDefaulted {
-		daclDefaultedRaw = 1
-	} else {
-		daclDefaultedRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall6(
 		procSetSecurityDescriptorDacl.Addr(),
 		4,
 		uintptr(unsafe.Pointer(securityDescriptor)),
-		uintptr(daclPresentRaw),
+		boolToUintptr(daclPresent),
 		uintptr(unsafe.Pointer(dacl)),
-		uintptr(daclDefaultedRaw),
+		boolToUintptr(daclDefaulted),
 		0,
 		0)
 	if r1 == 0 {
@@ -2013,18 +2069,12 @@ func SetSecurityDescriptorDacl(securityDescriptor *byte, daclPresent bool, dacl 
 }
 
 func SetSecurityDescriptorOwner(securityDescriptor *byte, owner *SID, ownerDefaulted bool) error {
-	var ownerDefaultedRaw int32
-	if ownerDefaulted {
-		ownerDefaultedRaw = 1
-	} else {
-		ownerDefaultedRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procSetSecurityDescriptorOwner.Addr(),
 		3,
 		uintptr(unsafe.Pointer(securityDescriptor)),
 		uintptr(unsafe.Pointer(owner)),
-		uintptr(ownerDefaultedRaw))
+		boolToUintptr(ownerDefaulted))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

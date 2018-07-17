@@ -247,17 +247,11 @@ func GetSystemMetrics(index int32) int {
 }
 
 func OpenInputDesktop(flags uint32, inherit bool, desiredAccess uint32) (syscall.Handle, error) {
-	var inheritRaw int32
-	if inherit {
-		inheritRaw = 1
-	} else {
-		inheritRaw = 0
-	}
 	r1, _, e1 := syscall.Syscall(
 		procOpenInputDesktop.Addr(),
 		3,
 		uintptr(flags),
-		uintptr(inheritRaw),
+		boolToUintptr(inherit),
 		uintptr(desiredAccess))
 
 	if r1 == 0 {

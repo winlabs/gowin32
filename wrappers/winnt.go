@@ -427,11 +427,11 @@ const (
 )
 
 func MAKELCID(languageID uint16, sortID uint16) uint32 {
-	return (uint32)(sortID) << 16 | uint32(languageID)
+	return (uint32)(sortID)<<16 | uint32(languageID)
 }
 
 func MAKESORTLCID(languageID uint16, sortID uint16, sortVersion uint16) uint32 {
-	return MAKELCID(languageID, sortID) | (uint32)(sortVersion) << 20
+	return MAKELCID(languageID, sortID) | (uint32)(sortVersion)<<20
 }
 
 func LANGIDFROMLCID(lcid uint32) uint16 {
@@ -563,7 +563,7 @@ type SID_IDENTIFIER_AUTHORITY struct {
 	Value [6]byte
 }
 
-type SID struct {}
+type SID struct{}
 
 const (
 	SidTypeUser           = 1
@@ -1207,6 +1207,16 @@ const (
 	JobObjectBasicAndIoAccountingInformation    = 8
 	JobObjectExtendedLimitInformation           = 9
 	JobObjectGroupInformation                   = 11
+)
+
+const (
+	EVENT_MODIFY_STATE = 0x0002
+	EVENT_ALL_ACCESS   = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3
+)
+
+const (
+	MUTANT_QUERY_STATE = 0x0001
+	MUTANT_ALL_ACCESS  = STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | MUTANT_QUERY_STATE
 )
 
 const (
