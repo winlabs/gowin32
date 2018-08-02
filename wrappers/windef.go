@@ -16,9 +16,15 @@
 
 package wrappers
 
+import "syscall"
+
 const (
 	MAX_PATH = 260
 )
+
+type HDC syscall.Handle
+
+type HMONITOR syscall.Handle
 
 func MAKELONG(low uint16, high uint16) uint32 {
 	return uint32(low) | (uint32(high) << 16)

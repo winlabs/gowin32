@@ -206,14 +206,17 @@ const (
 	EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
 )
 
+type MonitorEnumProc func(hmonitor HMONITOR, hdc HDC, rect *RECT, lparam LPARAM) uintptr
+
 var (
 	moduser32 = syscall.NewLazyDLL("user32.dll")
 
-	procCloseDesktop       = moduser32.NewProc("CloseDesktop")
-	procEnumDisplayDevices = moduser32.NewProc("EnumDisplayDevicesW")
-	procGetSystemMetrics   = moduser32.NewProc("GetSystemMetrics")
-	procOpenInputDesktop   = moduser32.NewProc("OpenInputDesktop")
-	procSetThreadDesktop   = moduser32.NewProc("SetThreadDesktop")
+	procCloseDesktop        = moduser32.NewProc("CloseDesktop")
+	procEnumDisplayDevices  = moduser32.NewProc("EnumDisplayDevicesW")
+	procEnumDisplayMonitors = moduser32.NewProc("EnumDisplayMonitors")
+	procGetSystemMetrics    = moduser32.NewProc("GetSystemMetrics")
+	procOpenInputDesktop    = moduser32.NewProc("OpenInputDesktop")
+	procSetThreadDesktop    = moduser32.NewProc("SetThreadDesktop")
 )
 
 func CloseDesktop(desktop syscall.Handle) error {
@@ -236,6 +239,19 @@ func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DE
 		uintptr(devNum),
 		uintptr(unsafe.Pointer(displayDevice)),
 		uintptr(flags),
+		0,
+		0)
+	return r1 != 0
+}
+
+func EnumDisplayMonitors(hdc HDC, clip *RECT, fnEnum MonitorEnumProc, data LPARAM) bool {
+	r1, _, _ := syscall.Syscall6(
+		procEnumDisplayMonitors.Addr(),
+		4,
+		uintptr(hdc),
+		uintptr(unsafe.Pointer(clip)),
+		syscall.NewCallback(fnEnum),
+		uintptr(data),
 		0,
 		0)
 	return r1 != 0

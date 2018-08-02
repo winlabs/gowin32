@@ -17,6 +17,9 @@
 package gowin32
 
 import (
+	"syscall"
+	"unsafe"
+
 	"github.com/winlabs/gowin32/wrappers"
 )
 
@@ -32,11 +35,49 @@ const (
 	ProcessorArchitectureAMD64   ProcessorArchitecture = wrappers.PROCESSOR_ARCHITECTURE_AMD64
 )
 
+type DisplayDevice struct {
+	DeviceName   string
+	DeviceString string
+	StateFlags   uint32
+	DeviceID     string
+	DeviceKey    string
+}
+
+type DisplayMonitorInfo struct {
+	Handle wrappers.HMONITOR
+	Hdc    wrappers.HDC
+	Rect   wrappers.RECT
+}
+
 type ProcessorInfo struct {
 	ProcessorArchitecture ProcessorArchitecture
 	NumberOfProcessors    uint
 	ProcessorLevel        uint
 	ProcessorRevision     uint
+}
+
+func EnumAllDisplayDevices() []DisplayDevice {
+	result := make([]DisplayDevice, 0)
+	var device *uint16
+	var dd wrappers.DISPLAY_DEVICE
+	dd.Cb = uint32(unsafe.Sizeof(dd))
+
+	var i uint32
+	for i = 0; ; i++ {
+		if wrappers.EnumDisplayDevices(device, i, &dd, 0) {
+			result = append(result,
+				DisplayDevice{DeviceName: syscall.UTF16ToString(dd.DeviceName[:]),
+					DeviceString: syscall.UTF16ToString(dd.DeviceString[:]),
+					StateFlags:   dd.StateFlags,
+					DeviceID:     syscall.UTF16ToString(dd.DeviceID[:]),
+					DeviceKey:    syscall.UTF16ToString(dd.DeviceKey[:]),
+				})
+		} else {
+			break
+		}
+	}
+	return result
+
 }
 
 func GetProcessorInfo() *ProcessorInfo {
@@ -48,4 +89,23 @@ func GetProcessorInfo() *ProcessorInfo {
 		ProcessorLevel:        uint(si.ProcessorLevel),
 		ProcessorRevision:     uint(si.ProcessorRevision),
 	}
+}
+
+func EnumAllDisplayMonitors() []DisplayMonitorInfo {
+	r := enumAllDisplayMonitorsResult{Monitors: make([]DisplayMonitorInfo, 0)}
+	wrappers.EnumDisplayMonitors(wrappers.HDC(0),
+		nil,
+		enumAllDisplayMonitorsCallback,
+		wrappers.LPARAM(unsafe.Pointer(&r)))
+	return r.Monitors
+}
+
+type enumAllDisplayMonitorsResult struct {
+	Monitors []DisplayMonitorInfo
+}
+
+func enumAllDisplayMonitorsCallback(hmonitor wrappers.HMONITOR, hdc wrappers.HDC, rect *wrappers.RECT, data wrappers.LPARAM) uintptr {
+	result := (*enumAllDisplayMonitorsResult)(unsafe.Pointer(data))
+	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, Hdc: hdc, Rect: *rect})
+	return uintptr(1)
 }
