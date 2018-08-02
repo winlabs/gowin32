@@ -16,15 +16,6 @@
 
 package wrappers
 
-type LPARAM uintptr
-
-type RECT struct {
-	Left   int32
-	Top    int32
-	Right  int32
-	Bottom int32
-}
-
 const (
 	CLSCTX_INPROC_SERVER          = 0x00000001
 	CLSCTX_INPROC_HANDLER         = 0x00000002

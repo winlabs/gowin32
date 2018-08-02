@@ -38,15 +38,26 @@ const (
 type DisplayDevice struct {
 	DeviceName   string
 	DeviceString string
-	StateFlags   uint32
+	StateFlags   DisplayDeviceStateFlags
 	DeviceID     string
 	DeviceKey    string
 }
 
+type DisplayDeviceStateFlags uint32
+
+const (
+	DisplayDeviceActive          DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_ACTIVE
+	DisplayDevicePrimaryDevice   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_PRIMARY_DEVICE
+	DisplayDeviceMirroringDriver DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_MIRRORING_DRIVER
+	DisplayDeviceVgaCompatible   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_VGA_COMPATIBLE
+	DisplayDeviceRemovable       DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_REMOVABLE
+	DisplayDeviceModeSpruned     DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_MODESPRUNED
+)
+
 type DisplayMonitorInfo struct {
-	Handle wrappers.HMONITOR
-	Hdc    wrappers.HDC
-	Rect   wrappers.RECT
+	Handle        syscall.Handle
+	DeviceContext syscall.Handle
+	Rect          Rectangle
 }
 
 type ProcessorInfo struct {
@@ -56,7 +67,7 @@ type ProcessorInfo struct {
 	ProcessorRevision     uint
 }
 
-func EnumAllDisplayDevices() []DisplayDevice {
+func GetAllDisplayDevices() []DisplayDevice {
 	result := make([]DisplayDevice, 0)
 	var device *uint16
 	var dd wrappers.DISPLAY_DEVICE
@@ -68,7 +79,7 @@ func EnumAllDisplayDevices() []DisplayDevice {
 			result = append(result,
 				DisplayDevice{DeviceName: syscall.UTF16ToString(dd.DeviceName[:]),
 					DeviceString: syscall.UTF16ToString(dd.DeviceString[:]),
-					StateFlags:   dd.StateFlags,
+					StateFlags:   DisplayDeviceStateFlags(dd.StateFlags),
 					DeviceID:     syscall.UTF16ToString(dd.DeviceID[:]),
 					DeviceKey:    syscall.UTF16ToString(dd.DeviceKey[:]),
 				})
@@ -91,21 +102,21 @@ func GetProcessorInfo() *ProcessorInfo {
 	}
 }
 
-func EnumAllDisplayMonitors() []DisplayMonitorInfo {
-	r := enumAllDisplayMonitorsResult{Monitors: make([]DisplayMonitorInfo, 0)}
-	wrappers.EnumDisplayMonitors(wrappers.HDC(0),
+func GetAllDisplayMonitors() []DisplayMonitorInfo {
+	r := getAllDisplayMonitorsResult{Monitors: make([]DisplayMonitorInfo, 0)}
+	wrappers.EnumDisplayMonitors(syscall.Handle(0),
 		nil,
-		enumAllDisplayMonitorsCallback,
-		wrappers.LPARAM(unsafe.Pointer(&r)))
+		getAllDisplayMonitorsCallback,
+		uintptr(unsafe.Pointer(&r)))
 	return r.Monitors
 }
 
-type enumAllDisplayMonitorsResult struct {
+type getAllDisplayMonitorsResult struct {
 	Monitors []DisplayMonitorInfo
 }
 
-func enumAllDisplayMonitorsCallback(hmonitor wrappers.HMONITOR, hdc wrappers.HDC, rect *wrappers.RECT, data wrappers.LPARAM) uintptr {
-	result := (*enumAllDisplayMonitorsResult)(unsafe.Pointer(data))
-	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, Hdc: hdc, Rect: *rect})
-	return uintptr(1)
+func getAllDisplayMonitorsCallback(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, data uintptr) uintptr {
+	result := (*getAllDisplayMonitorsResult)(unsafe.Pointer(data))
+	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rect: rectToRectangle(*rect)})
+	return 1
 }

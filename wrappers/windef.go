@@ -16,15 +16,16 @@
 
 package wrappers
 
-import "syscall"
-
 const (
 	MAX_PATH = 260
 )
 
-type HDC syscall.Handle
-
-type HMONITOR syscall.Handle
+type RECT struct {
+	Left   int32
+	Top    int32
+	Right  int32
+	Bottom int32
+}
 
 func MAKELONG(low uint16, high uint16) uint32 {
 	return uint32(low) | (uint32(high) << 16)
