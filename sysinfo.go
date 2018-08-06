@@ -49,7 +49,7 @@ const (
 	DisplayDeviceActive          DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_ACTIVE
 	DisplayDevicePrimaryDevice   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_PRIMARY_DEVICE
 	DisplayDeviceMirroringDriver DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_MIRRORING_DRIVER
-	DisplayDeviceVgaCompatible   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_VGA_COMPATIBLE
+	DisplayDeviceVGACompatible   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_VGA_COMPATIBLE
 	DisplayDeviceRemovable       DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_REMOVABLE
 	DisplayDeviceModeSpruned     DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_MODESPRUNED
 )
@@ -57,7 +57,7 @@ const (
 type DisplayMonitorInfo struct {
 	Handle        syscall.Handle
 	DeviceContext syscall.Handle
-	Rect          Rectangle
+	Rectangle     Rectangle
 }
 
 type ProcessorInfo struct {
@@ -117,6 +117,6 @@ type getAllDisplayMonitorsResult struct {
 
 func getAllDisplayMonitorsCallback(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, data uintptr) uintptr {
 	result := (*getAllDisplayMonitorsResult)(unsafe.Pointer(data))
-	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rect: rectToRectangle(*rect)})
+	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rectangle: rectToRectangle(*rect)})
 	return 1
 }
