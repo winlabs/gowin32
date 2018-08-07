@@ -206,7 +206,7 @@ const (
 	EDD_GET_DEVICE_INTERFACE_NAME = 0x00000001
 )
 
-type MONITORENUMPROC func(hmonitor syscall.Handle, hdc syscall.Handle, rect *RECT, lparam uintptr) uintptr
+type MONITORENUMPROC func(hmonitor syscall.Handle, hdc syscall.Handle, rect *RECT, lparam uintptr) int32
 
 var (
 	moduser32 = syscall.NewLazyDLL("user32.dll")
@@ -245,12 +245,20 @@ func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DE
 }
 
 func EnumDisplayMonitors(hdc syscall.Handle, clip *RECT, fnEnum MONITORENUMPROC, data uintptr) bool {
+	fnEnumRaw := func(hmonitor uintptr, hdc uintptr, rect uintptr, lparam uintptr) uintptr {
+		return uintptr(fnEnum(
+			syscall.Handle(hmonitor),
+			syscall.Handle(hdc),
+			(*RECT)(unsafe.Pointer(rect)),
+			lparam))
+	}
+
 	r1, _, _ := syscall.Syscall6(
 		procEnumDisplayMonitors.Addr(),
 		4,
 		uintptr(hdc),
 		uintptr(unsafe.Pointer(clip)),
-		syscall.NewCallback(fnEnum),
+		syscall.NewCallback(fnEnumRaw),
 		uintptr(data),
 		0,
 		0)

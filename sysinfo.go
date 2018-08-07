@@ -115,7 +115,7 @@ type getAllDisplayMonitorsResult struct {
 	Monitors []DisplayMonitorInfo
 }
 
-func getAllDisplayMonitorsCallback(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, data uintptr) uintptr {
+func getAllDisplayMonitorsCallback(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, data uintptr) int32 {
 	result := (*getAllDisplayMonitorsResult)(unsafe.Pointer(data))
 	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rectangle: rectToRectangle(*rect)})
 	return 1
