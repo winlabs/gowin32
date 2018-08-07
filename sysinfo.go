@@ -17,6 +17,9 @@
 package gowin32
 
 import (
+	"syscall"
+	"unsafe"
+
 	"github.com/winlabs/gowin32/wrappers"
 )
 
@@ -32,11 +35,60 @@ const (
 	ProcessorArchitectureAMD64   ProcessorArchitecture = wrappers.PROCESSOR_ARCHITECTURE_AMD64
 )
 
+type DisplayDevice struct {
+	DeviceName   string
+	DeviceString string
+	StateFlags   DisplayDeviceStateFlags
+	DeviceID     string
+	DeviceKey    string
+}
+
+type DisplayDeviceStateFlags uint32
+
+const (
+	DisplayDeviceActive          DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_ACTIVE
+	DisplayDevicePrimaryDevice   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_PRIMARY_DEVICE
+	DisplayDeviceMirroringDriver DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_MIRRORING_DRIVER
+	DisplayDeviceVGACompatible   DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_VGA_COMPATIBLE
+	DisplayDeviceRemovable       DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_REMOVABLE
+	DisplayDeviceModeSpruned     DisplayDeviceStateFlags = wrappers.DISPLAY_DEVICE_MODESPRUNED
+)
+
+type DisplayMonitorInfo struct {
+	Handle        syscall.Handle
+	DeviceContext syscall.Handle
+	Rectangle     Rectangle
+}
+
 type ProcessorInfo struct {
 	ProcessorArchitecture ProcessorArchitecture
 	NumberOfProcessors    uint
 	ProcessorLevel        uint
 	ProcessorRevision     uint
+}
+
+func GetAllDisplayDevices() []DisplayDevice {
+	result := make([]DisplayDevice, 0)
+	var device *uint16
+	var dd wrappers.DISPLAY_DEVICE
+	dd.Cb = uint32(unsafe.Sizeof(dd))
+
+	var i uint32
+	for i = 0; ; i++ {
+		if wrappers.EnumDisplayDevices(device, i, &dd, 0) {
+			result = append(result,
+				DisplayDevice{DeviceName: syscall.UTF16ToString(dd.DeviceName[:]),
+					DeviceString: syscall.UTF16ToString(dd.DeviceString[:]),
+					StateFlags:   DisplayDeviceStateFlags(dd.StateFlags),
+					DeviceID:     syscall.UTF16ToString(dd.DeviceID[:]),
+					DeviceKey:    syscall.UTF16ToString(dd.DeviceKey[:]),
+				})
+		} else {
+			break
+		}
+	}
+	return result
+
 }
 
 func GetProcessorInfo() *ProcessorInfo {
@@ -48,4 +100,23 @@ func GetProcessorInfo() *ProcessorInfo {
 		ProcessorLevel:        uint(si.ProcessorLevel),
 		ProcessorRevision:     uint(si.ProcessorRevision),
 	}
+}
+
+func GetAllDisplayMonitors() []DisplayMonitorInfo {
+	r := getAllDisplayMonitorsResult{Monitors: make([]DisplayMonitorInfo, 0)}
+	wrappers.EnumDisplayMonitors(syscall.Handle(0),
+		nil,
+		getAllDisplayMonitorsCallback,
+		uintptr(unsafe.Pointer(&r)))
+	return r.Monitors
+}
+
+type getAllDisplayMonitorsResult struct {
+	Monitors []DisplayMonitorInfo
+}
+
+func getAllDisplayMonitorsCallback(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, data uintptr) int32 {
+	result := (*getAllDisplayMonitorsResult)(unsafe.Pointer(data))
+	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rectangle: rectToRectangle(*rect)})
+	return 1
 }
