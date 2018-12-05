@@ -17,6 +17,9 @@
 package gowin32
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/winlabs/gowin32/wrappers"
 
 	"os"
@@ -132,4 +135,48 @@ func TouchFile(f *os.File) error {
 		return NewWindowsError("SetFileTime", err)
 	}
 	return nil
+}
+
+func GetFinalPathName(fileName string, openFlags uint32, finalPathFlags uint32) (result string, err error) {
+	// Todo: GetFinalPathName does not exists on Windows XP. We need other method to get final path name.
+	// Now we use recover() for interoperability with XP
+	defer func() {
+		if e := recover(); e != nil {
+			err = NewWindowsError("GetFinalPathName", errors.New("function call error"))
+		}
+	}()
+
+	file, e := wrappers.CreateFile(
+		syscall.StringToUTF16Ptr(fileName),
+		wrappers.GENERIC_READ,
+		wrappers.FILE_SHARE_READ,
+		nil,
+		wrappers.OPEN_EXISTING,
+		openFlags,
+		0)
+	if e != nil {
+		return "", NewWindowsError("CreateFile", e)
+	}
+	defer wrappers.CloseHandle(file)
+
+	buf := make([]uint16, wrappers.MAX_PATH)
+	if _, err = wrappers.GetFinalPathNameByHandle(file, &buf[0], wrappers.MAX_PATH, finalPathFlags); err != nil {
+		return "", NewWindowsError("GetFinalPathNameByHandle", err)
+	}
+	result = syscall.UTF16ToString(buf)
+	return result, err
+}
+
+// GetFinalPathNameAsDosName returns symlik target in "DOS" format (c:\dir\name) or source fileName if fileName is normal,
+// not symlinked file
+func GetFinalPathNameAsDosName(fileName string) (string, error) {
+	result, err := GetFinalPathName(fileName, wrappers.FILE_ATTRIBUTE_NORMAL|wrappers.FILE_FLAG_BACKUP_SEMANTICS, wrappers.VOLUME_NAME_DOS)
+	if err != nil {
+		return "", err
+	}
+	// GetFinalPathName can return path in the \?\ syntax
+	if strings.HasPrefix(result, "\\\\?\\") {
+		result = result[4:]
+	}
+	return result, nil
 }
