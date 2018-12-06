@@ -17,7 +17,6 @@
 package gowin32
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/winlabs/gowin32/wrappers"
@@ -138,14 +137,11 @@ func TouchFile(f *os.File) error {
 }
 
 func GetFinalPathName(fileName string, openFlags uint32, finalPathFlags uint32) (result string, err error) {
-	// Todo: GetFinalPathName does not exists on Windows XP. We need other method to get final path name.
-	// Now we use recover() for interoperability with XP
-	defer func() {
-		if e := recover(); e != nil {
-			err = NewWindowsError("GetFinalPathName", errors.New("function call error"))
-		}
-	}()
-
+	isXP, _ := IsWindowsXP()
+	if isXP {
+		// Todo: resolve symlink target on Windows XP
+		return fileName, nil
+	}
 	file, e := wrappers.CreateFile(
 		syscall.StringToUTF16Ptr(fileName),
 		wrappers.GENERIC_READ,

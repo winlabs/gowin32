@@ -172,3 +172,19 @@ func GetWindowsVersion() (*OSVersionInfo, error) {
 		ProductType:      VerProductType(osvi.ProductType),
 	}, nil
 }
+
+func IsWindowsXP() (bool, error) {
+	osVer, err := GetWindowsVersion()
+	if err != nil {
+		return false, err
+	}
+	if osVer.PlatformId == VerPlatformWindowsNT {
+		if osVer.MajorVersion == 5 && osVer.MinorVersion == 1 {
+			return true, nil
+		}
+		if osVer.MajorVersion == 5 && osVer.MinorVersion == 2 && osVer.ProductType != VerProductWorkstation {
+			return true, nil
+		}
+	}
+	return false, nil
+}
