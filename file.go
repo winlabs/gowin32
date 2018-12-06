@@ -137,11 +137,13 @@ func TouchFile(f *os.File) error {
 }
 
 func GetFinalPathName(fileName string, openFlags uint32, finalPathFlags uint32) (result string, err error) {
-	isXP, _ := IsWindowsXP()
-	if isXP {
-		// Todo: resolve symlink target on Windows XP
+	if isVistaOrGreater, e := IsWindowsVistaOrGreater(); e != nil {
+		return "", NewWindowsError("IsWindowsVistaOrGreater", e)
+	} else if !isVistaOrGreater {
+		// Todo: resolve symlink target on Windows XP, 2003
 		return fileName, nil
 	}
+
 	file, e := wrappers.CreateFile(
 		syscall.StringToUTF16Ptr(fileName),
 		wrappers.GENERIC_READ,
