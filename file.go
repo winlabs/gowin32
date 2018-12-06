@@ -163,9 +163,9 @@ func GetFinalPathName(fileName string, openFlags uint32, finalPathFlags uint32) 
 	return result, err
 }
 
-// GetFinalPathNameAsDosName returns symlik target in "DOS" format (c:\dir\name) or source fileName if fileName is normal,
+// GetFinalPathNameAsDOSName returns symlik target in "DOS" format (c:\dir\name) or source fileName if fileName is normal,
 // not symlinked file
-func GetFinalPathNameAsDosName(fileName string) (string, error) {
+func GetFinalPathNameAsDOSName(fileName string) (string, error) {
 	result, err := GetFinalPathName(fileName, wrappers.FILE_ATTRIBUTE_NORMAL|wrappers.FILE_FLAG_BACKUP_SEMANTICS, wrappers.VOLUME_NAME_DOS)
 	if err != nil {
 		return "", err

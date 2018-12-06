@@ -209,7 +209,7 @@ func GetSubdirsInfo(dirName string) ([]FindFileItem, error) {
 
 func getFilesInfo(dirName, mask string, recursive bool, dirsProcessed *[]string, result *[]FindFileItem) error {
 	// get symlinkDirName
-	symlinkDirName, _ := GetFinalPathNameAsDosName(dirName)
+	symlinkDirName, _ := GetFinalPathNameAsDOSName(dirName)
 	if strings.EqualFold(dirName, symlinkDirName) {
 		// if dirName is normal (not symlinked) GetFinalPathNameAsDosName return dirName, so we clearing symlinkDirName
 		symlinkDirName = ""
