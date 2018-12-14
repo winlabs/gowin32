@@ -1651,23 +1651,6 @@ func UpdateResource(update syscall.Handle, resourceType uintptr, name uintptr, l
 	return nil
 }
 
-func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
-	r1, _, e1 := syscall.Syscall(
-		procVerifyVersionInfoW.Addr(),
-		3,
-		uintptr(unsafe.Pointer(versionInfo)),
-		uintptr(typeMask),
-		uintptr(conditionMask))
-	if r1 == 0 {
-		if e1 != ERROR_SUCCESS {
-			return e1
-		} else {
-			return syscall.EINVAL
-		}
-	}
-	return nil
-}
-
 func WaitForMultipleObjects(count uint32, handle *syscall.Handle, waitAll bool, milliseconds uint32) (uint32, error) {
 	r1, _, e1 := syscall.Syscall6(
 		procWaitForMultipleObjects.Addr(),

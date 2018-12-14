@@ -1518,12 +1518,3 @@ func RtlZeroMemory(destination *byte, length uintptr) {
 		0)
 }
 
-func VerSetConditionMask(conditionMask uint64, typeBitMask uint32, condition uint8) uint64 {
-	r1, _, _ := syscall.Syscall(
-		procVerSetConditionMask.Addr(),
-		3,
-		uintptr(conditionMask),
-		uintptr(typeBitMask),
-		uintptr(condition))
-	return uint64(r1)
-}
