@@ -14,31 +14,29 @@
  * limitations under the License.
  */
 
-// +build 386
-
-package wrappers
+package gowin32
 
 import (
 	"syscall"
-	"unsafe"
+
+	"github.com/winlabs/gowin32/wrappers"
 )
 
-func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
-	r1, _, e1 := syscall.Syscall6(
-		procVerifyVersionInfoW.Addr(),
-		4,
-		uintptr(unsafe.Pointer(versionInfo)),
-		uintptr(typeMask),
-		uintptr(loUint32(conditionMask)),
-		uintptr(hiUint32(conditionMask)),
-		0,
-		0)
-	if r1 == 0 {
-		if e1 != ERROR_SUCCESS {
-			return e1
-		} else {
-			return syscall.EINVAL
-		}
+func GetWindowProcessId(hwnd syscall.Handle) syscall.Handle {
+	var pid uint32
+	wrappers.GetWindowThreadProcessId(hwnd, &pid)
+	return syscall.Handle(pid)
+}
+
+func GetWindowText(hwnd syscall.Handle) (string, error) {
+	buf := make([]uint16, 512)
+	if _, err := wrappers.GetWindowText(hwnd, &buf[0], len(buf)); err != nil {
+		return "", err
 	}
-	return nil
+	return syscall.UTF16ToString(buf), nil
+}
+
+func GetWindowThreadId(hwnd syscall.Handle) syscall.Handle {
+	var pid uint32
+	return syscall.Handle(wrappers.GetWindowThreadProcessId(hwnd, &pid))
 }

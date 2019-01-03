@@ -49,3 +49,15 @@ func boolToUintptr(value bool) uintptr {
 
 	return uintptr(valueRaw)
 }
+
+func makeUint64(lo, hi uint32) uint64 {
+	return uint64(lo) | (uint64(hi) << 32)
+}
+
+func loUint32(value uint64) uint32 {
+	return uint32(value & 0xffffffff)
+}
+
+func hiUint32(value uint64) uint32 {
+	return uint32(value >> 32)
+}

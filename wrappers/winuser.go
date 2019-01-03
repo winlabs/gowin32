@@ -211,12 +211,15 @@ type MONITORENUMPROC func(hmonitor syscall.Handle, hdc syscall.Handle, rect *REC
 var (
 	moduser32 = syscall.NewLazyDLL("user32.dll")
 
-	procCloseDesktop        = moduser32.NewProc("CloseDesktop")
-	procEnumDisplayDevicesW = moduser32.NewProc("EnumDisplayDevicesW")
-	procEnumDisplayMonitors = moduser32.NewProc("EnumDisplayMonitors")
-	procGetSystemMetrics    = moduser32.NewProc("GetSystemMetrics")
-	procOpenInputDesktop    = moduser32.NewProc("OpenInputDesktop")
-	procSetThreadDesktop    = moduser32.NewProc("SetThreadDesktop")
+	procCloseDesktop             = moduser32.NewProc("CloseDesktop")
+	procEnumDisplayDevicesW      = moduser32.NewProc("EnumDisplayDevicesW")
+	procEnumDisplayMonitors      = moduser32.NewProc("EnumDisplayMonitors")
+	procGetForegroundWindow      = moduser32.NewProc("GetForegroundWindow")
+	procGetSystemMetrics         = moduser32.NewProc("GetSystemMetrics")
+	procGetWindowText            = moduser32.NewProc("GetWindowTextW")
+	procGetWindowThreadProcessId = moduser32.NewProc("GetWindowThreadProcessId")
+	procOpenInputDesktop         = moduser32.NewProc("OpenInputDesktop")
+	procSetThreadDesktop         = moduser32.NewProc("SetThreadDesktop")
 )
 
 func CloseDesktop(desktop syscall.Handle) error {
@@ -229,6 +232,28 @@ func CloseDesktop(desktop syscall.Handle) error {
 		}
 	}
 	return nil
+}
+
+func GetForegroundWindow() syscall.Handle {
+	r1, _, _ := syscall.Syscall(procGetForegroundWindow.Addr(), 0, 0, 0, 0)
+	return syscall.Handle(r1)
+}
+
+func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int) (int, error) {
+	r1, _, e1 := syscall.Syscall(
+		procGetWindowText.Addr(),
+		3,
+		uintptr(hwnd), uintptr(unsafe.Pointer(buffer)),
+		uintptr(maxCount))
+	if e1 != ERROR_SUCCESS {
+		return int(r1), e1
+	}
+	return int(r1), nil
+}
+
+func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) syscall.Handle {
+	r1, _, _ := syscall.Syscall(procGetWindowThreadProcessId.Addr(), 2, uintptr(hwnd), uintptr(unsafe.Pointer(processID)), 0)
+	return syscall.Handle(r1)
 }
 
 func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DEVICE, flags uint32) bool {

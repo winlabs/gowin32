@@ -18,18 +18,19 @@
 
 package wrappers
 
-import "syscall"
+import (
+	"syscall"
+)
 
 func VerSetConditionMask(conditionMask uint64, typeBitMask uint32, condition uint8) uint64 {
-	conditionMaskLo, conditionMaskHi := splitUint64To32(conditionMask)
 	r1, r2, _ := syscall.Syscall6(
 		procVerSetConditionMask.Addr(),
 		4,
-		uintptr(conditionMaskLo),
-		uintptr(conditionMaskHi),
+		uintptr(loUint32(conditionMask)),
+		uintptr(hiUint32(conditionMask)),
 		uintptr(typeBitMask),
 		uintptr(condition),
 		0,
 		0)
-	return joinUint32To64(uint32(r1), uint32(r2))
+	return makeUint64(uint32(r1), uint32(r2))
 }
