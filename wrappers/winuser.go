@@ -240,17 +240,19 @@ func GetForegroundWindow() syscall.Handle {
 	return syscall.Handle(r1)
 }
 
-func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int32) (int, error) {
+func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int32) (int32, error) {
 	r1, _, e1 := syscall.Syscall(
 		procGetWindowTextW.Addr(),
 		3,
 		uintptr(hwnd),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(maxCount))
-	if e1 != ERROR_SUCCESS {
-		return int(r1), e1
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		}
 	}
-	return int(r1), nil
+	return int32(r1), nil
 }
 
 func GetWindowTextLength(hwnd syscall.Handle) (int32, error) {
@@ -260,13 +262,15 @@ func GetWindowTextLength(hwnd syscall.Handle) (int32, error) {
 		uintptr(hwnd),
 		0,
 		0)
-	if e1 != ERROR_SUCCESS {
-		return int32(r1), e1
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		}
 	}
 	return int32(r1), nil
 }
 
-func GetWindowThreadProcessID(hwnd syscall.Handle, processID *uint32) (uint32, error) {
+func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) (uint32, error) {
 	r1, _, e1 := syscall.Syscall(procGetWindowThreadProcessId.Addr(), 2, uintptr(hwnd), uintptr(unsafe.Pointer(processID)), 0)
 	if e1 != ERROR_SUCCESS {
 		return uint32(r1), e1
