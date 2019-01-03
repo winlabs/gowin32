@@ -216,7 +216,8 @@ var (
 	procEnumDisplayMonitors      = moduser32.NewProc("EnumDisplayMonitors")
 	procGetForegroundWindow      = moduser32.NewProc("GetForegroundWindow")
 	procGetSystemMetrics         = moduser32.NewProc("GetSystemMetrics")
-	procGetWindowText            = moduser32.NewProc("GetWindowTextW")
+	procGetWindowTextW           = moduser32.NewProc("GetWindowTextW")
+	procGetWindowTextLengthW     = moduser32.NewProc("GetWindowTextLengthW")
 	procGetWindowThreadProcessId = moduser32.NewProc("GetWindowThreadProcessId")
 	procOpenInputDesktop         = moduser32.NewProc("OpenInputDesktop")
 	procSetThreadDesktop         = moduser32.NewProc("SetThreadDesktop")
@@ -239,11 +240,12 @@ func GetForegroundWindow() syscall.Handle {
 	return syscall.Handle(r1)
 }
 
-func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int) (int, error) {
+func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int32) (int, error) {
 	r1, _, e1 := syscall.Syscall(
-		procGetWindowText.Addr(),
+		procGetWindowTextW.Addr(),
 		3,
-		uintptr(hwnd), uintptr(unsafe.Pointer(buffer)),
+		uintptr(hwnd),
+		uintptr(unsafe.Pointer(buffer)),
 		uintptr(maxCount))
 	if e1 != ERROR_SUCCESS {
 		return int(r1), e1
@@ -251,9 +253,25 @@ func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int) (int, erro
 	return int(r1), nil
 }
 
-func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) syscall.Handle {
-	r1, _, _ := syscall.Syscall(procGetWindowThreadProcessId.Addr(), 2, uintptr(hwnd), uintptr(unsafe.Pointer(processID)), 0)
-	return syscall.Handle(r1)
+func GetWindowTextLength(hwnd syscall.Handle) (int32, error) {
+	r1, _, e1 := syscall.Syscall(
+		procGetWindowTextLengthW.Addr(),
+		1,
+		uintptr(hwnd),
+		0,
+		0)
+	if e1 != ERROR_SUCCESS {
+		return int32(r1), e1
+	}
+	return int32(r1), nil
+}
+
+func GetWindowThreadProcessID(hwnd syscall.Handle, processID *uint32) (uint32, error) {
+	r1, _, e1 := syscall.Syscall(procGetWindowThreadProcessId.Addr(), 2, uintptr(hwnd), uintptr(unsafe.Pointer(processID)), 0)
+	if e1 != ERROR_SUCCESS {
+		return uint32(r1), e1
+	}
+	return uint32(r1), nil
 }
 
 func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DEVICE, flags uint32) bool {

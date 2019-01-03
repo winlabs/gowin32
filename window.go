@@ -22,21 +22,26 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 )
 
-func GetWindowProcessId(hwnd syscall.Handle) syscall.Handle {
+func GetWindowProcessID(hwnd syscall.Handle) uint {
 	var pid uint32
-	wrappers.GetWindowThreadProcessId(hwnd, &pid)
-	return syscall.Handle(pid)
+	wrappers.GetWindowThreadProcessID(hwnd, &pid)
+	return uint(pid)
 }
 
 func GetWindowText(hwnd syscall.Handle) (string, error) {
-	buf := make([]uint16, 512)
-	if _, err := wrappers.GetWindowText(hwnd, &buf[0], len(buf)); err != nil {
+	l, err := wrappers.GetWindowTextLength(hwnd)
+	if err != nil {
+		return "", err
+	}
+	buf := make([]uint16, l+1)
+	if _, err := wrappers.GetWindowText(hwnd, &buf[0], l+1); err != nil {
 		return "", err
 	}
 	return syscall.UTF16ToString(buf), nil
 }
 
-func GetWindowThreadId(hwnd syscall.Handle) syscall.Handle {
+func GetWindowThreadID(hwnd syscall.Handle) (uint, error) {
 	var pid uint32
-	return syscall.Handle(wrappers.GetWindowThreadProcessId(hwnd, &pid))
+	r, err := wrappers.GetWindowThreadProcessID(hwnd, &pid)
+	return uint(r), err
 }
