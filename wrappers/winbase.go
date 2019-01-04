@@ -355,6 +355,7 @@ var (
 	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
 	procSetInformationJobObject           = modkernel32.NewProc("SetInformationJobObject")
+	procSetLastError                      = modkernel32.NewProc("SetLastError")
 	procSetStdHandle                      = modkernel32.NewProc("SetStdHandle")
 	procTerminateJobObject                = modkernel32.NewProc("TerminateJobObject")
 	procTerminateProcess                  = modkernel32.NewProc("TerminateProcess")
@@ -390,6 +391,10 @@ var (
 	procSetSecurityDescriptorDacl    = modadvapi32.NewProc("SetSecurityDescriptorDacl")
 	procSetSecurityDescriptorOwner   = modadvapi32.NewProc("SetSecurityDescriptorOwner")
 )
+
+func SetLastError(errCode syscall.Errno) {
+	syscall.Syscall(procSetLastError.Addr(), 1, uintptr(errCode), 0, 0)
+}
 
 func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(

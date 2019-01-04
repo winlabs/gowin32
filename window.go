@@ -36,6 +36,9 @@ func GetWindowText(hwnd syscall.Handle) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if l == 0 {
+		return "", nil
+	}
 	buf := make([]uint16, l+1)
 	if _, err := wrappers.GetWindowText(hwnd, &buf[0], l+1); err != nil {
 		return "", NewWindowsError("GetWindowText", err)
