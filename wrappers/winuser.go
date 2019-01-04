@@ -272,8 +272,12 @@ func GetWindowTextLength(hwnd syscall.Handle) (int32, error) {
 
 func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) (uint32, error) {
 	r1, _, e1 := syscall.Syscall(procGetWindowThreadProcessId.Addr(), 2, uintptr(hwnd), uintptr(unsafe.Pointer(processID)), 0)
-	if e1 != ERROR_SUCCESS {
-		return uint32(r1), e1
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
 	}
 	return uint32(r1), nil
 }

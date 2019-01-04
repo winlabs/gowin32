@@ -34,7 +34,7 @@ func GetWindowProcessID(hwnd syscall.Handle) (uint, error) {
 func GetWindowText(hwnd syscall.Handle) (string, error) {
 	l, err := wrappers.GetWindowTextLength(hwnd)
 	if err != nil {
-		return "", err
+		return "", NewWindowsError("GetWindowTextLength", err)
 	}
 	if l == 0 {
 		return "", nil
