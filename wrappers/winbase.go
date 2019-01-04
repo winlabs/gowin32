@@ -141,6 +141,18 @@ const (
 )
 
 const (
+	VOLUME_NAME_DOS  = 0x0
+	VOLUME_NAME_GUID = 0x1
+	VOLUME_NAME_NT   = 0x2
+	VOLUME_NAME_NONE = 0x4
+)
+
+const (
+	FILE_NAME_NORMALIZED = 0x0
+	FILE_NAME_OPENED     = 0x8
+)
+
+const (
 	DRIVE_UNKNOWN     = 0
 	DRIVE_NO_ROOT_DIR = 1
 	DRIVE_REMOVABLE   = 2
@@ -303,6 +315,7 @@ var (
 	procGetEnvironmentVariableW           = modkernel32.NewProc("GetEnvironmentVariableW")
 	procGetFileAttributesW                = modkernel32.NewProc("GetFileAttributesW")
 	procGetFileSize                       = modkernel32.NewProc("GetFileSize")
+	procGetFinalPathNameByHandle          = modkernel32.NewProc("GetFinalPathNameByHandleW")
 	procGetModuleFileNameW                = modkernel32.NewProc("GetModuleFileNameW")
 	procGetProcessTimes                   = modkernel32.NewProc("GetProcessTimes")
 	procGetStdHandle                      = modkernel32.NewProc("GetStdHandle")
@@ -342,6 +355,7 @@ var (
 	procSetFileAttributesW                = modkernel32.NewProc("SetFileAttributesW")
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
 	procSetInformationJobObject           = modkernel32.NewProc("SetInformationJobObject")
+	procSetLastError                      = modkernel32.NewProc("SetLastError")
 	procSetStdHandle                      = modkernel32.NewProc("SetStdHandle")
 	procTerminateJobObject                = modkernel32.NewProc("TerminateJobObject")
 	procTerminateProcess                  = modkernel32.NewProc("TerminateProcess")
@@ -377,6 +391,10 @@ var (
 	procSetSecurityDescriptorDacl    = modadvapi32.NewProc("SetSecurityDescriptorDacl")
 	procSetSecurityDescriptorOwner   = modadvapi32.NewProc("SetSecurityDescriptorOwner")
 )
+
+func SetLastError(errCode syscall.Errno) {
+	syscall.Syscall(procSetLastError.Addr(), 1, uintptr(errCode), 0, 0)
+}
 
 func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(
@@ -902,6 +920,26 @@ func GetFileSize(file syscall.Handle, fileSizeHigh *uint32) (uint32, error) {
 		2,
 		uintptr(file),
 		uintptr(unsafe.Pointer(fileSizeHigh)),
+		0)
+	if r1 == INVALID_FILE_SIZE {
+		if e1 != ERROR_SUCCESS {
+			return uint32(r1), e1
+		} else {
+			return uint32(r1), syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
+func GetFinalPathNameByHandle(handle syscall.Handle, filepath *uint16, size uint32, flags uint32) (uint32, error) {
+	r1, _, e1 := syscall.Syscall6(
+		procGetFinalPathNameByHandle.Addr(),
+		4,
+		uintptr(handle),
+		uintptr(unsafe.Pointer(filepath)),
+		uintptr(size),
+		uintptr(flags),
+		0,
 		0)
 	if r1 == INVALID_FILE_SIZE {
 		if e1 != ERROR_SUCCESS {
@@ -1608,23 +1646,6 @@ func UpdateResource(update syscall.Handle, resourceType uintptr, name uintptr, l
 		uintptr(language),
 		uintptr(unsafe.Pointer(data)),
 		uintptr(cbData))
-	if r1 == 0 {
-		if e1 != ERROR_SUCCESS {
-			return e1
-		} else {
-			return syscall.EINVAL
-		}
-	}
-	return nil
-}
-
-func VerifyVersionInfo(versionInfo *OSVERSIONINFOEX, typeMask uint32, conditionMask uint64) error {
-	r1, _, e1 := syscall.Syscall(
-		procVerifyVersionInfoW.Addr(),
-		3,
-		uintptr(unsafe.Pointer(versionInfo)),
-		uintptr(typeMask),
-		uintptr(conditionMask))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

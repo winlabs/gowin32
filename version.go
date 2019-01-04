@@ -172,3 +172,75 @@ func GetWindowsVersion() (*OSVersionInfo, error) {
 		ProductType:      VerProductType(osvi.ProductType),
 	}, nil
 }
+
+func IsWindowsXP() (bool, error) {
+	osVer, err := GetWindowsVersion()
+	if err != nil {
+		return false, err
+	}
+	if osVer.PlatformId == VerPlatformWindowsNT {
+		if osVer.MajorVersion == 5 && osVer.MinorVersion == 1 {
+			return true, nil
+		}
+		if osVer.MajorVersion == 5 && osVer.MinorVersion == 2 && osVer.ProductType != VerProductWorkstation {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func IsWindowsVersionOrGreater(majorVersion uint, minorVersion uint, servicePackMajor uint) (bool, error) {
+	vc := VersionCheck{}
+	vc.MajorVersion(VerGreaterEqual, majorVersion)
+	vc.MinorVersion(VerGreaterEqual, minorVersion)
+	vc.ServicePackMajor(VerGreaterEqual, servicePackMajor)
+	return vc.Verify()
+}
+
+func IsWindowsXPOrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(5, 1, 0)
+}
+
+func IsWindowsXPSP1OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(5, 1, 1)
+}
+
+func IsWindowsXPSP2OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(5, 1, 2)
+}
+
+func IsWindowsXPSP3OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(5, 1, 3)
+}
+
+func IsWindowsVistaOrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 0, 0)
+}
+
+func IsWindowsVistaSP1OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 0, 1)
+}
+
+func IsWindowsVistaSP2OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 0, 2)
+}
+
+func IsWindows7OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 1, 0)
+}
+
+func IsWindows7SP1OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 1, 1)
+}
+
+func IsWindows8OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 2, 0)
+}
+
+func IsWindows8Point1OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(6, 3, 0)
+}
+
+func IsWindows10OrGreater() (bool, error) {
+	return IsWindowsVersionOrGreater(10, 0, 0)
+}

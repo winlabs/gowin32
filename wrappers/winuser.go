@@ -211,12 +211,16 @@ type MONITORENUMPROC func(hmonitor syscall.Handle, hdc syscall.Handle, rect *REC
 var (
 	moduser32 = syscall.NewLazyDLL("user32.dll")
 
-	procCloseDesktop        = moduser32.NewProc("CloseDesktop")
-	procEnumDisplayDevicesW = moduser32.NewProc("EnumDisplayDevicesW")
-	procEnumDisplayMonitors = moduser32.NewProc("EnumDisplayMonitors")
-	procGetSystemMetrics    = moduser32.NewProc("GetSystemMetrics")
-	procOpenInputDesktop    = moduser32.NewProc("OpenInputDesktop")
-	procSetThreadDesktop    = moduser32.NewProc("SetThreadDesktop")
+	procCloseDesktop             = moduser32.NewProc("CloseDesktop")
+	procEnumDisplayDevicesW      = moduser32.NewProc("EnumDisplayDevicesW")
+	procEnumDisplayMonitors      = moduser32.NewProc("EnumDisplayMonitors")
+	procGetForegroundWindow      = moduser32.NewProc("GetForegroundWindow")
+	procGetSystemMetrics         = moduser32.NewProc("GetSystemMetrics")
+	procGetWindowTextW           = moduser32.NewProc("GetWindowTextW")
+	procGetWindowTextLengthW     = moduser32.NewProc("GetWindowTextLengthW")
+	procGetWindowThreadProcessId = moduser32.NewProc("GetWindowThreadProcessId")
+	procOpenInputDesktop         = moduser32.NewProc("OpenInputDesktop")
+	procSetThreadDesktop         = moduser32.NewProc("SetThreadDesktop")
 )
 
 func CloseDesktop(desktop syscall.Handle) error {
@@ -229,6 +233,53 @@ func CloseDesktop(desktop syscall.Handle) error {
 		}
 	}
 	return nil
+}
+
+func GetForegroundWindow() syscall.Handle {
+	r1, _, _ := syscall.Syscall(procGetForegroundWindow.Addr(), 0, 0, 0, 0)
+	return syscall.Handle(r1)
+}
+
+func GetWindowText(hwnd syscall.Handle, buffer *uint16, maxCount int32) (int32, error) {
+	r1, _, e1 := syscall.Syscall(
+		procGetWindowTextW.Addr(),
+		3,
+		uintptr(hwnd),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(maxCount))
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		}
+	}
+	return int32(r1), nil
+}
+
+func GetWindowTextLength(hwnd syscall.Handle) (int32, error) {
+	r1, _, e1 := syscall.Syscall(
+		procGetWindowTextLengthW.Addr(),
+		1,
+		uintptr(hwnd),
+		0,
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		}
+	}
+	return int32(r1), nil
+}
+
+func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) (uint32, error) {
+	r1, _, e1 := syscall.Syscall(procGetWindowThreadProcessId.Addr(), 2, uintptr(hwnd), uintptr(unsafe.Pointer(processID)), 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
 }
 
 func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DEVICE, flags uint32) bool {

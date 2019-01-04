@@ -17,6 +17,9 @@
 package gowin32
 
 import (
+	"strings"
+	"time"
+
 	"github.com/winlabs/gowin32/wrappers"
 
 	"path/filepath"
@@ -39,6 +42,9 @@ const (
 
 type FindFileItem struct {
 	FileAttributes    FileAttributes
+	CreationTime      time.Time
+	LastAccessTime    time.Time
+	LastWriteTime     time.Time
 	FileSize          uint64
 	ReparseTag        ReparseTag
 	FileName          string
@@ -69,6 +75,9 @@ func (self *FindFile) Close() error {
 func (self *FindFile) Current() FindFileItem {
 	return FindFileItem{
 		FileAttributes:    FileAttributes(self.current.FileAttributes),
+		CreationTime:      windowsFileTimeToTime(int64(fileTimeToUint64(self.current.CreationTime))),
+		LastAccessTime:    windowsFileTimeToTime(int64(fileTimeToUint64(self.current.LastAccessTime))),
+		LastWriteTime:     windowsFileTimeToTime(int64(fileTimeToUint64(self.current.LastWriteTime))),
 		FileSize:          (uint64(self.current.FileSizeHigh) << 32) | uint64(self.current.FileSizeLow),
 		ReparseTag:        ReparseTag(self.current.Reserved0),
 		FileName:          syscall.UTF16ToString(self.current.FileName[:]),
@@ -169,5 +178,103 @@ func GetDirectorySizeOnDisk(dirName string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return getDirectorySizeOnDisk(dirName, uint64(sectorsPerCluster) * uint64(bytesPerSector))
+	return getDirectorySizeOnDisk(dirName, uint64(sectorsPerCluster)*uint64(bytesPerSector))
+}
+
+// GetSubdirsInfo returns information about all subdirectories of the directory
+func GetSubdirsInfo(dirName string) ([]FindFileItem, error) {
+
+	ff := OpenFindFile(filepath.Join(dirName, "*"))
+	defer ff.Close()
+
+	result := make([]FindFileItem, 0)
+	for {
+		found, err := ff.Next()
+		if err != nil {
+			return nil, err
+		}
+
+		if found {
+			info := ff.Current()
+			if info.FileName != "." && info.FileName != ".." && (info.FileAttributes&FileAttributeDirectory) != 0 {
+				result = append(result, info)
+			}
+		} else {
+			break
+		}
+	}
+
+	return result, nil
+}
+
+func getFilesInfo(dirName, mask string, recursive bool, dirsProcessed *[]string, result *[]FindFileItem) error {
+	// get symlinkDirName
+	symlinkDirName, _ := GetFinalPathNameAsDOSName(dirName)
+	if strings.EqualFold(dirName, symlinkDirName) {
+		// if dirName is normal (not symlinked) GetFinalPathNameAsDosName return dirName, so we clearing symlinkDirName
+		symlinkDirName = ""
+	}
+
+	// skip already processed dirs
+	for _, dir := range *dirsProcessed {
+		if strings.EqualFold(dir, dirName) || strings.EqualFold(dir, symlinkDirName) {
+			return nil
+		}
+	}
+
+	// add dirName and its symlink target to processed dirs
+	*dirsProcessed = append(*dirsProcessed, dirName)
+	if symlinkDirName != "" {
+		*dirsProcessed = append(*dirsProcessed, symlinkDirName)
+	}
+
+	ff := OpenFindFile(filepath.Join(dirName, mask))
+	defer ff.Close()
+	for {
+		found, err := ff.Next()
+		if err != nil {
+			return err
+		}
+		if !found {
+			break
+		}
+
+		info := ff.Current()
+		if info.FileName == "." || info.FileName == ".." {
+			continue
+		}
+		info.FileName = filepath.Join(dirName, info.FileName)
+		*result = append(*result, info)
+
+		// for "*" mask all dirs are processed in this loop
+		if recursive && mask == "*" && ((info.FileAttributes & FileAttributeDirectory) != 0) {
+			if err = getFilesInfo(info.FileName, mask, recursive, dirsProcessed, result); err != nil {
+				return err
+			}
+		}
+	}
+
+	// for mask != "*" we processed dirs after files
+	if recursive && mask != "*" {
+		dirs, err := GetSubdirsInfo(dirName)
+		if err != nil {
+			return err
+		}
+
+		for _, dirInfo := range dirs {
+			getFilesInfo(filepath.Join(dirName, dirInfo.FileName), mask, recursive, dirsProcessed, result)
+		}
+	}
+	return nil
+}
+
+// GetFilesInfo returns all files from dirName that matches a specific file mask (for example *.txt)
+// This function can search files recursively and process symlinked directories. If file exists in
+// directory and also in symlinked directory it will be present in result array only one time
+// In result array file names are returned with full path
+func GetFilesInfo(dirName, mask string, recursive bool) ([]FindFileItem, error) {
+	result := make([]FindFileItem, 0)
+	dirsProcessed := make([]string, 0)
+	err := getFilesInfo(dirName, mask, recursive, &dirsProcessed, &result)
+	return result, err
 }
