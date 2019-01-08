@@ -202,7 +202,7 @@ func WTSQuerySessionInformation(handle syscall.Handle, sessionId uint32, infoCla
 	return nil
 }
 
-func WTSLogoffSession(handle syscall.Handle, sessionId uint32, wait bool) (bool, error) {
+func WTSLogoffSession(handle syscall.Handle, sessionId uint32, wait bool) error {
 	r1, _, e1 := syscall.Syscall(
 		procWTSLogoffSession.Addr(),
 		3,
@@ -212,12 +212,12 @@ func WTSLogoffSession(handle syscall.Handle, sessionId uint32, wait bool) (bool,
 
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
-			return false, e1
+			return e1
 		} else {
-			return false, syscall.EINVAL
+			return syscall.EINVAL
 		}
 	}
-	return true, nil
+	return nil
 }
 
 func WTSQueryUserToken(sessionId uint32, handle *syscall.Handle) error {
