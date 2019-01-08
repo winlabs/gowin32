@@ -143,6 +143,7 @@ var (
 	procWTSEnumerateSessions       = modwtsapi32.NewProc("WTSEnumerateSessionsW")
 	procWTSFreeMemory              = modwtsapi32.NewProc("WTSFreeMemory")
 	procWTSOpenServer              = modwtsapi32.NewProc("WTSOpenServerW")
+	procWTSLogoffSession           = modwtsapi32.NewProc("WTSLogoffSession")
 	procWTSQuerySessionInformation = modwtsapi32.NewProc("WTSQuerySessionInformationW")
 	procWTSQueryUserToken          = modwtsapi32.NewProc("WTSQueryUserToken")
 )
@@ -190,6 +191,24 @@ func WTSQuerySessionInformation(handle syscall.Handle, sessionId uint32, infoCla
 		uintptr(infoClass),
 		uintptr(unsafe.Pointer(buffer)),
 		uintptr(unsafe.Pointer(bytesReturned)), 0)
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func WTSLogoffSession(handle syscall.Handle, sessionId uint32, wait bool) error {
+	r1, _, e1 := syscall.Syscall(
+		procWTSLogoffSession.Addr(),
+		3,
+		uintptr(handle),
+		uintptr(sessionId),
+		boolToUintptr(wait))
 
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
