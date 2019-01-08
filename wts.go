@@ -155,6 +155,10 @@ func (wts *WTSServer) EnumerateSessions() ([]WTSSessionInfo, error) {
 	return result, nil
 }
 
+func (wts *WTSServer) LogoffSession(sessionID uint, wait bool) (bool, error) {
+	return wrappers.WTSLogoffSession(wts.handle, uint32(sessionID), wait)
+}
+
 func (wts *WTSServer) QuerySessionInitialProgram(sessionID uint) (string, error) {
 	return wts.querySessionInformationAsString(sessionID, wrappers.WTSInitialProgram)
 }
