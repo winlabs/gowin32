@@ -35,16 +35,17 @@ const (
 )
 
 var (
-	procRegCloseKey      = modadvapi32.NewProc("RegCloseKey")
-	procRegCreateKeyExW  = modadvapi32.NewProc("RegCreateKeyExW")
-	procRegDeleteKeyW    = modadvapi32.NewProc("RegDeleteKeyW")
-	procRegDeleteValueW  = modadvapi32.NewProc("RegDeleteValueW")
-	procRegEnumKeyExW    = modadvapi32.NewProc("RegEnumKeyExW")
-	procRegEnumValueW    = modadvapi32.NewProc("RegEnumValueW")
-	procRegOpenKeyExW    = modadvapi32.NewProc("RegOpenKeyExW")
-	procRegQueryInfoKeyW = modadvapi32.NewProc("RegQueryInfoKeyW")
-	procRegQueryValueExW = modadvapi32.NewProc("RegQueryValueExW")
-	procRegSetValueExW   = modadvapi32.NewProc("RegSetValueExW")
+	procInitiateSystemShutdownW = modadvapi32.NewProc("InitiateSystemShutdownW")
+	procRegCloseKey             = modadvapi32.NewProc("RegCloseKey")
+	procRegCreateKeyExW         = modadvapi32.NewProc("RegCreateKeyExW")
+	procRegDeleteKeyW           = modadvapi32.NewProc("RegDeleteKeyW")
+	procRegDeleteValueW         = modadvapi32.NewProc("RegDeleteValueW")
+	procRegEnumKeyExW           = modadvapi32.NewProc("RegEnumKeyExW")
+	procRegEnumValueW           = modadvapi32.NewProc("RegEnumValueW")
+	procRegOpenKeyExW           = modadvapi32.NewProc("RegOpenKeyExW")
+	procRegQueryInfoKeyW        = modadvapi32.NewProc("RegQueryInfoKeyW")
+	procRegQueryValueExW        = modadvapi32.NewProc("RegQueryValueExW")
+	procRegSetValueExW          = modadvapi32.NewProc("RegSetValueExW")
 )
 
 func RegCloseKey(key syscall.Handle) error {
@@ -101,7 +102,7 @@ func RegDeleteValue(key syscall.Handle, valueName *uint16) error {
 }
 
 func RegEnumKeyEx(key syscall.Handle, index uint32, name *uint16, cName *uint32, reserved *uint32, class *uint16, cClass *uint32, lastWriteTime *FILETIME) error {
-	r1, _,_ := syscall.Syscall9(
+	r1, _, _ := syscall.Syscall9(
 		procRegEnumKeyExW.Addr(),
 		8,
 		uintptr(key),
@@ -204,6 +205,26 @@ func RegSetValueEx(key syscall.Handle, valueName *uint16, reserved uint32, value
 		uintptr(cbData))
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
+	}
+	return nil
+}
+
+func InitiateSystemShutdown(machineName *uint16, message *uint16, timeout uint32, forceAppsClosed bool, rebootAfterShutdown bool) error {
+	r1, _, e1 := syscall.Syscall6(
+		procInitiateSystemShutdownW.Addr(),
+		5,
+		uintptr(unsafe.Pointer(machineName)),
+		uintptr(unsafe.Pointer(message)),
+		uintptr(timeout),
+		boolToUintptr(forceAppsClosed),
+		boolToUintptr(rebootAfterShutdown),
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
 	}
 	return nil
 }
