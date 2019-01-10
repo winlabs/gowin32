@@ -23,5 +23,13 @@ import (
 )
 
 func InitiateSystemShutdown(machineName string, message string, timeout int, forceAppsClosed bool, rebootAfterShutdown bool) error {
-	return wrappers.InitiateSystemShutdown(syscall.StringToUTF16Ptr(machineName), syscall.StringToUTF16Ptr(message), uint32(timeout), forceAppsClosed, rebootAfterShutdown)
+	if err := wrappers.InitiateSystemShutdown(
+		syscall.StringToUTF16Ptr(machineName),
+		syscall.StringToUTF16Ptr(message),
+		uint32(timeout),
+		forceAppsClosed,
+		rebootAfterShutdown); err != nil {
+		return NewWindowsError("InitiateSystemShutdown", err)
+	}
+	return nil
 }

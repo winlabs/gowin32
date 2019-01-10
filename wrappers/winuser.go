@@ -113,7 +113,6 @@ const (
 	EWX_FORCE           = 0x00000004
 	EWX_POWEROFF        = 0x00000008
 	EWX_FORCEIFHUNG     = 0x00000010
-	EWX_QUICKRESOLVE    = 0x00000020
 	EWX_RESTARTAPPS     = 0x00000040
 	EWX_HYBRID_SHUTDOWN = 0x00400000
 )
@@ -248,7 +247,7 @@ func CloseDesktop(desktop syscall.Handle) error {
 	return nil
 }
 
-func ExitWindowsEx(flags uint, reason uint32) error {
+func ExitWindowsEx(flags uint32, reason uint32) error {
 	r1, _, e1 := syscall.Syscall(
 		procExitWindowsEx.Addr(),
 		2,
