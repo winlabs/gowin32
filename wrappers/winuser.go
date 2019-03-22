@@ -107,6 +107,17 @@ const (
 )
 
 const (
+	EWX_LOGOFF          = 0
+	EWX_SHUTDOWN        = 0x00000001
+	EWX_REBOOT          = 0x00000002
+	EWX_FORCE           = 0x00000004
+	EWX_POWEROFF        = 0x00000008
+	EWX_FORCEIFHUNG     = 0x00000010
+	EWX_RESTARTAPPS     = 0x00000040
+	EWX_HYBRID_SHUTDOWN = 0x00400000
+)
+
+const (
 	SM_CXSCREEN                    = 0
 	SM_CYSCREEN                    = 1
 	SM_CXVSCROLL                   = 2
@@ -214,6 +225,7 @@ var (
 	procCloseDesktop             = moduser32.NewProc("CloseDesktop")
 	procEnumDisplayDevicesW      = moduser32.NewProc("EnumDisplayDevicesW")
 	procEnumDisplayMonitors      = moduser32.NewProc("EnumDisplayMonitors")
+	procExitWindowsEx            = moduser32.NewProc("ExitWindowsEx")
 	procGetForegroundWindow      = moduser32.NewProc("GetForegroundWindow")
 	procGetSystemMetrics         = moduser32.NewProc("GetSystemMetrics")
 	procGetWindowTextW           = moduser32.NewProc("GetWindowTextW")
@@ -225,6 +237,23 @@ var (
 
 func CloseDesktop(desktop syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(procCloseDesktop.Addr(), 1, uintptr(desktop), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func ExitWindowsEx(flags uint32, reason uint32) error {
+	r1, _, e1 := syscall.Syscall(
+		procExitWindowsEx.Addr(),
+		2,
+		uintptr(flags),
+		uintptr(reason),
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
