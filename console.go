@@ -21,12 +21,6 @@
  )
 
  func EnableVTSequences() error {
-	err := addStdConsoleModeFlag(
-		wrappers.STD_INPUT_HANDLE,
-		wrappers.ENABLE_VIRTUAL_TERMINAL_INPUT)
-	if err != nil {
-		return err
-	}
 	err = addStdConsoleModeFlag(
 		wrappers.STD_OUTPUT_HANDLE,
 		wrappers.ENABLE_VIRTUAL_TERMINAL_PROCESSING)
