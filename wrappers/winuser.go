@@ -238,6 +238,18 @@ var (
 	procSetThreadDesktop         = moduser32.NewProc("SetThreadDesktop")
 )
 
+func BlockInput(blockIt bool) error {
+	r1, _, e1 := syscall.Syscall(procBlockInput.Addr(), 1, boolToUintptr(blockIt), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func CloseDesktop(desktop syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(procCloseDesktop.Addr(), 1, uintptr(desktop), 0, 0)
 	if r1 == 0 {
@@ -405,18 +417,6 @@ func SendNotifyMessage(hwnd syscall.Handle, msg uint32, wparam, lparam uintptr) 
 		lparam,
 		0,
 		0)
-	if r1 == 0 {
-		if e1 != ERROR_SUCCESS {
-			return e1
-		} else {
-			return syscall.EINVAL
-		}
-	}
-	return nil
-}
-
-func BlockInput(blockIt bool) error {
-	r1, _, e1 := syscall.Syscall(procBlockInput.Addr(), 1, boolToUintptr(blockIt), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

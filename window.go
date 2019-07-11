@@ -56,5 +56,9 @@ func GetWindowThreadID(hwnd syscall.Handle) (uint, error) {
 }
 
 func RegisterWindowMessage(messageName string) (uint32, error) {
-	return wrappers.RegisterWindowMessage(syscall.StringToUTF16Ptr(messageName))
+	r, err := wrappers.RegisterWindowMessage(syscall.StringToUTF16Ptr(messageName))
+	if err != nil {
+		return 0, NewWindowsError("RegisterWindowMessage", err)
+	}
+	return r, nil
 }
