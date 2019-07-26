@@ -103,20 +103,17 @@ func GetProcessorInfo() *ProcessorInfo {
 }
 
 func GetAllDisplayMonitors() []DisplayMonitorInfo {
-	r := getAllDisplayMonitorsResult{Monitors: make([]DisplayMonitorInfo, 0)}
-	wrappers.EnumDisplayMonitors(syscall.Handle(0),
+
+	result := []DisplayMonitorInfo{}
+	wrappers.EnumDisplayMonitors(
+		syscall.Handle(0),
 		nil,
-		getAllDisplayMonitorsCallback,
-		uintptr(unsafe.Pointer(&r)))
-	return r.Monitors
-}
+		func(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, lparam uintptr) int32 {
+			result = append(result, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rectangle: rectToRectangle(*rect)})
+			return 1
+		},
+		uintptr(0),
+	)
 
-type getAllDisplayMonitorsResult struct {
-	Monitors []DisplayMonitorInfo
-}
-
-func getAllDisplayMonitorsCallback(hmonitor syscall.Handle, hdc syscall.Handle, rect *wrappers.RECT, data uintptr) int32 {
-	result := (*getAllDisplayMonitorsResult)(unsafe.Pointer(data))
-	result.Monitors = append(result.Monitors, DisplayMonitorInfo{Handle: hmonitor, DeviceContext: hdc, Rectangle: rectToRectangle(*rect)})
-	return 1
+	return result
 }

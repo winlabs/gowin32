@@ -222,6 +222,7 @@ type MONITORENUMPROC func(hmonitor syscall.Handle, hdc syscall.Handle, rect *REC
 var (
 	moduser32 = syscall.NewLazyDLL("user32.dll")
 
+	procBlockInput               = moduser32.NewProc("BlockInput")
 	procCloseDesktop             = moduser32.NewProc("CloseDesktop")
 	procEnumDisplayDevicesW      = moduser32.NewProc("EnumDisplayDevicesW")
 	procEnumDisplayMonitors      = moduser32.NewProc("EnumDisplayMonitors")
@@ -232,8 +233,22 @@ var (
 	procGetWindowTextLengthW     = moduser32.NewProc("GetWindowTextLengthW")
 	procGetWindowThreadProcessId = moduser32.NewProc("GetWindowThreadProcessId")
 	procOpenInputDesktop         = moduser32.NewProc("OpenInputDesktop")
+	procRegisterWindowMessageW   = moduser32.NewProc("RegisterWindowMessageW")
+	procSendNotifyMessageW       = moduser32.NewProc("SendNotifyMessageW")
 	procSetThreadDesktop         = moduser32.NewProc("SetThreadDesktop")
 )
+
+func BlockInput(blockIt bool) error {
+	r1, _, e1 := syscall.Syscall(procBlockInput.Addr(), 1, boolToUintptr(blockIt), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
 
 func CloseDesktop(desktop syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(procCloseDesktop.Addr(), 1, uintptr(desktop), 0, 0)
@@ -370,6 +385,38 @@ func OpenInputDesktop(flags uint32, inherit bool, desiredAccess uint32) (syscall
 
 func SetThreadDesktop(desktop syscall.Handle) error {
 	r1, _, e1 := syscall.Syscall(procSetThreadDesktop.Addr(), 1, uintptr(desktop), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func RegisterWindowMessage(messageName *uint16) (uint32, error) {
+	r1, _, e1 := syscall.Syscall(procRegisterWindowMessageW.Addr(), 1, uintptr(unsafe.Pointer(messageName)), 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return uint32(r1), nil
+}
+
+func SendNotifyMessage(hwnd syscall.Handle, msg uint32, wparam, lparam uintptr) error {
+	r1, _, e1 := syscall.Syscall6(
+		procSendNotifyMessageW.Addr(),
+		4,
+		uintptr(hwnd),
+		uintptr(msg),
+		wparam,
+		lparam,
+		0,
+		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1
