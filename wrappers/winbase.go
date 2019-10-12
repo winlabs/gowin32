@@ -231,6 +231,10 @@ type STARTUPINFO struct {
 	StdError      syscall.Handle
 }
 
+const (
+	SHUTDOWN_NORETRY = 0x00000001
+)
+
 type WIN32_FIND_DATA struct {
 	FileAttributes    uint32
 	CreationTime      FILETIME
@@ -356,6 +360,7 @@ var (
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
 	procSetInformationJobObject           = modkernel32.NewProc("SetInformationJobObject")
 	procSetLastError                      = modkernel32.NewProc("SetLastError")
+	procSetProcessShutdownParameters      = modkernel32.NewProc("SetProcessShutdownParameters")
 	procSetStdHandle                      = modkernel32.NewProc("SetStdHandle")
 	procTerminateJobObject                = modkernel32.NewProc("TerminateJobObject")
 	procTerminateProcess                  = modkernel32.NewProc("TerminateProcess")
@@ -567,6 +572,16 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		}
 	}
 	return nil
+}
+
+func SetProcessShutdownParameters(level, flags uint32) bool {
+	r1, _, _ := syscall.Syscall(
+		procSetProcessShutdownParameters.Addr(),
+		2,
+		uintptr(level),
+		uintptr(flags),
+		0)
+	return r1 != 0
 }
 
 func CreateSymbolicLink(symlinkFileName *uint16, targetFileName *uint16, flags uint32) error {
