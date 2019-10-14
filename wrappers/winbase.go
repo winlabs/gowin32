@@ -231,6 +231,10 @@ type STARTUPINFO struct {
 	StdError      syscall.Handle
 }
 
+const (
+	SHUTDOWN_NORETRY = 0x00000001
+)
+
 type WIN32_FIND_DATA struct {
 	FileAttributes    uint32
 	CreationTime      FILETIME
@@ -356,6 +360,7 @@ var (
 	procSetFileTime                       = modkernel32.NewProc("SetFileTime")
 	procSetInformationJobObject           = modkernel32.NewProc("SetInformationJobObject")
 	procSetLastError                      = modkernel32.NewProc("SetLastError")
+	procSetProcessShutdownParameters      = modkernel32.NewProc("SetProcessShutdownParameters")
 	procSetStdHandle                      = modkernel32.NewProc("SetStdHandle")
 	procTerminateJobObject                = modkernel32.NewProc("TerminateJobObject")
 	procTerminateProcess                  = modkernel32.NewProc("TerminateProcess")
@@ -558,6 +563,23 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 		uintptr(unsafe.Pointer(startupInfo)),
 		uintptr(unsafe.Pointer(processInformation)),
 		0,
+		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SetProcessShutdownParameters(level, flags uint32) error {
+	r1, _, e1 := syscall.Syscall(
+		procSetProcessShutdownParameters.Addr(),
+		2,
+		uintptr(level),
+		uintptr(flags),
 		0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
