@@ -574,14 +574,21 @@ func CreateProcess(applicationName *uint16, commandLine *uint16, processAttribut
 	return nil
 }
 
-func SetProcessShutdownParameters(level, flags uint32) bool {
-	r1, _, _ := syscall.Syscall(
+func SetProcessShutdownParameters(level, flags uint32) error {
+	r1, _, e1 := syscall.Syscall(
 		procSetProcessShutdownParameters.Addr(),
 		2,
 		uintptr(level),
 		uintptr(flags),
 		0)
-	return r1 != 0
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func CreateSymbolicLink(symlinkFileName *uint16, targetFileName *uint16, flags uint32) error {
