@@ -18,9 +18,24 @@ package gowin32
 
 import (
 	"syscall"
+	"unsafe"
 
 	"github.com/winlabs/gowin32/wrappers"
 )
+
+func EnumDesktops(winsta syscall.Handle) ([]string, error) {
+
+	result := make([]string, 0)
+	if err := wrappers.EnumDesktops(winsta,
+		func(name *uint16, lparam uintptr) int32 {
+			result = append(result, syscall.UTF16ToString((*[1024]uint16)(unsafe.Pointer(name))[:]))
+			return 1
+		},
+		0); err != nil {
+		return nil, NewWindowsError("EnumDesktops", err)
+	}
+	return result, nil
+}
 
 func GetWindowProcessID(hwnd syscall.Handle) (uint, error) {
 	var pid uint32

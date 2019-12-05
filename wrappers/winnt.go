@@ -1517,4 +1517,3 @@ func RtlZeroMemory(destination *byte, length uintptr) {
 		length,
 		0)
 }
-
