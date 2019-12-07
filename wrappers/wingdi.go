@@ -22,40 +22,40 @@ const (
 )
 
 type DEVMODE struct {
-	DmDeviceName       [CCHDEVICENAME]uint16
-	DmSpecVersion      uint16
-	DmDriverVersion    uint16
-	DmSize             uint16
-	DmDriverExtra      uint16
-	DmFields           uint32
-	DmOrientation      int16
-	DmPaperSize        int16
-	DmPaperLength      int16
-	DmPaperWidth       int16
-	DmScale            int16
-	DmCopies           int16
-	DmDefaultSource    int16
-	DmPrintQuality     int16
-	DmColor            int16
-	DmDuplex           int16
-	DmYResolution      int16
-	DmTTOption         int16
-	DmCollate          int16
-	DmFormName         [CCHFORMNAME]uint16
-	DmLogPixels        uint16
-	DmBitsPerPel       uint32
-	DmPelsWidth        uint32
-	DmPelsHeight       uint32
-	DmDisplayFlags     uint32
-	DmDisplayFrequency uint32
-	DmICMMethod        uint32
-	DmICMIntent        uint32
-	DmMediaType        uint32
-	DmDitherType       uint32
-	DmReserved1        uint32
-	DmReserved2        uint32
-	DmPanningWidth     uint32
-	DmPanningHeight    uint32
+	DeviceName       [CCHDEVICENAME]uint16
+	SpecVersion      uint16
+	DriverVersion    uint16
+	Size             uint16
+	DriverExtra      uint16
+	Fields           uint32
+	Orientation      int16
+	PaperSize        int16
+	PaperLength      int16
+	PaperWidth       int16
+	Scale            int16
+	Copies           int16
+	DefaultSource    int16
+	PrintQuality     int16
+	Color            int16
+	Duplex           int16
+	YResolution      int16
+	TTOption         int16
+	Collate          int16
+	FormName         [CCHFORMNAME]uint16
+	LogPixels        uint16
+	BitsPerPel       uint32
+	PelsWidth        uint32
+	PelsHeight       uint32
+	DisplayFlags     uint32
+	DisplayFrequency uint32
+	ICMMethod        uint32
+	ICMIntent        uint32
+	MediaType        uint32
+	DitherType       uint32
+	Reserved1        uint32
+	Reserved2        uint32
+	PanningWidth     uint32
+	PanningHeight    uint32
 }
 
 type DISPLAY_DEVICE struct {
