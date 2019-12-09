@@ -21,6 +21,10 @@ import (
 	"unsafe"
 )
 
+type NAMEENUMPROC func(name *uint16, lparam uintptr) bool
+
+type DESKTOPENUMPROC NAMEENUMPROC
+
 func MAKEINTRESOURCE(integer uint16) uintptr {
 	return uintptr(integer)
 }
@@ -222,20 +226,26 @@ type MONITORENUMPROC func(hmonitor syscall.Handle, hdc syscall.Handle, rect *REC
 var (
 	moduser32 = syscall.NewLazyDLL("user32.dll")
 
-	procBlockInput               = moduser32.NewProc("BlockInput")
-	procCloseDesktop             = moduser32.NewProc("CloseDesktop")
-	procEnumDisplayDevicesW      = moduser32.NewProc("EnumDisplayDevicesW")
-	procEnumDisplayMonitors      = moduser32.NewProc("EnumDisplayMonitors")
-	procExitWindowsEx            = moduser32.NewProc("ExitWindowsEx")
-	procGetForegroundWindow      = moduser32.NewProc("GetForegroundWindow")
-	procGetSystemMetrics         = moduser32.NewProc("GetSystemMetrics")
-	procGetWindowTextW           = moduser32.NewProc("GetWindowTextW")
-	procGetWindowTextLengthW     = moduser32.NewProc("GetWindowTextLengthW")
-	procGetWindowThreadProcessId = moduser32.NewProc("GetWindowThreadProcessId")
-	procOpenInputDesktop         = moduser32.NewProc("OpenInputDesktop")
-	procRegisterWindowMessageW   = moduser32.NewProc("RegisterWindowMessageW")
-	procSendNotifyMessageW       = moduser32.NewProc("SendNotifyMessageW")
-	procSetThreadDesktop         = moduser32.NewProc("SetThreadDesktop")
+	procBlockInput                = moduser32.NewProc("BlockInput")
+	procCloseDesktop              = moduser32.NewProc("CloseDesktop")
+	procCreateDesktopW            = moduser32.NewProc("CreateDesktopW")
+	procEnumDesktopsW             = moduser32.NewProc("EnumDesktopsW")
+	procEnumDisplayDevicesW       = moduser32.NewProc("EnumDisplayDevicesW")
+	procEnumDisplayMonitors       = moduser32.NewProc("EnumDisplayMonitors")
+	procExitWindowsEx             = moduser32.NewProc("ExitWindowsEx")
+	procGetForegroundWindow       = moduser32.NewProc("GetForegroundWindow")
+	procGetProcessWindowStation   = moduser32.NewProc("GetProcessWindowStation")
+	procGetSystemMetrics          = moduser32.NewProc("GetSystemMetrics")
+	procGetUserObjectInformationW = moduser32.NewProc("GetUserObjectInformationW")
+	procGetWindowTextW            = moduser32.NewProc("GetWindowTextW")
+	procGetWindowTextLengthW      = moduser32.NewProc("GetWindowTextLengthW")
+	procGetWindowThreadProcessId  = moduser32.NewProc("GetWindowThreadProcessId")
+	procOpenDesktopW              = moduser32.NewProc("OpenDesktopW")
+	procOpenInputDesktop          = moduser32.NewProc("OpenInputDesktop")
+	procRegisterWindowMessageW    = moduser32.NewProc("RegisterWindowMessageW")
+	procSendNotifyMessageW        = moduser32.NewProc("SendNotifyMessageW")
+	procSetThreadDesktop          = moduser32.NewProc("SetThreadDesktop")
+	procSwitchDesktop             = moduser32.NewProc("SwitchDesktop")
 )
 
 func BlockInput(blockIt bool) error {
@@ -262,6 +272,27 @@ func CloseDesktop(desktop syscall.Handle) error {
 	return nil
 }
 
+func CreateDesktop(desktop *uint16, device *uint16, devmode *DEVMODE, flags uint32, desiredAccess uint32, securityAttributes *SECURITY_ATTRIBUTES) (syscall.Handle, error) {
+	r1, _, e1 := syscall.Syscall6(
+		procCreateDesktopW.Addr(),
+		6,
+		uintptr(unsafe.Pointer(desktop)),
+		uintptr(unsafe.Pointer(device)),
+		uintptr(unsafe.Pointer(devmode)),
+		uintptr(flags),
+		uintptr(desiredAccess),
+		uintptr(unsafe.Pointer(securityAttributes)))
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
+}
+
 func ExitWindowsEx(flags uint32, reason uint32) error {
 	r1, _, e1 := syscall.Syscall(
 		procExitWindowsEx.Addr(),
@@ -277,6 +308,11 @@ func ExitWindowsEx(flags uint32, reason uint32) error {
 		}
 	}
 	return nil
+}
+
+func GetProcessWindowStation() syscall.Handle {
+	r1, _, _ := syscall.Syscall(procGetProcessWindowStation.Addr(), 0, 0, 0, 0)
+	return syscall.Handle(r1)
 }
 
 func GetForegroundWindow() syscall.Handle {
@@ -326,6 +362,30 @@ func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) (uint32, e
 	return uint32(r1), nil
 }
 
+func EnumDesktops(winsta syscall.Handle, fnEnum DESKTOPENUMPROC, param uintptr) error {
+	fnEnumRaw := func(desktop *uint16, lparam uintptr) uintptr {
+		return boolToUintptr(fnEnum(
+			desktop,
+			lparam))
+	}
+
+	r1, _, e1 := syscall.Syscall(
+		procEnumDesktopsW.Addr(),
+		3,
+		uintptr(unsafe.Pointer(winsta)),
+		syscall.NewCallback(fnEnumRaw),
+		uintptr(param))
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
 func EnumDisplayDevices(device *uint16, devNum uint32, displayDevice *DISPLAY_DEVICE, flags uint32) bool {
 	r1, _, _ := syscall.Syscall6(
 		procEnumDisplayDevicesW.Addr(),
@@ -363,6 +423,48 @@ func EnumDisplayMonitors(hdc syscall.Handle, clip *RECT, fnEnum MONITORENUMPROC,
 func GetSystemMetrics(index int32) int {
 	ret, _, _ := syscall.Syscall(procGetSystemMetrics.Addr(), 1, uintptr(index), 0, 0)
 	return int(ret)
+}
+
+func GetUserObjectInformation(obj syscall.Handle, index int32, info uintptr, len uint32, lengthNeeded *uint32) error {
+	r1, _, e1 := syscall.Syscall6(
+		procGetUserObjectInformationW.Addr(),
+		5,
+		uintptr(obj),
+		uintptr(index),
+		info,
+		uintptr(len),
+		uintptr(unsafe.Pointer(lengthNeeded)),
+		0)
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func OpenDesktop(desktop *uint16, flags uint32, inherit bool, desiredAccess uint32) (syscall.Handle, error) {
+	r1, _, e1 := syscall.Syscall6(
+		procOpenDesktopW.Addr(),
+		4,
+		uintptr(unsafe.Pointer(desktop)),
+		uintptr(flags),
+		boolToUintptr(inherit),
+		uintptr(desiredAccess),
+		0,
+		0)
+
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return 0, e1
+		} else {
+			return 0, syscall.EINVAL
+		}
+	}
+	return syscall.Handle(r1), nil
 }
 
 func OpenInputDesktop(flags uint32, inherit bool, desiredAccess uint32) (syscall.Handle, error) {
@@ -417,6 +519,18 @@ func SendNotifyMessage(hwnd syscall.Handle, msg uint32, wparam, lparam uintptr) 
 		lparam,
 		0,
 		0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
+}
+
+func SwitchDesktop(desktop syscall.Handle) error {
+	r1, _, e1 := syscall.Syscall(procSwitchDesktop.Addr(), 1, uintptr(desktop), 0, 0)
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

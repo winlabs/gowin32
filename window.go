@@ -22,6 +22,18 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 )
 
+func EnumDesktops(winsta syscall.Handle) ([]string, error) {
+	result := make([]string, 0)
+	callback := func(name *uint16, lparam uintptr) bool {
+		result = append(result, LpstrToString(name))
+		return true
+	}
+	if err := wrappers.EnumDesktops(winsta, callback, 0); err != nil {
+		return result, NewWindowsError("EnumDesktops", err)
+	}
+	return result, nil
+}
+
 func GetWindowProcessID(hwnd syscall.Handle) (uint, error) {
 	var pid uint32
 	_, err := wrappers.GetWindowThreadProcessId(hwnd, &pid)

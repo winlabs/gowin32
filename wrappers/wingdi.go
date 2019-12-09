@@ -16,6 +16,48 @@
 
 package wrappers
 
+const (
+	CCHDEVICENAME = 32
+	CCHFORMNAME   = 32
+)
+
+type DEVMODE struct {
+	DeviceName       [CCHDEVICENAME]uint16
+	SpecVersion      uint16
+	DriverVersion    uint16
+	Size             uint16
+	DriverExtra      uint16
+	Fields           uint32
+	Orientation      int16
+	PaperSize        int16
+	PaperLength      int16
+	PaperWidth       int16
+	Scale            int16
+	Copies           int16
+	DefaultSource    int16
+	PrintQuality     int16
+	Color            int16
+	Duplex           int16
+	YResolution      int16
+	TTOption         int16
+	Collate          int16
+	FormName         [CCHFORMNAME]uint16
+	LogPixels        uint16
+	BitsPerPel       uint32
+	PelsWidth        uint32
+	PelsHeight       uint32
+	DisplayFlags     uint32
+	DisplayFrequency uint32
+	ICMMethod        uint32
+	ICMIntent        uint32
+	MediaType        uint32
+	DitherType       uint32
+	Reserved1        uint32
+	Reserved2        uint32
+	PanningWidth     uint32
+	PanningHeight    uint32
+}
+
 type DISPLAY_DEVICE struct {
 	Cb           uint32
 	DeviceName   [32]uint16
