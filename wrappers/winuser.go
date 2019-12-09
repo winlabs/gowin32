@@ -21,7 +21,7 @@ import (
 	"unsafe"
 )
 
-type NAMEENUMPROC func(name *uint16, lparam uintptr) int32
+type NAMEENUMPROC func(name *uint16, lparam uintptr) bool
 
 type DESKTOPENUMPROC NAMEENUMPROC
 
@@ -364,7 +364,7 @@ func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) (uint32, e
 
 func EnumDesktops(winsta syscall.Handle, fnEnum DESKTOPENUMPROC, param uintptr) error {
 	fnEnumRaw := func(desktop *uint16, lparam uintptr) uintptr {
-		return uintptr(fnEnum(
+		return boolToUintptr(fnEnum(
 			desktop,
 			lparam))
 	}

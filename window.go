@@ -24,12 +24,12 @@ import (
 
 func EnumDesktops(winsta syscall.Handle) ([]string, error) {
 	result := make([]string, 0)
-	callback := func(name *uint16, lparam uintptr) int32 {
+	callback := func(name *uint16, lparam uintptr) bool {
 		result = append(result, LpstrToString(name))
-		return 1
+		return true
 	}
 	if err := wrappers.EnumDesktops(winsta, callback, 0); err != nil {
-		return nil, NewWindowsError("EnumDesktops", err)
+		return result, NewWindowsError("EnumDesktops", err)
 	}
 	return result, nil
 }
