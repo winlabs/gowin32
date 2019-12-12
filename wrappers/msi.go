@@ -49,7 +49,7 @@ const (
 	INSTALLUILEVEL_BASIC    = 3
 	INSTALLUILEVEL_REDUCED  = 4
 	INSTALLUILEVEL_FULL     = 5
-	
+
 	INSTALLUILEVEL_ENDDIALOG     = 0x0080
 	INSTALLUILEVEL_PROGRESSONLY  = 0x0040
 	INSTALLUILEVEL_HIDECANCEL    = 0x0020
@@ -144,6 +144,7 @@ var (
 	procMsiConfigureProductExW  = modmsi.NewProc("MsiConfigureProductExW")
 	procMsiConfigureProductW    = modmsi.NewProc("MsiConfigureProductW")
 	procMsiEnableLogW           = modmsi.NewProc("MsiEnableLogW")
+	procMsiEnumProductsW        = modmsi.NewProc("MsiEnumProductsW")
 	procMsiEnumRelatedProductsW = modmsi.NewProc("MsiEnumRelatedProductsW")
 	procMsiGetComponentPathW    = modmsi.NewProc("MsiGetComponentPathW")
 	procMsiGetProductInfoW      = modmsi.NewProc("MsiGetProductInfoW")
@@ -206,6 +207,19 @@ func MsiEnableLog(logMode uint32, logFile *uint16, logAttributes uint32) error {
 		uintptr(logMode),
 		uintptr(unsafe.Pointer(logFile)),
 		uintptr(logAttributes))
+	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+
+func MsiEnumProducts(productIndex uint32, productBuf *uint16) error {
+	r1, _, _ := syscall.Syscall(
+		procMsiEnumProductsW.Addr(),
+		2,
+		uintptr(productIndex),
+		uintptr(unsafe.Pointer(productBuf)),
+		0)
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
 	}
