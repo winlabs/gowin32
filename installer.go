@@ -279,6 +279,20 @@ func GetInstalledProductState(productCode string) InstallState {
 	return InstallState(wrappers.MsiQueryProductState(syscall.StringToUTF16Ptr(productCode)))
 }
 
+func GetInstalledProducts() ([]string, error) {
+	productCodes := []string{}
+	buf := make([]uint16, 39)
+	for i := 0; ; i++ {
+		err := wrappers.MsiEnumProducts(uint32(i), &buf[0])
+		if err == wrappers.ERROR_NO_MORE_ITEMS {
+			return productCodes, nil
+		} else if err != nil {
+			return nil, NewWindowsError("MsiEnumProducts", err)
+		}
+		productCodes = append(productCodes, syscall.UTF16ToString(buf))
+	}
+}
+
 func GetInstalledProductsByUpgradeCode(upgradeCode string) ([]string, error) {
 	productCodes := []string{}
 	buf := make([]uint16, 39)
