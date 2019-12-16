@@ -169,6 +169,28 @@ type FixedFileInfo struct {
 	FileSubtype    VerFileSubtype
 }
 
+type StringFileInfoNames string
+
+const (
+	FileInfoNameComments         StringFileInfoNames = "Comments"
+	FileInfoNameCompanyName      StringFileInfoNames = "CompanyName"
+	FileInfoNameFileDescription  StringFileInfoNames = "FileDescription"
+	FileInfoNameFileVersion      StringFileInfoNames = "FileVersion"
+	FileInfoNameInternalName     StringFileInfoNames = "InternalName"
+	FileInfoNameLegalCopyright   StringFileInfoNames = "LegalCopyright"
+	FileInfoNameLegalTrademarks  StringFileInfoNames = "LegalTrademarks"
+	FileInfoNameOriginalFilename StringFileInfoNames = "OriginalFilename"
+	FileInfoNameProductName      StringFileInfoNames = "ProductName"
+	FileInfoNameProductVersion   StringFileInfoNames = "ProductVersion"
+	FileInfoNamePrivateBuild     StringFileInfoNames = "PrivateBuild"
+	FileInfoNameSpecialBuild     StringFileInfoNames = "SpecialBuild"
+)
+
+type FileInfoTranslation struct {
+	Language uint16
+	CodePage uint16
+}
+
 type FileVersion struct {
 	data []byte
 }
@@ -217,4 +239,58 @@ func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
 		FileType:    VerFileType(ffi.FileType),
 		FileSubtype: VerFileSubtype(ffi.FileSubtype),
 	}, nil
+}
+
+func (self *FileVersion) GetFileInfoTranslations() ([]FileInfoTranslation, error) {
+	var fit *FileInfoTranslation
+	var len uint32
+	err := wrappers.VerQueryValue(
+		&self.data[0],
+		syscall.StringToUTF16Ptr(`\VarFileInfo\Translation`),
+		(**byte)(unsafe.Pointer(&fit)),
+		&len)
+	if err != nil {
+		return nil, NewWindowsError("VerQueryValue", err)
+	}
+
+	result := make([]FileInfoTranslation, 0)
+	if len == 0 {
+		return result, nil
+	}
+
+	ti := fit
+	for i := 0; i < int(len/uint32(unsafe.Sizeof(*ti))); i++ {
+		result = append(result, FileInfoTranslation{Language: ti.Language, CodePage: ti.CodePage})
+		ti = (*FileInfoTranslation)(unsafe.Pointer(uintptr(unsafe.Pointer(ti)) + unsafe.Sizeof(*ti)))
+	}
+	return result, nil
+}
+
+func (self *FileVersion) GetStringFileInfo(translation FileInfoTranslation, stringName string) (string, error) {
+	var offset *uint16
+	var len uint32
+	err := wrappers.VerQueryValue(
+		&self.data[0],
+		syscall.StringToUTF16Ptr(fmt.Sprintf("\\StringFileInfo\\%04x%04x\\%s", translation.Language, translation.CodePage, stringName)),
+		(**byte)(unsafe.Pointer(&offset)),
+		&len)
+	if err != nil {
+		return "", NewWindowsError("VerQueryValue", err)
+	}
+	if len == 0 {
+		return "", nil
+	}
+	return LpstrToString(offset), nil
+}
+
+func (self *FileVersion) GetFirstStringFileInfo(stringName string) (string, error) {
+	tr, err := self.GetFileInfoTranslations()
+	if err != nil || len(tr) == 0 {
+		return "", err
+	}
+	return self.GetStringFileInfo(tr[0], stringName)
+}
+
+func (self *FileVersion) GetStandardStringFileInfo(stringName StringFileInfoNames) (string, error) {
+	return self.GetFirstStringFileInfo(string(stringName))
 }
