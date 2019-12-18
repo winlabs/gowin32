@@ -17,8 +17,6 @@
 package gowin32
 
 import (
-	"errors"
-
 	"github.com/winlabs/gowin32/wrappers"
 
 	"fmt"
@@ -189,7 +187,7 @@ const (
 )
 
 type FileVersionTranslation struct {
-	Language uint
+	Language Language
 	CodePage uint
 }
 
@@ -250,8 +248,8 @@ func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
 
 func (self *FileVersion) GetTranslations() ([]FileVersionTranslation, error) {
 	type fileVersionTranslation struct {
-		Language Language
-		CodePage Language
+		Language uint16
+		CodePage uint16
 	}
 
 	var fit *fileVersionTranslation
@@ -279,17 +277,8 @@ func (self *FileVersion) GetTranslations() ([]FileVersionTranslation, error) {
 	return result, nil
 }
 
-func (self *FileVersion) GetStringFileInfo(translation FileVersionTranslation) (*StringFileInfo, error) {
-	tr, err := self.GetTranslations()
-	if err != nil {
-		return nil, err
-	}
-	for _, t := range tr {
-		if t.Language == translation.Language && t.CodePage == translation.CodePage {
-			return &StringFileInfo{data: self.data, translation: t}, nil
-		}
-	}
-	return nil, errors.New("translation not found")
+func (self *FileVersion) GetStringFileInfo(translation FileVersionTranslation) *StringFileInfo {
+	return &StringFileInfo{data: self.data, translation: translation}
 }
 
 func (self *FileVersion) GetFirstStringFileInfo() (*StringFileInfo, error) {
