@@ -321,9 +321,9 @@ func GetProcessWindowStation() syscall.Handle {
 	return syscall.Handle(r1)
 }
 
-func GetLastInputInfo(lli *LASTINPUTINFO) bool {
-	lli.Size = uint32(unsafe.Sizeof(LASTINPUTINFO{}))
-	r1, _, _ := syscall.Syscall(procGetLastInputInfo.Addr(), 1, uintptr(unsafe.Pointer(lli)), 0, 0)
+func GetLastInputInfo(lii *LASTINPUTINFO) bool {
+	lii.Size = uint32(unsafe.Sizeof(LASTINPUTINFO{}))
+	r1, _, _ := syscall.Syscall(procGetLastInputInfo.Addr(), 1, uintptr(unsafe.Pointer(lii)), 0, 0)
 	return r1 != 0
 }
 
