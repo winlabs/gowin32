@@ -271,7 +271,7 @@ func (self *FileVersion) GetTranslations() ([]FileVersionTranslation, error) {
 	ti := fit
 	l := int(len / uint32(unsafe.Sizeof(*ti)))
 	for i := 0; i < l; i++ {
-		result = append(result, FileVersionTranslation{Language: uint(ti.Language), CodePage: uint(ti.CodePage)})
+		result = append(result, FileVersionTranslation{Language: Language(ti.Language), CodePage: uint(ti.CodePage)})
 		ti = (*fileVersionTranslation)(unsafe.Pointer(uintptr(unsafe.Pointer(ti)) + unsafe.Sizeof(*ti)))
 	}
 	return result, nil
