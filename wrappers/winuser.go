@@ -121,6 +121,11 @@ const (
 	EWX_HYBRID_SHUTDOWN = 0x00400000
 )
 
+type LASTINPUTINFO struct {
+	Size uint32
+	Time uint32
+}
+
 const (
 	SM_CXSCREEN                    = 0
 	SM_CYSCREEN                    = 1
@@ -234,6 +239,7 @@ var (
 	procEnumDisplayMonitors       = moduser32.NewProc("EnumDisplayMonitors")
 	procExitWindowsEx             = moduser32.NewProc("ExitWindowsEx")
 	procGetForegroundWindow       = moduser32.NewProc("GetForegroundWindow")
+	procGetLastInputInfo          = moduser32.NewProc("GetLastInputInfo")
 	procGetProcessWindowStation   = moduser32.NewProc("GetProcessWindowStation")
 	procGetSystemMetrics          = moduser32.NewProc("GetSystemMetrics")
 	procGetUserObjectInformationW = moduser32.NewProc("GetUserObjectInformationW")
@@ -313,6 +319,12 @@ func ExitWindowsEx(flags uint32, reason uint32) error {
 func GetProcessWindowStation() syscall.Handle {
 	r1, _, _ := syscall.Syscall(procGetProcessWindowStation.Addr(), 0, 0, 0, 0)
 	return syscall.Handle(r1)
+}
+
+func GetLastInputInfo(lii *LASTINPUTINFO) bool {
+	lii.Size = uint32(unsafe.Sizeof(LASTINPUTINFO{}))
+	r1, _, _ := syscall.Syscall(procGetLastInputInfo.Addr(), 1, uintptr(unsafe.Pointer(lii)), 0, 0)
+	return r1 != 0
 }
 
 func GetForegroundWindow() syscall.Handle {

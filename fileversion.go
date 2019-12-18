@@ -169,8 +169,35 @@ type FixedFileInfo struct {
 	FileSubtype    VerFileSubtype
 }
 
+type FileVersionString string
+
+const (
+	FileVersionComments         FileVersionString = "Comments"
+	FileVersionCompanyName      FileVersionString = "CompanyName"
+	FileVersionFileDescription  FileVersionString = "FileDescription"
+	FileVersionFileVersion      FileVersionString = "FileVersion"
+	FileVersionInternalName     FileVersionString = "InternalName"
+	FileVersionLegalCopyright   FileVersionString = "LegalCopyright"
+	FileVersionLegalTrademarks  FileVersionString = "LegalTrademarks"
+	FileVersionOriginalFilename FileVersionString = "OriginalFilename"
+	FileVersionProductName      FileVersionString = "ProductName"
+	FileVersionProductVersion   FileVersionString = "ProductVersion"
+	FileVersionPrivateBuild     FileVersionString = "PrivateBuild"
+	FileVersionSpecialBuild     FileVersionString = "SpecialBuild"
+)
+
+type FileVersionTranslation struct {
+	Language Language
+	CodePage uint
+}
+
 type FileVersion struct {
 	data []byte
+}
+
+type StringFileInfo struct {
+	data        []byte
+	translation FileVersionTranslation
 }
 
 func GetFileVersion(filename string) (*FileVersion, error) {
@@ -217,4 +244,76 @@ func (self *FileVersion) GetFixedFileInfo() (*FixedFileInfo, error) {
 		FileType:    VerFileType(ffi.FileType),
 		FileSubtype: VerFileSubtype(ffi.FileSubtype),
 	}, nil
+}
+
+func (self *FileVersion) GetTranslations() ([]FileVersionTranslation, error) {
+	type fileVersionTranslation struct {
+		Language uint16
+		CodePage uint16
+	}
+
+	var fit *fileVersionTranslation
+	var len uint32
+	err := wrappers.VerQueryValue(
+		&self.data[0],
+		syscall.StringToUTF16Ptr(`\VarFileInfo\Translation`),
+		(**byte)(unsafe.Pointer(&fit)),
+		&len)
+	if err != nil {
+		return nil, NewWindowsError("VerQueryValue", err)
+	}
+
+	result := make([]FileVersionTranslation, 0)
+	if len == 0 {
+		return result, nil
+	}
+
+	ti := fit
+	l := int(len / uint32(unsafe.Sizeof(*ti)))
+	for i := 0; i < l; i++ {
+		result = append(result, FileVersionTranslation{Language: Language(ti.Language), CodePage: uint(ti.CodePage)})
+		ti = (*fileVersionTranslation)(unsafe.Pointer(uintptr(unsafe.Pointer(ti)) + unsafe.Sizeof(*ti)))
+	}
+	return result, nil
+}
+
+func (self *FileVersion) GetStringFileInfo(translation FileVersionTranslation) *StringFileInfo {
+	return &StringFileInfo{data: self.data, translation: translation}
+}
+
+func (self *FileVersion) GetFirstStringFileInfo() (*StringFileInfo, error) {
+	tr, err := self.GetTranslations()
+	if err != nil {
+		return nil, err
+	}
+	return &StringFileInfo{data: self.data, translation: tr[0]}, nil
+}
+
+func (self *StringFileInfo) GetString(stringName FileVersionString) (string, error) {
+	var offset *uint16
+	var len uint32
+	err := wrappers.VerQueryValue(
+		&self.data[0],
+		syscall.StringToUTF16Ptr(fmt.Sprintf("\\StringFileInfo\\%04x%04x\\%s", self.translation.Language, self.translation.CodePage, stringName)),
+		(**byte)(unsafe.Pointer(&offset)),
+		&len)
+	if err != nil {
+		return "", NewWindowsError("VerQueryValue", err)
+	}
+	if len == 0 {
+		return "", nil
+	}
+	return LpstrToString(offset), nil
+}
+
+func GetStringFileInfo(fileName string, stringName FileVersionString) (string, error) {
+	fv, err := GetFileVersion(fileName)
+	if err != nil {
+		return "", err
+	}
+	si, err := fv.GetFirstStringFileInfo()
+	if err != nil {
+		return "", err
+	}
+	return si.GetString(stringName)
 }

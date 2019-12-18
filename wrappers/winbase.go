@@ -331,6 +331,8 @@ var (
 	procGetSystemWow64DirectoryW          = modkernel32.NewProc("GetSystemWow64DirectoryW")
 	procGetTempFileNameW                  = modkernel32.NewProc("GetTempFileNameW")
 	procGetTempPathW                      = modkernel32.NewProc("GetTempPathW")
+	procGetTickCount                      = modkernel32.NewProc("GetTickCount")
+	procGetTickCount64                    = modkernel32.NewProc("GetTickCount64")
 	procGetVersionExW                     = modkernel32.NewProc("GetVersionExW")
 	procGetVolumeInformationW             = modkernel32.NewProc("GetVolumeInformationW")
 	procGetVolumeNameForVolumeMountPointW = modkernel32.NewProc("GetVolumeNameForVolumeMountPointW")
@@ -695,6 +697,16 @@ func FindClose(findFile syscall.Handle) error {
 		}
 	}
 	return nil
+}
+
+func GetTickCount() uint32 {
+	r1, _, _ := syscall.Syscall(procGetTickCount.Addr(), 0, 0, 0, 0)
+	return uint32(r1)
+}
+
+func GetTickCount64() uint64 {
+	r1, _, _ := syscall.Syscall(procGetTickCount64.Addr(), 0, 0, 0, 0)
+	return uint64(r1)
 }
 
 func FindFirstFile(fileName *uint16, findFileData *WIN32_FIND_DATA) (syscall.Handle, error) {
