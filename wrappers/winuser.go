@@ -241,6 +241,7 @@ var (
 	procGetForegroundWindow       = moduser32.NewProc("GetForegroundWindow")
 	procGetLastInputInfo          = moduser32.NewProc("GetLastInputInfo")
 	procGetProcessWindowStation   = moduser32.NewProc("GetProcessWindowStation")
+	procGetShellWindow            = moduser32.NewProc("GetShellWindow")
 	procGetSystemMetrics          = moduser32.NewProc("GetSystemMetrics")
 	procGetUserObjectInformationW = moduser32.NewProc("GetUserObjectInformationW")
 	procGetWindowTextW            = moduser32.NewProc("GetWindowTextW")
@@ -551,4 +552,9 @@ func SwitchDesktop(desktop syscall.Handle) error {
 		}
 	}
 	return nil
+}
+
+func GetShellWindow() syscall.Handle {
+	r1, _, _ := syscall.Syscall(procGetShellWindow.Addr(), 0, 0, 0, 0)
+	return syscall.Handle(r1)
 }
