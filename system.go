@@ -22,6 +22,19 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 )
 
+func InitiateShutdown(machineName string, message string, gracePriod int, shutdownFlags int, reason int) error {
+	if err := wrappers.InitiateShutdown(
+		syscall.StringToUTF16Ptr(machineName),
+		syscall.StringToUTF16Ptr(message),
+		uint32(gracePriod),
+		uint32(shutdownFlags),
+		uint32(reason)); err != nil {
+		return NewWindowsError("InitiateShutdown", err)
+	}
+	return nil
+}
+
+
 func InitiateSystemShutdown(machineName string, message string, timeout int, forceAppsClosed bool, rebootAfterShutdown bool) error {
 	if err := wrappers.InitiateSystemShutdown(
 		syscall.StringToUTF16Ptr(machineName),
