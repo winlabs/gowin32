@@ -40,8 +40,8 @@ const (
 type InitiateShutdownReason uint32
 
 const (
-	InitiateShutdownReasonUserDefinied InitiateShutdownReason = wrappers.SHTDN_REASON_FLAG_USER_DEFINED
-	InitiateShutdownReasonPlaned       InitiateShutdownReason = wrappers.SHTDN_REASON_FLAG_PLANNED
+	InitiateShutdownReasonUserDefined InitiateShutdownReason = wrappers.SHTDN_REASON_FLAG_USER_DEFINED
+	InitiateShutdownReasonPlanned     InitiateShutdownReason = wrappers.SHTDN_REASON_FLAG_PLANNED
 )
 
 const (
