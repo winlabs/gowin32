@@ -34,7 +34,21 @@ const (
 	HKEY_CURRENT_USER_LOCAL_SETTINGS = 0x80000007
 )
 
+const (
+	SHUTDOWN_FORCE_OTHERS         = 0x00000001
+	SHUTDOWN_FORCE_SELF           = 0x00000002
+	SHUTDOWN_RESTART              = 0x00000004
+	SHUTDOWN_POWEROFF             = 0x00000008
+	SHUTDOWN_NOREBOOT             = 0x00000010
+	SHUTDOWN_GRACE_OVERRIDE       = 0x00000020
+	SHUTDOWN_INSTALL_UPDATES      = 0x00000040
+	SHUTDOWN_RESTARTAPPS          = 0x00000080
+	SHUTDOWN_SKIP_SVC_PRESHUTDOWN = 0x00000100
+	SHUTDOWN_HYBRID               = 0x00000200
+)
+
 var (
+	procInitiateShutdownW       = modadvapi32.NewProc("InitiateShutdownW")
 	procInitiateSystemShutdownW = modadvapi32.NewProc("InitiateSystemShutdownW")
 	procRegCloseKey             = modadvapi32.NewProc("RegCloseKey")
 	procRegCreateKeyExW         = modadvapi32.NewProc("RegCreateKeyExW")
@@ -205,6 +219,27 @@ func RegSetValueEx(key syscall.Handle, valueName *uint16, reserved uint32, value
 		uintptr(cbData))
 	if err := syscall.Errno(r1); err != ERROR_SUCCESS {
 		return err
+	}
+	return nil
+}
+
+func InitiateShutdown(machineName *uint16, message *uint16, gracePriod uint32, shutdownFlags uint32, reason uint32) error {
+	r1, _, e1 := syscall.Syscall6(
+		procInitiateShutdownW.Addr(),
+		5,
+		uintptr(unsafe.Pointer(machineName)),
+		uintptr(unsafe.Pointer(message)),
+		uintptr(gracePriod),
+		uintptr(shutdownFlags),
+		uintptr(reason),
+		0)
+
+	if r1 != 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
 	}
 	return nil
 }

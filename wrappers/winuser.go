@@ -247,6 +247,7 @@ var (
 	procGetWindowTextW            = moduser32.NewProc("GetWindowTextW")
 	procGetWindowTextLengthW      = moduser32.NewProc("GetWindowTextLengthW")
 	procGetWindowThreadProcessId  = moduser32.NewProc("GetWindowThreadProcessId")
+	procLockWorkStation           = moduser32.NewProc("LockWorkStation")
 	procOpenDesktopW              = moduser32.NewProc("OpenDesktopW")
 	procOpenInputDesktop          = moduser32.NewProc("OpenInputDesktop")
 	procRegisterWindowMessageW    = moduser32.NewProc("RegisterWindowMessageW")
@@ -373,6 +374,18 @@ func GetWindowThreadProcessId(hwnd syscall.Handle, processID *uint32) (uint32, e
 		}
 	}
 	return uint32(r1), nil
+}
+
+func LockWorkStation() error {
+	r1, _, e1 := syscall.Syscall(procLockWorkStation.Addr(), 0, 0, 0, 0)
+	if r1 == 0 {
+		if e1 != ERROR_SUCCESS {
+			return e1
+		} else {
+			return syscall.EINVAL
+		}
+	}
+	return nil
 }
 
 func EnumDesktops(winsta syscall.Handle, fnEnum DESKTOPENUMPROC, param uintptr) error {
