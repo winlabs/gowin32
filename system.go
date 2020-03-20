@@ -45,14 +45,14 @@ const (
 )
 
 const (
-	InitiateShutdownReasonMajorOther          InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_OTHER
-	InitiateShutdownReasonMajorHardware       InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_HARDWARE
-	InitiateShutdownReasonMajorperatingSystem InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_OPERATINGSYSTEM
-	InitiateShutdownReasonMajorSoftware       InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_SOFTWARE
-	InitiateShutdownReasonMajorApplication    InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_APPLICATION
-	InitiateShutdownReasonMajorSystem         InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_SYSTEM
-	InitiateShutdownReasonMajorPower          InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_POWER
-	InitiateShutdownReasonMajorLegacyApi      InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_LEGACY_API
+	InitiateShutdownReasonMajorOther           InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_OTHER
+	InitiateShutdownReasonMajorHardware        InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_HARDWARE
+	InitiateShutdownReasonMajorOperatingSystem InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_OPERATINGSYSTEM
+	InitiateShutdownReasonMajorSoftware        InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_SOFTWARE
+	InitiateShutdownReasonMajorApplication     InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_APPLICATION
+	InitiateShutdownReasonMajorSystem          InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_SYSTEM
+	InitiateShutdownReasonMajorPower           InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_POWER
+	InitiateShutdownReasonMajorLegacyApi       InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_LEGACY_API
 )
 
 const (
@@ -67,22 +67,22 @@ const (
 	InitiateShutdownReasonMinorProcessor            InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_PROCESSOR
 	InitiateShutdownReasonMinorNetwordCard          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_NETWORKCARD
 	InitiateShutdownReasonMinorPowerSupply          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_POWER_SUPPLY
-	InitiateShutdownReasonMinorCordunplugged        InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_CORDUNPLUGGED
+	InitiateShutdownReasonMinorCordUnplugged        InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_CORDUNPLUGGED
 	InitiateShutdownReasonMinorEnvironment          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_ENVIRONMENT
 	InitiateShutdownReasonMinorHardwareDriver       InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_HARDWARE_DRIVER
-	InitiateShutdownReasonMinorOtherdriver          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_OTHERDRIVER
-	InitiateShutdownReasonMinorBluescreen           InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_BLUESCREEN
-	InitiateShutdownReasonMinorServicepack          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SERVICEPACK
-	InitiateShutdownReasonMinorHotfix               InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_HOTFIX
-	InitiateShutdownReasonMinorSecurityfix          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITYFIX
+	InitiateShutdownReasonMinorOtherDriver          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_OTHERDRIVER
+	InitiateShutdownReasonMinorBlueScreen           InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_BLUESCREEN
+	InitiateShutdownReasonMinorServicePack          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SERVICEPACK
+	InitiateShutdownReasonMinorHotFix               InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_HOTFIX
+	InitiateShutdownReasonMinorSecurityFix          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITYFIX
 	InitiateShutdownReasonMinorSecurity             InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITY
 	InitiateShutdownReasonMinorConnectivity         InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_NETWORK_CONNECTIVITY
-	InitiateShutdownReasonMinormi                   InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_WMI
-	InitiateShutdownReasonMinorServicepackUninstall InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SERVICEPACK_UNINSTALL
+	InitiateShutdownReasonMinorWmi                  InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_WMI
+	InitiateShutdownReasonMinorServicePackUninstall InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SERVICEPACK_UNINSTALL
 	InitiateShutdownReasonMinorHotfixUninstall      InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_HOTFIX_UNINSTALL
-	InitiateShutdownReasonMinorSecurityfixUninstall InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITYFIX_UNINSTALL
+	InitiateShutdownReasonMinorSecurityFixUninstall InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITYFIX_UNINSTALL
 	InitiateShutdownReasonMinorMmc                  InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_MMC
-	InitiateShutdownReasonMinorTermsrv              InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_TERMSRV
+	InitiateShutdownReasonMinorTermSrv              InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_TERMSRV
 )
 
 func InitiateShutdown(machineName string, message string, gracePeriod int, shutdownFlags InitiateShutdownFlag, reason InitiateShutdownReason) error {
