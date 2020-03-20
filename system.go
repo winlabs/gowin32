@@ -22,19 +22,19 @@ import (
 	"github.com/winlabs/gowin32/wrappers"
 )
 
-type InitiateShutdownFlag uint32
+type InitiateShutdownFlags uint32
 
 const (
-	InitiateShutdownFlagForceOthers        InitiateShutdownFlag = wrappers.SHUTDOWN_FORCE_OTHERS
-	InitiateShutdownFlagForceSelf          InitiateShutdownFlag = wrappers.SHUTDOWN_FORCE_SELF
-	InitiateShutdownFlagRestart            InitiateShutdownFlag = wrappers.SHUTDOWN_RESTART
-	InitiateShutdownFlagPowerOff           InitiateShutdownFlag = wrappers.SHUTDOWN_POWEROFF
-	InitiateShutdownFlagNoReboot           InitiateShutdownFlag = wrappers.SHUTDOWN_NOREBOOT
-	InitiateShutdownFlagGraceOverride      InitiateShutdownFlag = wrappers.SHUTDOWN_GRACE_OVERRIDE
-	InitiateShutdownFlagInstallUpdates     InitiateShutdownFlag = wrappers.SHUTDOWN_INSTALL_UPDATES
-	InitiateShutdownFlagRestartApps        InitiateShutdownFlag = wrappers.SHUTDOWN_RESTARTAPPS
-	InitiateShutdownFlagSkipSvcPreshutdown InitiateShutdownFlag = wrappers.SHUTDOWN_SKIP_SVC_PRESHUTDOWN
-	InitiateShutdownFlagHybrid             InitiateShutdownFlag = wrappers.SHUTDOWN_HYBRID
+	InitiateShutdownFlagForceOthers        InitiateShutdownFlags = wrappers.SHUTDOWN_FORCE_OTHERS
+	InitiateShutdownFlagForceSelf          InitiateShutdownFlags = wrappers.SHUTDOWN_FORCE_SELF
+	InitiateShutdownFlagRestart            InitiateShutdownFlags = wrappers.SHUTDOWN_RESTART
+	InitiateShutdownFlagPowerOff           InitiateShutdownFlags = wrappers.SHUTDOWN_POWEROFF
+	InitiateShutdownFlagNoReboot           InitiateShutdownFlags = wrappers.SHUTDOWN_NOREBOOT
+	InitiateShutdownFlagGraceOverride      InitiateShutdownFlags = wrappers.SHUTDOWN_GRACE_OVERRIDE
+	InitiateShutdownFlagInstallUpdates     InitiateShutdownFlags = wrappers.SHUTDOWN_INSTALL_UPDATES
+	InitiateShutdownFlagRestartApps        InitiateShutdownFlags = wrappers.SHUTDOWN_RESTARTAPPS
+	InitiateShutdownFlagSkipSvcPreshutdown InitiateShutdownFlags = wrappers.SHUTDOWN_SKIP_SVC_PRESHUTDOWN
+	InitiateShutdownFlagHybrid             InitiateShutdownFlags = wrappers.SHUTDOWN_HYBRID
 )
 
 type InitiateShutdownReason uint32
@@ -52,7 +52,7 @@ const (
 	InitiateShutdownReasonMajorApplication     InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_APPLICATION
 	InitiateShutdownReasonMajorSystem          InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_SYSTEM
 	InitiateShutdownReasonMajorPower           InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_POWER
-	InitiateShutdownReasonMajorLegacyApi       InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_LEGACY_API
+	InitiateShutdownReasonMajorLegacyAPI       InitiateShutdownReason = wrappers.SHTDN_REASON_MAJOR_LEGACY_API
 )
 
 const (
@@ -77,15 +77,15 @@ const (
 	InitiateShutdownReasonMinorSecurityFix          InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITYFIX
 	InitiateShutdownReasonMinorSecurity             InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITY
 	InitiateShutdownReasonMinorConnectivity         InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_NETWORK_CONNECTIVITY
-	InitiateShutdownReasonMinorWmi                  InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_WMI
+	InitiateShutdownReasonMinorWMI                  InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_WMI
 	InitiateShutdownReasonMinorServicePackUninstall InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SERVICEPACK_UNINSTALL
 	InitiateShutdownReasonMinorHotfixUninstall      InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_HOTFIX_UNINSTALL
 	InitiateShutdownReasonMinorSecurityFixUninstall InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_SECURITYFIX_UNINSTALL
-	InitiateShutdownReasonMinorMmc                  InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_MMC
+	InitiateShutdownReasonMinorMMC                  InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_MMC
 	InitiateShutdownReasonMinorTermSrv              InitiateShutdownReason = wrappers.SHTDN_REASON_MINOR_TERMSRV
 )
 
-func InitiateShutdown(machineName string, message string, gracePeriod int, shutdownFlags InitiateShutdownFlag, reason InitiateShutdownReason) error {
+func InitiateShutdown(machineName string, message string, gracePeriod int, shutdownFlags InitiateShutdownFlags, reason InitiateShutdownReason) error {
 	if err := wrappers.InitiateShutdown(
 		syscall.StringToUTF16Ptr(machineName),
 		syscall.StringToUTF16Ptr(message),
