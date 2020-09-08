@@ -142,10 +142,6 @@ type ServiceConfig struct {
 	DisplayName      string
 }
 
-type ServiceDelayedAutoStartInfo struct {
-	DelayedAutoStart bool
-}
-
 type ServiceStatusInfo struct {
 	ServiceType             ServiceType
 	CurrentState            ServiceState
@@ -222,7 +218,7 @@ func (self *Service) GetConfig() (*ServiceConfig, error) {
 	}, nil
 }
 
-func (self *Service) GetDelayedAutoStartInfo() (*ServiceDelayedAutoStartInfo, error) {
+func (self *Service) GetDelayedAutoStartInfo() (bool, error) {
 	var res wrappers.SERVICE_DELAYED_AUTO_START_INFO
 	size := uint32(unsafe.Sizeof(res))
 	err := wrappers.QueryServiceConfig2(
@@ -232,9 +228,9 @@ func (self *Service) GetDelayedAutoStartInfo() (*ServiceDelayedAutoStartInfo, er
 		size,
 		&size)
 	if err != nil {
-		return nil, NewWindowsError("QueryServiceConfig2", err)
+		return false, NewWindowsError("QueryServiceConfig2", err)
 	}
-	return &ServiceDelayedAutoStartInfo{DelayedAutoStart: res.DelayedAutostart == 1}, nil
+	return res.DelayedAutostart != 0, nil
 }
 
 func (self *Service) GetDescription() (string, error) {
