@@ -218,6 +218,21 @@ func (self *Service) GetConfig() (*ServiceConfig, error) {
 	}, nil
 }
 
+func (self *Service) GetDelayedAutoStart() (bool, error) {
+	var res wrappers.SERVICE_DELAYED_AUTO_START_INFO
+	size := uint32(unsafe.Sizeof(res))
+	err := wrappers.QueryServiceConfig2(
+		self.handle,
+		wrappers.SERVICE_CONFIG_DELAYED_AUTO_START_INFO,
+		(*byte)(unsafe.Pointer(&res)),
+		size,
+		&size)
+	if err != nil {
+		return false, NewWindowsError("QueryServiceConfig2", err)
+	}
+	return res.DelayedAutostart != 0, nil
+}
+
 func (self *Service) GetDescription() (string, error) {
 	var bytesNeeded uint32
 	err := wrappers.QueryServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, nil, 0, &bytesNeeded)
@@ -337,6 +352,19 @@ func (self *Service) SetConfig(config *ServiceConfig, mask ServiceConfigMask) er
 func (self *Service) SetDescription(description string) error {
 	info := &wrappers.SERVICE_DESCRIPTION{Description: syscall.StringToUTF16Ptr(description)}
 	err := wrappers.ChangeServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DESCRIPTION, (*byte)(unsafe.Pointer(info)))
+	if err != nil {
+		return NewWindowsError("ChangeServiceConfig2", err)
+	}
+	return nil
+}
+
+func (self *Service) SetDelayedAutoStart(delayedAutostart bool) error {
+
+	info := &wrappers.SERVICE_DELAYED_AUTO_START_INFO{}
+	if delayedAutostart {
+		info.DelayedAutostart = 1
+	}
+	err := wrappers.ChangeServiceConfig2(self.handle, wrappers.SERVICE_CONFIG_DELAYED_AUTO_START_INFO, (*byte)(unsafe.Pointer(info)))
 	if err != nil {
 		return NewWindowsError("ChangeServiceConfig2", err)
 	}
@@ -470,8 +498,8 @@ func (self *SCManager) GetServices(serviceType ServiceType, serviceState Service
 		for i := 0; i < int(servicesReturned); i++ {
 			data := (*wrappers.ENUM_SERVICE_STATUS)(unsafe.Pointer(&buf[i*dataSize]))
 			services = append(services, ServiceInfo{
-				ServiceName:   LpstrToString(data.ServiceName),
-				DisplayName:   LpstrToString(data.DisplayName),
+				ServiceName: LpstrToString(data.ServiceName),
+				DisplayName: LpstrToString(data.DisplayName),
 				ServiceStatus: ServiceStatusInfo{
 					ServiceType:             ServiceType(data.ServiceStatus.ServiceType),
 					CurrentState:            ServiceState(data.ServiceStatus.CurrentState),
