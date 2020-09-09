@@ -218,7 +218,7 @@ func (self *Service) GetConfig() (*ServiceConfig, error) {
 	}, nil
 }
 
-func (self *Service) GetDelayedAutoStartInfo() (bool, error) {
+func (self *Service) GetDelayedAutoStart() (bool, error) {
 	var res wrappers.SERVICE_DELAYED_AUTO_START_INFO
 	size := uint32(unsafe.Sizeof(res))
 	err := wrappers.QueryServiceConfig2(
