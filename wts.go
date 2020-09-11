@@ -76,8 +76,17 @@ type WTSClientInfo struct {
 
 func (ci *WTSClientInfo) ClientAddressToIP() (net.IP, error) {
 	var buf [16]byte
-	for i := 0; i < 16; i++ {
-		buf[i] = byte(ci.clientAddress[i])
+	if ci.ClientAddressFamily == wrappers.AF_INET {
+		for i := 0; i < 4; i++ {
+			buf[i] = byte(ci.clientAddress[i])
+		}
+	} else {
+		n := 0
+		for i := 0; i < 8; i++ {
+			buf[n] = byte(ci.clientAddress[i] >> 8 & 0xff)
+			buf[n+1] = byte(ci.clientAddress[i])
+			n = n + 2
+		}
 	}
 	return clientAddressToIP(uint32(ci.ClientAddressFamily), buf[:])
 }
