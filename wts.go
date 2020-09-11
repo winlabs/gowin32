@@ -60,7 +60,7 @@ type WTSClientInfo struct {
 	InitialProgram      string
 	EncryptionLevel     byte
 	ClientAddressFamily AddressFamily
-	ClientAddress       [wrappers.CLIENTADDRESS_LENGTH + 1]uint16
+	clientAddress       [wrappers.CLIENTADDRESS_LENGTH + 1]uint16
 	HRes                uint
 	VRes                uint
 	ColorDepth          uint
@@ -78,13 +78,13 @@ func (ci *WTSClientInfo) ClientAddressToIP() (net.IP, error) {
 	var buf [16]byte
 	if ci.ClientAddressFamily == wrappers.AF_INET {
 		for i := 0; i < 4; i++ {
-			buf[i] = byte(ci.ClientAddress[i])
+			buf[i] = byte(ci.clientAddress[i])
 		}
 	} else {
 		n := 0
 		for i := 0; i < 8; i++ {
-			buf[n] = byte(ci.ClientAddress[i] >> 8 & 0xff)
-			buf[n+1] = byte(ci.ClientAddress[i])
+			buf[n] = byte(ci.clientAddress[i] >> 8 & 0xff)
+			buf[n+1] = byte(ci.clientAddress[i])
 			n = n + 2
 		}
 	}
@@ -276,7 +276,7 @@ func (wts *WTSServer) QuerySessionClientInfo(sessionID uint) (WTSClientInfo, err
 		InitialProgram:      syscall.UTF16ToString(c.InitialProgram[:]),
 		EncryptionLevel:     c.EncryptionLevel,
 		ClientAddressFamily: AddressFamily(c.ClientAddressFamily),
-		ClientAddress:       c.ClientAddress,
+		clientAddress:       c.ClientAddress,
 		HRes:                uint(c.HRes),
 		VRes:                uint(c.VRes),
 		ColorDepth:          uint(c.ColorDepth),
