@@ -19,6 +19,7 @@ package gowin32
 import (
 	"github.com/winlabs/gowin32/wrappers"
 
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -263,11 +264,11 @@ func (self *FileVersion) GetTranslations() ([]FileVersionTranslation, error) {
 		return nil, NewWindowsError("VerQueryValue", err)
 	}
 
-	result := make([]FileVersionTranslation, 0)
 	if len == 0 {
-		return result, nil
+		return nil, errors.New("VarFileInfo\\Translations is empty");
 	}
 
+	result := make([]FileVersionTranslation, 0)
 	ti := fit
 	l := int(len / uint32(unsafe.Sizeof(*ti)))
 	for i := 0; i < l; i++ {
