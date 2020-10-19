@@ -264,11 +264,11 @@ func (self *FileVersion) GetTranslations() ([]FileVersionTranslation, error) {
 		return nil, NewWindowsError("VerQueryValue", err)
 	}
 
+	result := make([]FileVersionTranslation, 0)
 	if len == 0 {
-		return nil, errors.New("VarFileInfo\\Translations is empty");
+		return result, nil
 	}
 
-	result := make([]FileVersionTranslation, 0)
 	ti := fit
 	l := int(len / uint32(unsafe.Sizeof(*ti)))
 	for i := 0; i < l; i++ {
@@ -287,6 +287,11 @@ func (self *FileVersion) GetFirstStringFileInfo() (*StringFileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if len(tr) == 0 {
+		return nil, errors.New("Translations is empty");
+	}
+
 	return &StringFileInfo{data: self.data, translation: tr[0]}, nil
 }
 
