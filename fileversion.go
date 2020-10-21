@@ -19,6 +19,7 @@ package gowin32
 import (
 	"github.com/winlabs/gowin32/wrappers"
 
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -285,6 +286,9 @@ func (self *FileVersion) GetFirstStringFileInfo() (*StringFileInfo, error) {
 	tr, err := self.GetTranslations()
 	if err != nil {
 		return nil, err
+	}
+	if len(tr) == 0 {
+		return nil, errors.New("no translations")
 	}
 	return &StringFileInfo{data: self.data, translation: tr[0]}, nil
 }
