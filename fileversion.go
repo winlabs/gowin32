@@ -288,7 +288,7 @@ func (self *FileVersion) GetFirstStringFileInfo() (*StringFileInfo, error) {
 		return nil, err
 	}
 	if len(tr) == 0 {
-		return nil, errors.New("translations is empty")
+		return nil, errors.New("no translations")
 	}
 	return &StringFileInfo{data: self.data, translation: tr[0]}, nil
 }
