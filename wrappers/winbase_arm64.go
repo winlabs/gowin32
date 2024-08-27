@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// +build amd64
+// +build arm64
 
 package wrappers
 
