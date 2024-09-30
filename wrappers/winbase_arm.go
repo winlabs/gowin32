@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// +build 386
+// +build arm
 
 package wrappers
 
