@@ -28,6 +28,9 @@ func BstrToString(bstr *uint16) string {
 		return ""
 	}
 	len := wrappers.SysStringLen(bstr)
+	if len == 0 {
+		return ""
+	}
 	buf := make([]uint16, len)
 	wrappers.RtlMoveMemory(
 		(*byte)(unsafe.Pointer(&buf[0])),
